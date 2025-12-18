@@ -51,6 +51,10 @@ dependencies:
   
   # Table calendar for calendar view
   table_calendar: ^3.0.9
+  
+  # SMS reading for transaction import
+  flutter_sms_inbox: ^1.0.4
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

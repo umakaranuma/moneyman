@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import 'add_edit_transaction_screen.dart';
 import 'calendar_screen.dart';
 import 'notes_screen.dart';
+import 'sms_transactions_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -213,8 +214,16 @@ class _HomeScreenState extends State<HomeScreen>
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.download_outlined,
-                color: AppColors.textSecondary),
-            onPressed: () {},
+                color: AppColors.income),
+            tooltip: 'Import from SMS',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SmsTransactionsScreen(),
+                ),
+              ).then((_) => _refreshData());
+            },
           ),
           IconButton(
             icon: const Icon(Icons.search, color: AppColors.textSecondary),

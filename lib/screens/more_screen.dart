@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'categories_screen.dart';
+import 'sms_transactions_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -146,6 +147,20 @@ class MoreScreen extends StatelessWidget {
               children: [
                 _buildSettingsItem(
                   context,
+                  icon: Icons.sms_outlined,
+                  label: 'SMS Import',
+                  highlight: true,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SmsTransactionsScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildSettingsItem(
+                  context,
                   icon: Icons.settings_outlined,
                   label: 'Configuration',
                   onTap: () {},
@@ -230,28 +245,49 @@ class MoreScreen extends StatelessWidget {
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    bool highlight = false,
   }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: AppColors.textPrimary,
-            size: 32,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 12,
+      child: Container(
+        decoration: highlight
+            ? BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.income.withValues(alpha: 0.15),
+                    AppColors.income.withValues(alpha: 0.05),
+                  ],
+                ),
+                border: Border.all(
+                  color: AppColors.income.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              )
+            : null,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: highlight ? AppColors.income : AppColors.textPrimary,
+              size: 32,
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: highlight ? AppColors.income : AppColors.textPrimary,
+                fontSize: 12,
+                fontWeight: highlight ? FontWeight.w600 : FontWeight.normal,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

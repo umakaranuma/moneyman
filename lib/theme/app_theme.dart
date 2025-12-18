@@ -15,6 +15,7 @@ class AppColors {
   static const Color income = Color(0xFF4A9DFF);
   static const Color expense = Color(0xFFFF6B6B);
   static const Color transfer = Color(0xFF9B59B6);
+  static const Color success = Color(0xFF4CAF50);
   
   // Text colors
   static const Color textPrimary = Color(0xFFFFFFFF);
