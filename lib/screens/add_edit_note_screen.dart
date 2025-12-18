@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/note.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
@@ -33,6 +35,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     } else {
       _titleController = TextEditingController();
       _contentController = TextEditingController();
+      _selectedColor = AppConstants.noteColors.first;
     }
   }
 
@@ -45,12 +48,12 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
 
   Color _getColorFromHex(String? hexColor) {
     if (hexColor == null || hexColor.isEmpty) {
-      return AppColors.surface;
+      return AppColors.primary;
     }
     try {
       return Color(int.parse(hexColor.replaceAll('#', '0xFF')));
     } catch (e) {
-      return AppColors.surface;
+      return AppColors.primary;
     }
   }
 
@@ -72,32 +75,71 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
         StorageService.addNote(note);
       }
 
-      Navigator.pop(context);
+      context.pop();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final activeColor = _getColorFromHex(_selectedColor);
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
+        leading: GestureDetector(
+          onTap: () => context.pop(),
+          child: Container(
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          ),
         ),
         title: Text(
-          widget.note != null ? 'Edit Note' : 'Add Note',
-          style: const TextStyle(
+          widget.note != null ? 'Edit Note' : 'New Note',
+          style: GoogleFonts.inter(
             color: AppColors.textPrimary,
             fontSize: 18,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.save, color: AppColors.textPrimary),
-            onPressed: _saveNote,
+          GestureDetector(
+            onTap: _saveNote,
+            child: Container(
+              margin: const EdgeInsets.all(8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [activeColor, activeColor.withValues(alpha: 0.8)],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: activeColor.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.save_rounded, color: Colors.white, size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Save',
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -106,102 +148,275 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Title
-            TextFormField(
-              controller: _titleController,
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: const InputDecoration(
-                labelText: 'Title',
-                prefixIcon: Icon(Icons.title, color: AppColors.textMuted),
+            // Title Card
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: activeColor.withValues(alpha: 0.2),
+                  width: 1,
+                ),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a title';
-                }
-                return null;
-              },
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 60,
+                    margin: const EdgeInsets.only(left: 16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [activeColor, activeColor.withValues(alpha: 0.5)],
+                      ),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _titleController,
+                      style: GoogleFonts.inter(
+                        color: AppColors.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Note title',
+                        hintStyle: GoogleFonts.inter(
+                          color: AppColors.textMuted,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 20),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter a title';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Content
-            TextFormField(
-              controller: _contentController,
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: const InputDecoration(
-                labelText: 'Content',
-                alignLabelWithHint: true,
+            // Content Card
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: AppColors.surfaceVariant,
+                  width: 1,
+                ),
               ),
-              maxLines: 10,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter some content';
-                }
-                return null;
-              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: activeColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.edit_note_rounded,
+                            color: activeColor,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Content',
+                          style: GoogleFonts.inter(
+                            color: AppColors.textMuted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: TextFormField(
+                      controller: _contentController,
+                      style: GoogleFonts.inter(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                        height: 1.6,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Write your note here...',
+                        hintStyle: GoogleFonts.inter(
+                          color: AppColors.textMuted,
+                          fontSize: 14,
+                        ),
+                        border: InputBorder.none,
+                      ),
+                      maxLines: 12,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter some content';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
 
             const SizedBox(height: 24),
 
             // Color Selection
-            const Text(
-              'Note Color',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.surface,
+                    AppColors.surfaceVariant.withValues(alpha: 0.5),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: AppColors.surfaceVariant,
+                  width: 1,
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: AppConstants.noteColors.map((colorHex) {
-                final isSelected = _selectedColor == colorHex;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedColor = colorHex;
-                    });
-                  },
-                  child: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: _getColorFromHex(colorHex),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isSelected ? AppColors.fab : AppColors.surfaceVariant,
-                        width: isSelected ? 3 : 1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [activeColor, activeColor.withValues(alpha: 0.7)],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.palette_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                       ),
-                    ),
-                    child: isSelected
-                        ? const Icon(
-                            Icons.check,
-                            color: AppColors.fab,
-                          )
-                        : null,
+                      const SizedBox(width: 12),
+                      Text(
+                        'Note Color',
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
                   ),
-                );
-              }).toList(),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: AppConstants.noteColors.map((colorHex) {
+                      final isSelected = _selectedColor == colorHex;
+                      final color = _getColorFromHex(colorHex);
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedColor = colorHex;
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [color, color.withValues(alpha: 0.7)],
+                            ),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.white
+                                  : Colors.transparent,
+                              width: 3,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: color.withValues(alpha: 0.4),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: isSelected
+                              ? const Icon(
+                                  Icons.check_rounded,
+                                  color: Colors.white,
+                                  size: 22,
+                                )
+                              : null,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
             ),
 
             const SizedBox(height: 32),
 
             // Save Button
-            ElevatedButton(
-              onPressed: _saveNote,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.fab,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            GestureDetector(
+              onTap: _saveNote,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [activeColor, activeColor.withValues(alpha: 0.8)],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: activeColor.withValues(alpha: 0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-              ),
-              child: Text(
-                widget.note != null ? 'Update Note' : 'Save Note',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.save_rounded, color: Colors.white, size: 20),
+                    const SizedBox(width: 10),
+                    Text(
+                      widget.note != null ? 'Update Note' : 'Save Note',
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

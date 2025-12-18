@@ -205,9 +205,17 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                   });
                 },
               )
-            : IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-                onPressed: () => Navigator.pop(context),
+            : GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  margin: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary, size: 20),
+                ),
               ),
         title: Text(
           _isSelectionMode 

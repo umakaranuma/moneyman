@@ -1,12 +1,12 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/storage_service.dart';
 import '../models/transaction.dart';
 import '../models/category.dart';
 import '../theme/app_theme.dart';
-import 'add_edit_transaction_screen.dart';
-import 'notes_screen.dart';
-import 'sms_transactions_screen.dart';
+import '../core/router/app_router.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -41,19 +41,13 @@ class _HomeScreenState extends State<HomeScreen>
     if (_tabController.indexIsChanging) return;
 
     if (_tabController.index == 4) {
-      // Note tab
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const NotesScreen()),
-      ).then((_) {
+      // Note tab - use GoRouter
+      context.goToNotes();
+      Future.delayed(const Duration(milliseconds: 100), () {
         _tabController.animateTo(0);
         setState(() {});
       });
     }
-    setState(() {});
-  }
-
-  void _refreshData() {
     setState(() {});
   }
 
@@ -165,6 +159,7 @@ class _HomeScreenState extends State<HomeScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             // Header with Month Selector
@@ -188,17 +183,33 @@ class _HomeScreenState extends State<HomeScreen>
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AddEditTransactionScreen(),
-            ),
-          ).then((_) => _refreshData());
+      floatingActionButton: _buildFAB(),
+    );
+  }
+
+  Widget _buildFAB() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 80),
+      child: GestureDetector(
+        onTap: () {
+          context.goToAddTransaction();
         },
-        backgroundColor: AppColors.fab,
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
+        child: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+        ),
       ),
     );
   }
@@ -207,86 +218,150 @@ class _HomeScreenState extends State<HomeScreen>
     // Show year only in Monthly view, month + year otherwise
     final headerText = _tabController.index == 2
         ? '${_selectedMonth.year}'
-        : DateFormat('MMM yyyy').format(_selectedMonth);
+        : DateFormat('MMMM yyyy').format(_selectedMonth);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left, color: AppColors.textPrimary),
-            onPressed: _previousMonth,
+          _buildCircleButton(
+            icon: Icons.chevron_left_rounded,
+            onTap: _previousMonth,
           ),
+          const SizedBox(width: 8),
           Text(
             headerText,
-            style: const TextStyle(
+            style: GoogleFonts.inter(
               color: AppColors.textPrimary,
               fontSize: 18,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right, color: AppColors.textPrimary),
-            onPressed: _nextMonth,
+          const SizedBox(width: 8),
+          _buildCircleButton(
+            icon: Icons.chevron_right_rounded,
+            onTap: _nextMonth,
           ),
           const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.download_outlined, color: AppColors.income),
-            tooltip: 'Import from SMS',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SmsTransactionsScreen(),
-                ),
-              ).then((_) => _refreshData());
-            },
+          _buildGlassButton(
+            icon: Icons.sms_outlined,
+            color: AppColors.income,
+            onTap: () => context.goToSmsTransactions(),
           ),
-          IconButton(
-            icon: const Icon(Icons.search, color: AppColors.textSecondary),
-            onPressed: () {},
+          const SizedBox(width: 8),
+          _buildGlassButton(
+            icon: Icons.search_rounded,
+            color: AppColors.textSecondary,
+            onTap: () {},
           ),
-          IconButton(
-            icon: const Icon(Icons.tune, color: AppColors.textSecondary),
-            onPressed: () {},
+          const SizedBox(width: 8),
+          _buildGlassButton(
+            icon: Icons.tune_rounded,
+            color: AppColors.textSecondary,
+            onTap: () {},
           ),
         ],
       ),
     );
   }
 
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.surfaceVariant, width: 1),
+        ),
+        child: Icon(icon, color: AppColors.textPrimary, size: 20),
+      ),
+    );
+  }
+
+  Widget _buildGlassButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
+        ),
+        child: Icon(icon, color: color, size: 20),
+      ),
+    );
+  }
+
   Widget _buildTabs() {
     return Container(
-      decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.surfaceVariant, width: 1),
-        ),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.surfaceVariant, width: 1),
       ),
       child: TabBar(
         controller: _tabController,
         isScrollable: false,
-        indicatorColor: AppColors.tabIndicator,
-        indicatorWeight: 3,
-        labelColor: AppColors.textPrimary,
-        unselectedLabelColor: AppColors.textMuted,
-        labelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-        unselectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.normal,
-          fontSize: 14,
+        indicator: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(12),
         ),
-        tabs: _tabs.map((tab) => Tab(text: tab)).toList(),
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicatorPadding: const EdgeInsets.all(4),
+        dividerColor: Colors.transparent,
+        labelColor: Colors.white,
+        unselectedLabelColor: AppColors.textMuted,
+        labelStyle: GoogleFonts.inter(
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
+        unselectedLabelStyle: GoogleFonts.inter(
+          fontWeight: FontWeight.w400,
+          fontSize: 12,
+        ),
+        tabs: _tabs.map((tab) => Tab(text: tab, height: 40)).toList(),
       ),
     );
   }
 
   Widget _buildSummaryBar(Map<String, double> summary) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        border: Border(
-          bottom: BorderSide(color: AppColors.surfaceVariant, width: 1),
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.surface,
+            AppColors.surfaceVariant.withValues(alpha: 0.5),
+          ],
         ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -295,31 +370,21 @@ class _HomeScreenState extends State<HomeScreen>
             'Income',
             summary['income']!,
             AppColors.income,
-            true,
+            Icons.arrow_downward_rounded,
           ),
+          Container(width: 1, height: 40, color: AppColors.surfaceVariant),
           _buildSummaryItem(
             'Expenses',
             summary['expense']!,
             AppColors.expense,
-            false,
+            Icons.arrow_upward_rounded,
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const Text(
-                'Total',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                _formatCurrency(summary['total']!.abs()),
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+          Container(width: 1, height: 40, color: AppColors.surfaceVariant),
+          _buildSummaryItem(
+            'Balance',
+            summary['total']!,
+            AppColors.textPrimary, // White for Balance
+            Icons.account_balance_wallet_rounded,
           ),
         ],
       ),
@@ -330,25 +395,44 @@ class _HomeScreenState extends State<HomeScreen>
     String label,
     double value,
     Color color,
-    bool isIncome,
+    IconData icon,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          _formatCurrency(value),
-          style: TextStyle(
-            color: color,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+    return Expanded(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(icon, color: color, size: 12),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  color: AppColors.textMuted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          Text(
+            'Rs. ${_formatCurrency(value.abs())}',
+            style: GoogleFonts.inter(
+              color: color,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -370,6 +454,7 @@ class _HomeScreenState extends State<HomeScreen>
           return _buildEmptyState();
         }
         return ListView.builder(
+          padding: const EdgeInsets.only(bottom: 100),
           itemCount: sortedDates.length,
           itemBuilder: (context, index) {
             final date = sortedDates[index];
@@ -387,6 +472,7 @@ class _HomeScreenState extends State<HomeScreen>
     final yearlyData = _getYearlyData(allTransactions);
 
     return ListView(
+      padding: const EdgeInsets.only(bottom: 100),
       children: [
         // Current month with weekly breakdown
         _buildCurrentMonthSection(allTransactions),
@@ -541,12 +627,19 @@ class _HomeScreenState extends State<HomeScreen>
     final isHighlighted = _isCurrentWeek(week);
 
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isHighlighted ? AppColors.surface : Colors.transparent,
-        border: const Border(
-          bottom: BorderSide(color: AppColors.surfaceVariant, width: 0.5),
-        ),
+        color: isHighlighted
+            ? AppColors.primary.withValues(alpha: 0.1)
+            : AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: isHighlighted
+            ? Border.all(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                width: 1,
+              )
+            : null,
       ),
       child: Row(
         children: [
@@ -554,18 +647,23 @@ class _HomeScreenState extends State<HomeScreen>
             width: 120,
             child: Text(
               '$startStr  ~  $endStr',
-              style: TextStyle(
-                fontSize: 14,
+              style: GoogleFonts.inter(
+                fontSize: 13,
                 color: isHighlighted
-                    ? AppColors.textPrimary
+                    ? AppColors.primary
                     : AppColors.textSecondary,
+                fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
           ),
           Expanded(
             child: Text(
               'Rs. ${_formatCurrency(week['income'])}',
-              style: const TextStyle(fontSize: 14, color: AppColors.income),
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: AppColors.income,
+                fontWeight: FontWeight.w500,
+              ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -575,15 +673,16 @@ class _HomeScreenState extends State<HomeScreen>
               children: [
                 Text(
                   'Rs. ${_formatCurrency(week['expense'])}',
-                  style: const TextStyle(
-                    fontSize: 14,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
                     color: AppColors.expense,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
                   'Rs. ${_formatCurrency(week['total'])}',
-                  style: TextStyle(
-                    fontSize: 11,
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
                     color: week['total'] >= 0
                         ? AppColors.textSecondary
                         : AppColors.textMuted,
@@ -632,12 +731,19 @@ class _HomeScreenState extends State<HomeScreen>
     required bool isHighlighted,
   }) {
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isHighlighted ? AppColors.surface : Colors.transparent,
-        border: const Border(
-          bottom: BorderSide(color: AppColors.surfaceVariant, width: 0.5),
-        ),
+        color: isHighlighted
+            ? AppColors.primary.withValues(alpha: 0.1)
+            : AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: isHighlighted
+            ? Border.all(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                width: 1,
+              )
+            : null,
       ),
       child: Row(
         children: [
@@ -648,8 +754,8 @@ class _HomeScreenState extends State<HomeScreen>
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
@@ -657,8 +763,8 @@ class _HomeScreenState extends State<HomeScreen>
                 if (dateRange.isNotEmpty)
                   Text(
                     dateRange,
-                    style: const TextStyle(
-                      fontSize: 11,
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
                       color: AppColors.textMuted,
                     ),
                   ),
@@ -668,7 +774,11 @@ class _HomeScreenState extends State<HomeScreen>
           Expanded(
             child: Text(
               'Rs. ${_formatCurrency(income)}',
-              style: const TextStyle(fontSize: 14, color: AppColors.income),
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: AppColors.income,
+                fontWeight: FontWeight.w500,
+              ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -678,15 +788,16 @@ class _HomeScreenState extends State<HomeScreen>
               children: [
                 Text(
                   'Rs. ${_formatCurrency(expense)}',
-                  style: const TextStyle(
-                    fontSize: 14,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
                     color: AppColors.expense,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
                   'Rs. ${_formatCurrency(total)}',
-                  style: TextStyle(
-                    fontSize: 11,
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
                     color: total >= 0
                         ? AppColors.textSecondary
                         : AppColors.textMuted,
@@ -760,28 +871,51 @@ class _HomeScreenState extends State<HomeScreen>
         // Accounts Section
         Container(
           decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.surface,
+                AppColors.surfaceVariant.withValues(alpha: 0.5),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              width: 1,
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(
-                          Icons.account_balance_wallet_outlined,
-                          color: AppColors.textPrimary,
-                          size: 20,
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                AppColors.primary,
+                                AppColors.primaryLight,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.account_balance_wallet_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 12),
                         Text(
                           'Accounts',
-                          style: TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,
@@ -789,21 +923,32 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                       ],
                     ),
-                    Text(
-                      dateRangeStr,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textMuted,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        dateRangeStr,
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const Divider(height: 1, color: AppColors.surfaceVariant),
+              Container(height: 1, color: AppColors.surfaceVariant),
 
               // Stats
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
                     _buildStatRow(
@@ -812,19 +957,19 @@ class _HomeScreenState extends State<HomeScreen>
                       '$comparisonPercent%',
                       isPercentage: true,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     _buildStatRow(
                       'Expenses',
                       '(Cash, Accounts)',
                       'Rs. ${_formatCurrency(cashExpenses)}',
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     _buildStatRow(
                       'Expenses',
                       '(Card)',
                       'Rs. ${_formatCurrency(cardExpenses)}',
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     _buildStatRow(
                       'Transfer',
                       '(Cash, Accounts→)',
@@ -841,33 +986,44 @@ class _HomeScreenState extends State<HomeScreen>
         // Export Button
         Container(
           decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.income.withValues(alpha: 0.1),
+                AppColors.income.withValues(alpha: 0.05),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppColors.income.withValues(alpha: 0.2),
+              width: 1,
+            ),
           ),
           child: InkWell(
             onTap: () {
-              // TODO: Implement export
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Export feature coming soon!')),
               );
             },
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.table_chart_outlined,
-                    color: Colors.green.shade600,
-                    size: 20,
+                  const Icon(
+                    Icons.table_chart_rounded,
+                    color: AppColors.income,
+                    size: 22,
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
+                  const SizedBox(width: 10),
+                  Text(
                     'Export data to Excel',
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 14,
-                      color: AppColors.textPrimary,
+                      color: AppColors.income,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -875,31 +1031,52 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
         ),
+        const SizedBox(height: 100),
       ],
     );
   }
 
   Widget _buildBudgetSection() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.surface,
+            AppColors.surfaceVariant.withValues(alpha: 0.5),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.1),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(
-                Icons.pie_chart_outline,
-                color: AppColors.textPrimary,
-                size: 20,
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.primary, AppColors.secondary],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.pie_chart_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 12),
               Text(
                 'Budget',
-                style: TextStyle(
+                style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
@@ -909,18 +1086,25 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           TextButton(
             onPressed: () {
-              // TODO: Navigate to budget settings
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Budget settings coming soon!')),
               );
             },
-            child: const Row(
+            child: Row(
               children: [
                 Text(
                   'Budget Setting',
-                  style: TextStyle(fontSize: 14, color: AppColors.textMuted),
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-                Icon(Icons.chevron_right, color: AppColors.textMuted, size: 20),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ],
             ),
           ),
@@ -942,7 +1126,7 @@ class _HomeScreenState extends State<HomeScreen>
           children: [
             Text(
               label,
-              style: const TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 14,
                 color: AppColors.textPrimary,
               ),
@@ -950,16 +1134,28 @@ class _HomeScreenState extends State<HomeScreen>
             const SizedBox(width: 4),
             Text(
               sublabel,
-              style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: AppColors.textMuted,
+              ),
             ),
           ],
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: isPercentage
+                ? AppColors.primary.withValues(alpha: 0.1)
+                : AppColors.surfaceVariant,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: isPercentage ? AppColors.primary : AppColors.textPrimary,
+            ),
           ),
         ),
       ],
@@ -971,20 +1167,31 @@ class _HomeScreenState extends State<HomeScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.account_balance_wallet_outlined,
-            size: 64,
-            color: AppColors.textMuted.withValues(alpha: 0.5),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.account_balance_wallet_outlined,
+              size: 48,
+              color: AppColors.primary.withValues(alpha: 0.5),
+            ),
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'No transactions',
-            style: TextStyle(fontSize: 16, color: AppColors.textMuted),
+          const SizedBox(height: 24),
+          Text(
+            'No transactions yet',
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Tap + to add your first transaction',
-            style: TextStyle(fontSize: 14, color: AppColors.textMuted),
+            style: GoogleFonts.inter(fontSize: 14, color: AppColors.textMuted),
           ),
         ],
       ),
@@ -1045,29 +1252,46 @@ class _HomeScreenState extends State<HomeScreen>
         if (selectedDayTransactions.isNotEmpty)
           Container(
             height: 200,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.surface,
-              border: Border(
-                top: BorderSide(color: AppColors.surfaceVariant, width: 1),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, -5),
+                ),
+              ],
             ),
             child: Column(
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+                    horizontal: 20,
+                    vertical: 12,
                   ),
-                  color: AppColors.surfaceVariant,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.1),
+                        AppColors.primaryLight.withValues(alpha: 0.05),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        DateFormat('MMM dd, yyyy').format(_selectedDay),
-                        style: const TextStyle(
+                        DateFormat('MMMM dd, yyyy').format(_selectedDay),
+                        style: GoogleFonts.inter(
                           color: AppColors.textPrimary,
                           fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -1114,7 +1338,8 @@ class _HomeScreenState extends State<HomeScreen>
       children: [
         // Week day headers
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          margin: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: weekDays.map((day) {
               final isWeekend = day == 'Sun' || day == 'Sat';
@@ -1122,12 +1347,12 @@ class _HomeScreenState extends State<HomeScreen>
                 child: Center(
                   child: Text(
                     day,
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 12,
                       color: isWeekend
-                          ? AppColors.expense
+                          ? AppColors.secondary
                           : AppColors.textMuted,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -1137,75 +1362,78 @@ class _HomeScreenState extends State<HomeScreen>
         ),
         // Calendar grid
         Expanded(
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7,
-              childAspectRatio: 0.65,
-            ),
-            itemCount: 42, // 6 weeks x 7 days
-            itemBuilder: (context, index) {
-              final dayOffset = index - firstWeekday;
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 7,
+                childAspectRatio: 0.65,
+              ),
+              itemCount: 42, // 6 weeks x 7 days
+              itemBuilder: (context, index) {
+                final dayOffset = index - firstWeekday;
 
-              if (dayOffset < 0 || dayOffset >= daysInMonth) {
-                // Previous or next month days
-                DateTime otherDate;
-                if (dayOffset < 0) {
-                  final prevMonth = DateTime(
-                    _selectedMonth.year,
-                    _selectedMonth.month,
-                    0,
-                  );
-                  otherDate = DateTime(
-                    prevMonth.year,
-                    prevMonth.month,
-                    prevMonth.day + dayOffset + 1,
-                  );
-                } else {
-                  otherDate = DateTime(
-                    _selectedMonth.year,
-                    _selectedMonth.month,
-                    dayOffset + 1,
+                if (dayOffset < 0 || dayOffset >= daysInMonth) {
+                  // Previous or next month days
+                  DateTime otherDate;
+                  if (dayOffset < 0) {
+                    final prevMonth = DateTime(
+                      _selectedMonth.year,
+                      _selectedMonth.month,
+                      0,
+                    );
+                    otherDate = DateTime(
+                      prevMonth.year,
+                      prevMonth.month,
+                      prevMonth.day + dayOffset + 1,
+                    );
+                  } else {
+                    otherDate = DateTime(
+                      _selectedMonth.year,
+                      _selectedMonth.month,
+                      dayOffset + 1,
+                    );
+                  }
+
+                  final dayTotals = _getDayTotals(otherDate);
+
+                  return _buildCalendarDay(
+                    otherDate.day,
+                    dayTotals['income']!,
+                    dayTotals['expense']!,
+                    isCurrentMonth: false,
+                    isToday: false,
+                    isSelected: false,
+                    isSunday: index % 7 == 0,
+                    onTap: null,
                   );
                 }
 
-                final dayTotals = _getDayTotals(otherDate);
+                final currentDate = DateTime(
+                  _selectedMonth.year,
+                  _selectedMonth.month,
+                  dayOffset + 1,
+                );
+                final dayTotals = _getDayTotals(currentDate);
+                final isToday = _isToday(currentDate);
+                final isSelected = _isSameDay(currentDate, _selectedDay);
 
                 return _buildCalendarDay(
-                  otherDate.day,
+                  dayOffset + 1,
                   dayTotals['income']!,
                   dayTotals['expense']!,
-                  isCurrentMonth: false,
-                  isToday: false,
-                  isSelected: false,
+                  isCurrentMonth: true,
+                  isToday: isToday,
+                  isSelected: isSelected,
                   isSunday: index % 7 == 0,
-                  onTap: null,
+                  onTap: () {
+                    setState(() {
+                      _selectedDay = currentDate;
+                    });
+                  },
                 );
-              }
-
-              final currentDate = DateTime(
-                _selectedMonth.year,
-                _selectedMonth.month,
-                dayOffset + 1,
-              );
-              final dayTotals = _getDayTotals(currentDate);
-              final isToday = _isToday(currentDate);
-              final isSelected = _isSameDay(currentDate, _selectedDay);
-
-              return _buildCalendarDay(
-                dayOffset + 1,
-                dayTotals['income']!,
-                dayTotals['expense']!,
-                isCurrentMonth: true,
-                isToday: isToday,
-                isSelected: isSelected,
-                isSunday: index % 7 == 0,
-                onTap: () {
-                  setState(() {
-                    _selectedDay = currentDate;
-                  });
-                },
-              );
-            },
+              },
+            ),
           ),
         ),
       ],
@@ -1233,66 +1461,87 @@ class _HomeScreenState extends State<HomeScreen>
     required bool isSunday,
     VoidCallback? onTap,
   }) {
-    final formatter = NumberFormat('#,##0.00', 'en_US');
+    final formatter = NumberFormat('#,##0', 'en_US');
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        margin: const EdgeInsets.all(2),
         decoration: BoxDecoration(
+          gradient: isSelected
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.primary, AppColors.primaryLight],
+                )
+              : isToday
+              ? LinearGradient(
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.2),
+                    AppColors.primaryLight.withValues(alpha: 0.1),
+                  ],
+                )
+              : null,
+          color: isSelected || isToday
+              ? null
+              : AppColors.surface.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? AppColors.textPrimary
+                ? AppColors.primary
+                : isToday
+                ? AppColors.primary.withValues(alpha: 0.3)
                 : AppColors.surfaceVariant.withValues(alpha: 0.3),
-            width: isSelected ? 1.5 : 0.5,
+            width: isSelected ? 2 : 1,
           ),
-          color: isSelected ? AppColors.surface : Colors.transparent,
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Day number
-            Padding(
-              padding: const EdgeInsets.only(left: 4, top: 2),
-              child: Text(
-                '$day',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                  color: !isCurrentMonth
-                      ? AppColors.textMuted.withValues(alpha: 0.3)
-                      : isSunday
-                      ? AppColors.expense
-                      : AppColors.textPrimary,
-                ),
+            Text(
+              '$day',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: isToday || isSelected
+                    ? FontWeight.w700
+                    : FontWeight.w500,
+                color: isSelected
+                    ? Colors.white
+                    : !isCurrentMonth
+                    ? AppColors.textMuted.withValues(alpha: 0.3)
+                    : isSunday
+                    ? AppColors.secondary
+                    : AppColors.textPrimary,
               ),
             ),
             // Income and expense amounts
             if (isCurrentMonth) ...[
               if (income > 0)
-                Padding(
-                  padding: const EdgeInsets.only(left: 2, right: 2),
-                  child: Text(
-                    formatter.format(income),
-                    style: const TextStyle(
-                      fontSize: 8,
-                      color: AppColors.income,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                Text(
+                  formatter.format(income),
+                  style: GoogleFonts.inter(
+                    fontSize: 7,
+                    color: isSelected
+                        ? Colors.white.withValues(alpha: 0.9)
+                        : AppColors.income,
+                    fontWeight: FontWeight.w500,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               if (expense > 0)
-                Padding(
-                  padding: const EdgeInsets.only(left: 2, right: 2),
-                  child: Text(
-                    formatter.format(expense),
-                    style: const TextStyle(
-                      fontSize: 8,
-                      color: AppColors.expense,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                Text(
+                  formatter.format(expense),
+                  style: GoogleFonts.inter(
+                    fontSize: 7,
+                    color: isSelected
+                        ? Colors.white.withValues(alpha: 0.8)
+                        : AppColors.expense,
+                    fontWeight: FontWeight.w500,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
             ],
           ],
@@ -1311,56 +1560,142 @@ class _HomeScreenState extends State<HomeScreen>
 
     final dayName = DateFormat('E').format(date);
     final dateStr = DateFormat('MM.yyyy').format(date);
+    final isToday = _isToday(date);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Date Header
         Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          color: AppColors.surfaceVariant,
+          decoration: BoxDecoration(
+            gradient: isToday
+                ? LinearGradient(
+                    colors: [
+                      AppColors.primary.withValues(alpha: 0.15),
+                      AppColors.primaryLight.withValues(alpha: 0.05),
+                    ],
+                  )
+                : null,
+            color: isToday ? null : AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: isToday
+                ? Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    width: 1,
+                  )
+                : null,
+          ),
           child: Row(
             children: [
-              Text(
-                '${date.day}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(4),
+                  gradient: isToday
+                      ? const LinearGradient(
+                          colors: [AppColors.primary, AppColors.primaryLight],
+                        )
+                      : null,
+                  color: isToday ? null : AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(
-                  dayName,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
+                child: Center(
+                  child: Text(
+                    '${date.day}',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isToday ? Colors.white : AppColors.textPrimary,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Text(
-                dateStr,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isToday
+                          ? AppColors.primary.withValues(alpha: 0.2)
+                          : AppColors.surface,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      isToday ? 'Today' : dayName,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: isToday
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    dateStr,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
               ),
               const Spacer(),
-              Text(
-                'Rs. ${_formatCurrency(dayIncome)}',
-                style: const TextStyle(fontSize: 12, color: AppColors.income),
-              ),
-              const SizedBox(width: 24),
-              Text(
-                'Rs. ${_formatCurrency(dayExpense)}',
-                style: const TextStyle(fontSize: 12, color: AppColors.expense),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: AppColors.income,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Rs. ${_formatCurrency(dayIncome)}',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.income,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: AppColors.expense,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Rs. ${_formatCurrency(dayExpense)}',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.expense,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
@@ -1381,57 +1716,52 @@ class _HomeScreenState extends State<HomeScreen>
 
     return InkWell(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                AddEditTransactionScreen(transaction: transaction),
-          ),
-        ).then((_) => _refreshData());
+        context.goToEditTransaction(transaction);
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: AppColors.surfaceVariant, width: 0.5),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: AppColors.surfaceVariant.withValues(alpha: 0.3),
+            width: 1,
           ),
         ),
         child: Row(
           children: [
             // Category with emoji
-            SizedBox(
-              width: 90,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      if (emoji.isNotEmpty)
-                        Text(emoji, style: const TextStyle(fontSize: 14)),
-                      if (emoji.isNotEmpty) const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          transaction.category ?? 'Other',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: transaction.type == TransactionType.income
+                    ? AppColors.income.withValues(alpha: 0.1)
+                    : transaction.type == TransactionType.expense
+                    ? AppColors.expense.withValues(alpha: 0.1)
+                    : AppColors.transfer.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: emoji.isNotEmpty
+                    ? Text(emoji, style: const TextStyle(fontSize: 20))
+                    : Icon(
+                        transaction.type == TransactionType.income
+                            ? Icons.arrow_downward_rounded
+                            : transaction.type == TransactionType.expense
+                            ? Icons.arrow_upward_rounded
+                            : Icons.swap_horiz_rounded,
+                        color: transaction.type == TransactionType.income
+                            ? AppColors.income
+                            : transaction.type == TransactionType.expense
+                            ? AppColors.expense
+                            : AppColors.transfer,
+                        size: 20,
                       ),
-                    ],
-                  ),
-                  if (subcategory.isNotEmpty)
-                    Text(
-                      subcategory,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                ],
               ),
             ),
+            const SizedBox(width: 14),
 
             // Title and Account
             Expanded(
@@ -1440,32 +1770,59 @@ class _HomeScreenState extends State<HomeScreen>
                 children: [
                   Text(
                     transaction.title,
-                    style: const TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 14,
                       color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  Text(
-                    _getAccountLabel(transaction),
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textMuted,
-                    ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Text(
+                        transaction.category ?? 'Other',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                      if (subcategory.isNotEmpty) ...[
+                        Text(
+                          ' • $subcategory',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
             ),
 
             // Amount
-            Text(
-              'Rs. ${_formatCurrency(transaction.amount)}',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: transaction.type == TransactionType.income
-                    ? AppColors.income
-                    : AppColors.expense,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  'Rs. ${_formatCurrency(transaction.amount)}',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: transaction.type == TransactionType.income
+                        ? AppColors.income
+                        : AppColors.expense,
+                  ),
+                ),
+                Text(
+                  _getAccountLabel(transaction),
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

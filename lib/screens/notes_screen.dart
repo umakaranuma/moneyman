@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/note.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/note_card.dart';
-import 'add_edit_note_screen.dart';
+import '../core/router/app_router.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
@@ -21,62 +23,50 @@ class _NotesScreenState extends State<NotesScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Notes',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
+        leading: GestureDetector(
+          onTap: () => context.pop(),
+          child: Container(
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
           ),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.note_alt_rounded, color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Notes',
+              style: GoogleFonts.inter(
+                color: AppColors.textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
       body: notes.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.note_outlined,
-                    size: 64,
-                    color: AppColors.textMuted.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No notes yet',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Tap + to create your first note',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                ],
-              ),
-            )
+          ? _buildEmptyState()
           : ListView.builder(
+              padding: const EdgeInsets.only(top: 8, bottom: 100),
               itemCount: notes.length,
               itemBuilder: (context, index) {
                 final note = notes[index];
                 return NoteCard(
                   note: note,
                   onTap: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AddEditNoteScreen(note: note),
-                      ),
-                    );
-                    setState(() {});
+                    context.goToEditNote(note);
                   },
                   onDelete: () {
                     _showDeleteDialog(note);
@@ -84,18 +74,73 @@ class _NotesScreenState extends State<NotesScreen> {
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AddEditNoteScreen(),
+      floatingActionButton: _buildFAB(),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
-          );
-          setState(() {});
-        },
-        backgroundColor: AppColors.fab,
-        child: const Icon(Icons.add, color: Colors.white),
+            child: const Icon(
+              Icons.note_alt_outlined,
+              size: 56,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'No notes yet',
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tap + to create your first note',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFAB() {
+    return GestureDetector(
+      onTap: () async {
+        context.goToAddNote();
+      },
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.add_rounded,
+          color: Colors.white,
+          size: 26,
+        ),
       ),
     );
   }
@@ -105,31 +150,73 @@ class _NotesScreenState extends State<NotesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text(
-          'Delete Note',
-          style: TextStyle(color: AppColors.textPrimary),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.expense.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.delete_rounded, color: AppColors.expense, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Delete Note',
+              style: GoogleFonts.inter(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
         content: Text(
           'Are you sure you want to delete "${note.title}"?',
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: GoogleFonts.inter(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child:
-                const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: AppColors.textMuted),
+            ),
           ),
-          TextButton(
-            onPressed: () {
+          GestureDetector(
+            onTap: () {
               StorageService.deleteNote(note.id);
               Navigator.pop(context);
               setState(() {});
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Note deleted')),
+                SnackBar(
+                  content: Row(
+                    children: [
+                      const Icon(Icons.check_circle_rounded, color: AppColors.income, size: 18),
+                      const SizedBox(width: 10),
+                      Text('Note deleted', style: GoogleFonts.inter()),
+                    ],
+                  ),
+                  backgroundColor: AppColors.surface,
+                ),
               );
             },
-            child:
-                const Text('Delete', style: TextStyle(color: AppColors.expense)),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.expense.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                'Delete',
+                style: GoogleFonts.inter(
+                  color: AppColors.expense,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
         ],
       ),
