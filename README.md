@@ -1,4 +1,4 @@
-# Money Manager & Notes App
+# Finzo
 
 A Flutter application for managing personal finances and taking notes, with all data stored locally using Hive.
 

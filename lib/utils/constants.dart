@@ -1,6 +1,6 @@
 class AppConstants {
   // App Info
-  static const String appName = 'Money Manager';
+  static const String appName = 'Finzo';
   
   // Transaction Categories
   static const List<String> expenseCategories = [

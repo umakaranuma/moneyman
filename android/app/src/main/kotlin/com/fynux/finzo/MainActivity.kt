@@ -1,5 +1,6 @@
-package com.example.money_man
+package com.fynux.finzo
 
 import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity : FlutterActivity()
+
