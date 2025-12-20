@@ -105,13 +105,53 @@ class _HomeScreenState extends State<HomeScreen>
 
       // Convert ParsedSmsTransaction to Transaction
       return smsTransactions.map((smsT) {
-        // Detect if this is a transfer (ATM withdrawal, cash deposit) vs actual expense/income
+        // Detect if this is a transfer (ATM withdrawal, cash deposit, bank-to-bank transfer) vs actual expense/income
         final isTransfer = _isSmsTransactionTransfer(smsT);
+
+        // Extract account information for transfers
+        String? fromAccount;
+        String? toAccount;
+
+        if (isTransfer) {
+          if (smsT.isCredit) {
+            // Money coming in (cash deposit to bank, or transfer received)
+            toAccount = smsT.accountNumber ?? 'Bank Account';
+            fromAccount = 'Cash'; // Default for cash deposits
+          } else {
+            // Money going out (ATM withdrawal, or transfer to another account)
+            fromAccount = smsT.accountNumber ?? 'Bank Account';
+            // Check if it's a bank-to-bank transfer (has "TO ACCOUNT" or similar)
+            final upperMessage = smsT.rawMessage.toUpperCase();
+            if (upperMessage.contains('TO ACCOUNT') ||
+                upperMessage.contains('TRANSFERRED TO') ||
+                upperMessage.contains('NEFT') ||
+                upperMessage.contains('RTGS') ||
+                upperMessage.contains('IMPS') ||
+                upperMessage.contains('UPI')) {
+              // Bank-to-bank transfer - try to extract recipient account
+              toAccount =
+                  _extractRecipientAccount(smsT.rawMessage) ?? 'Other Account';
+            } else {
+              // ATM withdrawal
+              toAccount = 'Cash';
+            }
+          }
+        }
 
         return Transaction(
           id: 'sms_${smsT.id}',
           title: isTransfer
-              ? '${smsT.bankName} ${smsT.isCredit ? "Deposit" : "Withdrawal"}'
+              ? (smsT.isCredit
+                    ? '${smsT.bankName} Deposit'
+                    : (smsT.rawMessage.toUpperCase().contains('TO ACCOUNT') ||
+                              smsT.rawMessage.toUpperCase().contains(
+                                'TRANSFERRED TO',
+                              ) ||
+                              smsT.rawMessage.toUpperCase().contains('NEFT') ||
+                              smsT.rawMessage.toUpperCase().contains('RTGS') ||
+                              smsT.rawMessage.toUpperCase().contains('IMPS')
+                          ? '${smsT.bankName} Transfer'
+                          : '${smsT.bankName} Withdrawal'))
               : '${smsT.bankName} ${smsT.isCredit ? "Credit" : "Debit"}',
           amount: smsT.amount,
           type: isTransfer
@@ -126,8 +166,8 @@ class _HomeScreenState extends State<HomeScreen>
           note:
               'From SMS: ${smsT.rawMessage.substring(0, smsT.rawMessage.length > 50 ? 50 : smsT.rawMessage.length)}${smsT.rawMessage.length > 50 ? "..." : ""}',
           accountType: AccountType.bank,
-          fromAccount: isTransfer && !smsT.isCredit ? 'Bank Account' : null,
-          toAccount: isTransfer && smsT.isCredit ? 'Bank Account' : null,
+          fromAccount: fromAccount,
+          toAccount: toAccount,
         );
       }).toList();
     } catch (e) {
@@ -136,14 +176,39 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  /// Detect if SMS transaction is a transfer (ATM withdrawal/deposit) vs actual expense/income
+  /// Detect if SMS transaction is a transfer (ATM withdrawal/cash deposit) vs actual expense/income
   ///
   /// Rule: Not all debits are expenses!
-  /// - Debit = Transfer (ATM, withdrawal, deposit) → NOT an expense (just moving money)
+  /// - Debit = Transfer (ATM withdrawal) → NOT an expense (just moving money)
   /// - Debit = Actual Expense (payment, purchase, bill) → IS an expense (money spent)
+  /// - Credit = Bank Deposit (money received) → IS income (not a transfer)
+  /// - Credit = Cash Deposit to Bank → IS transfer (moving money)
   bool _isSmsTransactionTransfer(ParsedSmsTransaction smsT) {
     final upperMessage = smsT.rawMessage.toUpperCase();
 
+    // If it's a credit (money coming in), check if it's a bank deposit (income) or cash deposit (transfer)
+    if (smsT.isCredit) {
+      // Bank deposit (money credited to account) = Income, NOT transfer
+      // Cash deposit (depositing cash to bank) = Transfer
+
+      // Check if it's a cash deposit (transfer from cash to bank)
+      final cashDepositKeywords = [
+        'CASH DEPOSIT',
+        'CASH DEPOSITED',
+        'DEPOSIT CASH',
+        'CASH DEPOSITED TO',
+      ];
+
+      final isCashDeposit = cashDepositKeywords.any(
+        (keyword) => upperMessage.contains(keyword),
+      );
+
+      // If it's a cash deposit, it's a transfer
+      // Otherwise, bank deposits are income (money received)
+      return isCashDeposit;
+    }
+
+    // For debits (money going out)
     // First, check if it's clearly an actual expense/payment
     final expenseKeywords = [
       'PAYMENT',
@@ -183,16 +248,14 @@ class _HomeScreenState extends State<HomeScreen>
       return false;
     }
 
-    // Transfer keywords - ATM withdrawals, cash deposits, transfers between accounts
+    // Transfer keywords - ATM withdrawals, transfers between accounts
+    // Note: "DEPOSIT" alone is NOT a transfer keyword for debits
     final transferKeywords = [
       'ATM',
       'CASH WITHDRAWAL',
       'CASH WITHDRAWN',
       'WITHDRAWAL',
       'WITHDRAWN',
-      'CASH DEPOSIT',
-      'DEPOSITED',
-      'CASH DEPOSITED',
       'TRANSFER',
       'TRANSFERRED',
       'NEFT',
@@ -218,6 +281,43 @@ class _HomeScreenState extends State<HomeScreen>
     // Default: If unclear, treat debit as expense (safer assumption)
     // But user can manually change it later
     return false;
+  }
+
+  /// Extract recipient account number from SMS message for bank-to-bank transfers
+  String? _extractRecipientAccount(String message) {
+    final upperMessage = message.toUpperCase();
+
+    // Patterns to find recipient account in transfer messages
+    final patterns = [
+      // "TO ACCOUNT XXXX" or "TO A/C XXXX"
+      RegExp(
+        r'TO\s+(?:ACCOUNT|A/C|ACCT)[:\s]*[X*]*([0-9]{4,})',
+        caseSensitive: false,
+      ),
+      // "TRANSFERRED TO XXXX"
+      RegExp(r'TRANSFERRED\s+TO[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
+      // "BENEFICIARY XXXX" or "BEN XXXX"
+      RegExp(r'BEN(?:EFICIARY)?[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
+      // UPI: "TO XXXX@bank"
+      RegExp(r'TO\s+([A-Z0-9]+@[A-Z]+)', caseSensitive: false),
+      // Account number after "TO" keyword
+      RegExp(r'TO[:\s]+[A-Z\s]*([0-9]{4,})', caseSensitive: false),
+    ];
+
+    for (final pattern in patterns) {
+      final match = pattern.firstMatch(upperMessage);
+      if (match != null && match.group(1) != null) {
+        final account = match.group(1)!;
+        // If it's a UPI ID, return as is, otherwise mask it
+        if (account.contains('@')) {
+          return account;
+        } else {
+          return '****${account.length > 4 ? account.substring(account.length - 4) : account}';
+        }
+      }
+    }
+
+    return null;
   }
 
   Map<DateTime, List<Transaction>> _groupTransactionsByDate(

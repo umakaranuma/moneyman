@@ -56,6 +56,25 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       _selectedTime = TimeOfDay.fromDateTime(widget.transaction!.date);
       _fromAccount = widget.transaction!.fromAccount;
       _toAccount = widget.transaction!.toAccount;
+      
+      // Validate category - if it's not in default categories, reset it
+      // This handles SMS transactions with categories like "Bank Transaction" or "Transfer"
+      if (_selectedCategory != null && _transactionType != TransactionType.transfer) {
+        final isValidCategory = DefaultCategories.getCategoryByName(
+          _selectedCategory!,
+          isIncome: _transactionType == TransactionType.income,
+        ) != null;
+        
+        if (!isValidCategory) {
+          // Category is not in default list (e.g., "Bank Transaction"), reset it
+          _selectedCategory = null;
+          _selectedSubcategory = null;
+        }
+      } else if (_transactionType == TransactionType.transfer) {
+        // Transfers don't need categories
+        _selectedCategory = null;
+        _selectedSubcategory = null;
+      }
     } else {
       _titleController = TextEditingController();
       _amountController = TextEditingController();
@@ -1124,8 +1143,24 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         onTap: () {
           setState(() {
             _transactionType = type;
-            _selectedCategory = null;
-            _selectedSubcategory = null;
+            // Reset category when type changes
+            // Also validate if current category is valid for new type
+            if (_selectedCategory != null && type != TransactionType.transfer) {
+              final isValidCategory = DefaultCategories.getCategoryByName(
+                _selectedCategory!,
+                isIncome: type == TransactionType.income,
+              ) != null;
+              
+              if (!isValidCategory) {
+                // Category is not valid for new type, reset it
+                _selectedCategory = null;
+                _selectedSubcategory = null;
+              }
+            } else {
+              // Transfer type or no category - reset
+              _selectedCategory = null;
+              _selectedSubcategory = null;
+            }
           });
         },
         child: Builder(
@@ -1336,28 +1371,30 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 color: AppColors.surfaceVariant.withValues(alpha: 0.5),
               ),
 
-              // Category
-              _buildDetailRow(
-                icon: Icons.category_rounded,
-                label: 'Category',
-                value: _selectedCategory != null
-                    ? (_selectedSubcategory != null
-                          ? '$_selectedCategory • $_selectedSubcategory'
-                          : _selectedCategory!)
-                    : 'Select category',
-                valueColor: _selectedCategory != null ? _activeColor : null,
-                emoji: _selectedCategory != null
-                    ? DefaultCategories.getCategoryEmoji(
-                        _selectedCategory,
-                        isIncome: _transactionType == TransactionType.income,
-                      )
-                    : null,
-                onTap: _showCategoryPicker,
-              ),
-              Container(
-                height: 1,
-                color: AppColors.surfaceVariant.withValues(alpha: 0.5),
-              ),
+              // Category (only show for Income and Expense, not for Transfer)
+              if (_transactionType != TransactionType.transfer) ...[
+                _buildDetailRow(
+                  icon: Icons.category_rounded,
+                  label: 'Category',
+                  value: _selectedCategory != null
+                      ? (_selectedSubcategory != null
+                            ? '$_selectedCategory • $_selectedSubcategory'
+                            : _selectedCategory!)
+                      : 'Select category',
+                  valueColor: _selectedCategory != null ? _activeColor : null,
+                  emoji: _selectedCategory != null
+                      ? DefaultCategories.getCategoryEmoji(
+                          _selectedCategory,
+                          isIncome: _transactionType == TransactionType.income,
+                        )
+                      : null,
+                  onTap: _showCategoryPicker,
+                ),
+                Container(
+                  height: 1,
+                  color: AppColors.surfaceVariant.withValues(alpha: 0.5),
+                ),
+              ],
 
               // Account
               _buildDetailRow(
