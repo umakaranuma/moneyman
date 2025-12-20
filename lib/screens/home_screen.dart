@@ -306,6 +306,87 @@ class _HomeScreenState extends State<HomeScreen>
       'TAX',
     ];
 
+    // FIRST: Check for transfers/withdrawals BEFORE checking for expenses
+    // This ensures withdrawals are correctly identified even if they contain expense keywords
+
+    // ATM withdrawals - must have both "ATM" AND "WITHDRAWAL/WITHDRAWN"
+    // Check this FIRST to catch messages like "HNB ATM Withdrawal e-Receipt"
+    if (upperMessage.contains('ATM') &&
+        (upperMessage.contains('WITHDRAWAL') ||
+            upperMessage.contains('WITHDRAWN'))) {
+      return true;
+    }
+
+    // Also check for "ATM WITHDRAWAL" or "ATM WITHDRAWN" as a phrase
+    if (RegExp(
+      r'ATM\s+WITHDRAW(?:AL|N)',
+      caseSensitive: false,
+    ).hasMatch(upperMessage)) {
+      return true;
+    }
+
+    // Cash withdrawals - must have "CASH WITHDRAWAL" or "CASH WITHDRAWN" (exact phrases)
+    if (upperMessage.contains('CASH WITHDRAWAL') ||
+        upperMessage.contains('CASH WITHDRAWN')) {
+      return true;
+    }
+
+    // Check for standalone "WITHDRAWAL" or "WITHDRAWN" with account patterns
+    // This catches messages like "Withdrawal Rs X From A/C No XXXX"
+    if ((upperMessage.contains('WITHDRAWAL') ||
+            upperMessage.contains('WITHDRAWN')) &&
+        (upperMessage.contains('FROM ACCOUNT') ||
+            upperMessage.contains('FROM A/C') ||
+            upperMessage.contains('FROM AC') ||
+            RegExp(
+              r'FROM\s+[A/C\s]*NO',
+              caseSensitive: false,
+            ).hasMatch(upperMessage) ||
+            upperMessage.contains('A/C NO') ||
+            upperMessage.contains('ACCOUNT NO') ||
+            upperMessage.contains('A/C:'))) {
+      return true;
+    }
+
+    // Bank-to-bank transfers - must have NEFT/RTGS/IMPS/UPI AND "TO ACCOUNT" or "DEBITED TO AC" pattern
+    if ((upperMessage.contains('NEFT') ||
+            upperMessage.contains('RTGS') ||
+            upperMessage.contains('IMPS') ||
+            upperMessage.contains('UPI')) &&
+        (upperMessage.contains('TO ACCOUNT') ||
+            upperMessage.contains('TO A/C') ||
+            upperMessage.contains('TO AC') ||
+            RegExp(
+              r'DEBITED\s+TO\s+(?:AC|ACCOUNT|A/C)',
+              caseSensitive: false,
+            ).hasMatch(upperMessage) ||
+            RegExp(
+              r'TO\s+(?:AC|ACCOUNT|A/C)\s+NO',
+              caseSensitive: false,
+            ).hasMatch(upperMessage))) {
+      return true;
+    }
+
+    // Check for "TRANSFER" with account number patterns (bank-to-bank transfers)
+    if (upperMessage.contains('TRANSFER') &&
+        (upperMessage.contains('TO ACCOUNT') ||
+            upperMessage.contains('TO A/C') ||
+            upperMessage.contains('TO AC') ||
+            upperMessage.contains('FROM ACCOUNT') ||
+            upperMessage.contains('FROM A/C') ||
+            upperMessage.contains('FROM AC') ||
+            RegExp(
+              r'TO\s+[A/C\s]*NO',
+              caseSensitive: false,
+            ).hasMatch(upperMessage) ||
+            RegExp(
+              r'FROM\s+[A/C\s]*NO',
+              caseSensitive: false,
+            ).hasMatch(upperMessage))) {
+      return true;
+    }
+
+    // NOW check for expenses - if it's clearly an expense, it's NOT a transfer
     final isActualExpense = expenseKeywords.any(
       (keyword) => upperMessage.contains(keyword),
     );
@@ -313,36 +394,6 @@ class _HomeScreenState extends State<HomeScreen>
     // If it's clearly an expense, it's NOT a transfer
     if (isActualExpense) {
       return false;
-    }
-
-    // Transfer keywords - ATM withdrawals, transfers between accounts
-    // Note: "DEPOSIT" alone is NOT a transfer keyword for debits
-    final transferKeywords = [
-      'ATM',
-      'CASH WITHDRAWAL',
-      'CASH WITHDRAWN',
-      'WITHDRAWAL',
-      'WITHDRAWN',
-      'TRANSFER',
-      'TRANSFERRED',
-      'NEFT',
-      'RTGS',
-      'IMPS',
-      'UPI TRANSFER',
-      'BANK TRANSFER',
-      'ACCOUNT TRANSFER',
-      'TO ACCOUNT',
-      'FROM ACCOUNT',
-    ];
-
-    // Check if message contains transfer keywords
-    final hasTransferKeyword = transferKeywords.any(
-      (keyword) => upperMessage.contains(keyword),
-    );
-
-    // If it has transfer keywords and no expense keywords, it's a transfer
-    if (hasTransferKeyword) {
-      return true;
     }
 
     // Default: If unclear, treat debit as expense (safer assumption)

@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -202,10 +201,7 @@ class _StatsScreenState extends State<StatsScreen>
         decoration: BoxDecoration(
           color: AppColors.surface,
           shape: BoxShape.circle,
-          border: Border.all(
-            color: AppColors.surfaceVariant,
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.surfaceVariant, width: 1),
         ),
         child: Icon(icon, color: AppColors.textPrimary, size: 20),
       ),
@@ -277,7 +273,10 @@ class _StatsScreenState extends State<StatsScreen>
           color: isSelected ? null : AppColors.cardBackground,
           borderRadius: BorderRadius.circular(16),
           border: isSelected
-              ? Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 1)
+              ? Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  width: 1,
+                )
               : null,
         ),
         child: Row(
@@ -331,10 +330,7 @@ class _StatsScreenState extends State<StatsScreen>
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.surfaceVariant,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.surfaceVariant, width: 1),
       ),
       child: Row(
         children: [
@@ -470,7 +466,10 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildStatsContent(
-      Map<String, double> categoryData, double total, bool isIncome) {
+    Map<String, double> categoryData,
+    double total,
+    bool isIncome,
+  ) {
     if (categoryData.isEmpty) {
       return _buildEmptyState(isIncome);
     }
@@ -498,8 +497,14 @@ class _StatsScreenState extends State<StatsScreen>
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: isIncome
-                          ? [AppColors.income, AppColors.income.withValues(alpha: 0.7)]
-                          : [AppColors.expense, AppColors.expense.withValues(alpha: 0.7)],
+                          ? [
+                              AppColors.income,
+                              AppColors.income.withValues(alpha: 0.7),
+                            ]
+                          : [
+                              AppColors.expense,
+                              AppColors.expense.withValues(alpha: 0.7),
+                            ],
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -528,7 +533,8 @@ class _StatsScreenState extends State<StatsScreen>
             final index = mapEntry.key;
             final entry = mapEntry.value;
             final percentage = (entry.value / total * 100);
-            final color = AppColors.categoryColors[index % AppColors.categoryColors.length];
+            final color = AppColors
+                .categoryColors[index % AppColors.categoryColors.length];
             final emoji = DefaultCategories.getCategoryEmoji(
               entry.key,
               isIncome: isIncome,
@@ -558,8 +564,14 @@ class _StatsScreenState extends State<StatsScreen>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isIncome
-                    ? [AppColors.income.withValues(alpha: 0.15), AppColors.income.withValues(alpha: 0.05)]
-                    : [AppColors.expense.withValues(alpha: 0.15), AppColors.expense.withValues(alpha: 0.05)],
+                    ? [
+                        AppColors.income.withValues(alpha: 0.15),
+                        AppColors.income.withValues(alpha: 0.05),
+                      ]
+                    : [
+                        AppColors.expense.withValues(alpha: 0.15),
+                        AppColors.expense.withValues(alpha: 0.05),
+                      ],
               ),
               shape: BoxShape.circle,
             ),
@@ -583,10 +595,7 @@ class _StatsScreenState extends State<StatsScreen>
           const SizedBox(height: 8),
           Text(
             'Start tracking your ${isIncome ? 'income' : 'expenses'}',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              color: AppColors.textMuted,
-            ),
+            style: GoogleFonts.inter(fontSize: 14, color: AppColors.textMuted),
           ),
         ],
       ),
@@ -594,7 +603,10 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildPieChartSection(
-      List<MapEntry<String, double>> entries, double total, bool isIncome) {
+    List<MapEntry<String, double>> entries,
+    double total,
+    bool isIncome,
+  ) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
@@ -609,7 +621,9 @@ class _StatsScreenState extends State<StatsScreen>
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: (isIncome ? AppColors.income : AppColors.expense).withValues(alpha: 0.1),
+          color: (isIncome ? AppColors.income : AppColors.expense).withValues(
+            alpha: 0.1,
+          ),
           width: 1,
         ),
         boxShadow: [
@@ -634,7 +648,9 @@ class _StatsScreenState extends State<StatsScreen>
                     sections: entries.asMap().entries.map((mapEntry) {
                       final index = mapEntry.key;
                       final entry = mapEntry.value;
-                      final color = AppColors.categoryColors[index % AppColors.categoryColors.length];
+                      final color =
+                          AppColors.categoryColors[index %
+                              AppColors.categoryColors.length];
 
                       return PieChartSectionData(
                         value: entry.value,
@@ -658,7 +674,9 @@ class _StatsScreenState extends State<StatsScreen>
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        isIncome ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                        isIncome
+                            ? Icons.trending_up_rounded
+                            : Icons.trending_down_rounded,
                         color: isIncome ? AppColors.income : AppColors.expense,
                         size: 24,
                       ),
@@ -694,7 +712,8 @@ class _StatsScreenState extends State<StatsScreen>
               final index = mapEntry.key;
               final entry = mapEntry.value;
               final percentage = (entry.value / total * 100);
-              final color = AppColors.categoryColors[index % AppColors.categoryColors.length];
+              final color = AppColors
+                  .categoryColors[index % AppColors.categoryColors.length];
 
               return _buildLegendItem(entry.key, percentage, color);
             }).toList(),
@@ -743,10 +762,7 @@ class _StatsScreenState extends State<StatsScreen>
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withValues(alpha: 0.2),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
       ),
       child: Row(
         children: [
