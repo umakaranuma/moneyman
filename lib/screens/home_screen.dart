@@ -17,10 +17,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
   DateTime _selectedMonth = DateTime.now();
   DateTime _selectedDay = DateTime.now();
+  int _refreshKey = 0; // Key to force FutureBuilder refresh
 
   final List<String> _tabs = ['Daily', 'Calendar', 'Monthly', 'Total', 'Note'];
 
@@ -29,13 +30,39 @@ class _HomeScreenState extends State<HomeScreen>
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
     _tabController.addListener(_handleTabChange);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // App came back to foreground, refresh to get new SMS transactions
+      setState(() {
+        _refreshKey++;
+      });
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh when screen becomes visible (e.g., returning from SMS screen)
+    // Use a small delay to avoid unnecessary refreshes during initial build
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        setState(() {
+          _refreshKey++;
+        });
+      }
+    });
   }
 
   void _handleTabChange() {
@@ -46,33 +73,73 @@ class _HomeScreenState extends State<HomeScreen>
       context.goToNotes();
       Future.delayed(const Duration(milliseconds: 100), () {
         _tabController.animateTo(0);
-        setState(() {});
+        setState(() {
+          _refreshKey++; // Force FutureBuilder to refresh
+        });
+      });
+    } else {
+      setState(() {
+        _refreshKey++; // Force FutureBuilder to refresh
       });
     }
-    setState(() {});
   }
 
   Future<List<Transaction>> _getFilteredTransactions() async {
+    print('=== FETCHING TRANSACTIONS DEBUG ===');
+    print('Refresh Key: $_refreshKey');
+
     // Get manually added transactions
     final manualTransactions = StorageService.getAllTransactions();
+    print('Manual transactions from storage: ${manualTransactions.length}');
+
+    if (manualTransactions.isNotEmpty) {
+      print('First 3 manual transactions:');
+      manualTransactions.take(3).forEach((t) {
+        print('  - ${t.id}: ${t.title} - Rs. ${t.amount} (Type: ${t.type})');
+      });
+    }
 
     // Get SMS transactions and convert them to Transaction objects
     final smsTransactions = await _getSmsTransactionsAsTransactions();
-
-    // Combine both lists
-    final allTransactions = [...manualTransactions, ...smsTransactions];
+    print('SMS transactions: ${smsTransactions.length}');
 
     // Remove duplicates (if any SMS transaction was already imported)
+    // Use transaction ID as the key to ensure edited transactions replace old ones
     final uniqueTransactions = <String, Transaction>{};
-    for (var t in allTransactions) {
-      // Use a combination of date, amount, and type as unique key
-      final key = '${t.date.toIso8601String()}_${t.amount}_${t.type.name}';
-      if (!uniqueTransactions.containsKey(key)) {
-        uniqueTransactions[key] = t;
+
+    // First, add all manual transactions (these are edited/imported, so they take precedence)
+    for (var t in manualTransactions) {
+      uniqueTransactions[t.id] = t;
+    }
+
+    // Then, add SMS transactions only if they don't already exist in manual storage
+    // This ensures that edited transactions replace the original SMS versions
+    for (var t in smsTransactions) {
+      if (!uniqueTransactions.containsKey(t.id)) {
+        uniqueTransactions[t.id] = t;
       }
     }
 
     final combinedTransactions = uniqueTransactions.values.toList();
+    print('Combined unique transactions: ${combinedTransactions.length}');
+    print(
+      'Deduplication: Manual transactions take precedence over SMS transactions',
+    );
+
+    // Count by type
+    final incomeCount = combinedTransactions
+        .where((t) => t.type == TransactionType.income)
+        .length;
+    final expenseCount = combinedTransactions
+        .where((t) => t.type == TransactionType.expense)
+        .length;
+    final transferCount = combinedTransactions
+        .where((t) => t.type == TransactionType.transfer)
+        .length;
+    print(
+      'Combined - Income: $incomeCount, Expense: $expenseCount, Transfer: $transferCount',
+    );
+    print('====================================');
 
     switch (_tabController.index) {
       case 0: // Daily - show all transactions for current month grouped by date
@@ -349,6 +416,7 @@ class _HomeScreenState extends State<HomeScreen>
           _selectedMonth.month - 1,
         );
       }
+      _refreshKey++; // Force FutureBuilder to refresh
     });
   }
 
@@ -366,6 +434,7 @@ class _HomeScreenState extends State<HomeScreen>
           _selectedMonth.month + 1,
         );
       }
+      _refreshKey++; // Force FutureBuilder to refresh
     });
   }
 
@@ -381,6 +450,7 @@ class _HomeScreenState extends State<HomeScreen>
       body: SafeArea(
         bottom: false,
         child: FutureBuilder<List<Transaction>>(
+          key: ValueKey(_refreshKey), // Force refresh when key changes
           future: _getFilteredTransactions(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -439,14 +509,49 @@ class _HomeScreenState extends State<HomeScreen>
   ) {
     // Only count actual income and expenses, exclude transfers
     // Transfers just move money between accounts, they don't affect net balance
-    final income = transactions
-        .where((t) => t.type == TransactionType.income)
-        .fold(0.0, (sum, t) => sum + t.amount);
-    final expense = transactions
-        .where((t) => t.type == TransactionType.expense)
-        .fold(0.0, (sum, t) => sum + t.amount);
 
-    return {'income': income, 'expense': expense, 'total': income - expense};
+    print('=== SUMMARY CALCULATION DEBUG ===');
+    print('Total transactions: ${transactions.length}');
+
+    final incomeTransactions = transactions
+        .where((t) => t.type == TransactionType.income)
+        .toList();
+    final expenseTransactions = transactions
+        .where((t) => t.type == TransactionType.expense)
+        .toList();
+    final transferTransactions = transactions
+        .where((t) => t.type == TransactionType.transfer)
+        .toList();
+
+    print('Income transactions: ${incomeTransactions.length}');
+    print('Expense transactions: ${expenseTransactions.length}');
+    print('Transfer transactions: ${transferTransactions.length}');
+
+    final income = incomeTransactions.fold(0.0, (sum, t) => sum + t.amount);
+    final expense = expenseTransactions.fold(0.0, (sum, t) => sum + t.amount);
+    final total = income - expense;
+
+    print('Income total: $income');
+    print('Expense total: $expense');
+    print('Balance total: $total');
+
+    // Print first few transactions of each type for debugging
+    if (expenseTransactions.isNotEmpty) {
+      print('First 3 Expense transactions:');
+      expenseTransactions.take(3).forEach((t) {
+        print('  - ${t.id}: ${t.title} - Rs. ${t.amount} (Type: ${t.type})');
+      });
+    }
+    if (transferTransactions.isNotEmpty) {
+      print('First 3 Transfer transactions:');
+      transferTransactions.take(3).forEach((t) {
+        print('  - ${t.id}: ${t.title} - Rs. ${t.amount} (Type: ${t.type})');
+      });
+    }
+
+    print('==================================');
+
+    return {'income': income, 'expense': expense, 'total': total};
   }
 
   Widget _buildFAB() {
@@ -457,7 +562,9 @@ class _HomeScreenState extends State<HomeScreen>
           final result = await context.goToAddTransaction<bool>();
           if (result == true) {
             // Transaction was saved, refresh the screen
-            setState(() {});
+            setState(() {
+              _refreshKey++; // Force FutureBuilder to refresh
+            });
           }
         },
         child: Container(
@@ -649,8 +756,11 @@ class _HomeScreenState extends State<HomeScreen>
           _buildSummaryItem(
             'Balance',
             summary['total']!,
-            AppColors.textPrimary, // White for Balance
+            summary['total']! >= 0
+                ? AppColors.income
+                : AppColors.expense, // Green if positive, red if negative
             Icons.account_balance_wallet_rounded,
+            showSign: true, // Show minus sign for negative balance
           ),
         ],
       ),
@@ -661,8 +771,9 @@ class _HomeScreenState extends State<HomeScreen>
     String label,
     double value,
     Color color,
-    IconData icon,
-  ) {
+    IconData icon, {
+    bool showSign = false,
+  }) {
     return Expanded(
       child: Column(
         children: [
@@ -690,7 +801,9 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           const SizedBox(height: 6),
           Text(
-            'Rs. ${_formatCurrency(value.abs())}',
+            showSign && value < 0
+                ? '-Rs. ${_formatCurrency(value.abs())}'
+                : 'Rs. ${_formatCurrency(value.abs())}',
             style: GoogleFonts.inter(
               color: color,
               fontSize: 13,
@@ -1929,10 +2042,32 @@ class _HomeScreenState extends State<HomeScreen>
 
     return InkWell(
       onTap: () async {
+        print('=== EDIT TRANSACTION CLICKED (Card View) ===');
+        print('Transaction ID: ${transaction.id}');
+        print('Current Type: ${transaction.type}');
+        print('Current Amount: ${transaction.amount}');
+
         final result = await context.goToEditTransaction<bool>(transaction);
+        print('Edit result: $result');
+
         if (result == true) {
-          setState(() {});
+          print('Transaction was saved, refreshing...');
+          // Add small delay to ensure storage update completes
+          await Future.delayed(const Duration(milliseconds: 100));
+
+          // Verify transaction was updated
+          final updatedTransaction = StorageService.getTransaction(
+            transaction.id,
+          );
+          print('Updated transaction type: ${updatedTransaction?.type}');
+          print('Updated transaction amount: ${updatedTransaction?.amount}');
+
+          setState(() {
+            _refreshKey++; // Force FutureBuilder to refresh
+            print('Refresh key incremented to: $_refreshKey');
+          });
         }
+        print('=============================================');
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -2044,10 +2179,32 @@ class _HomeScreenState extends State<HomeScreen>
 
     return InkWell(
       onTap: () async {
+        print('=== EDIT TRANSACTION CLICKED (List View) ===');
+        print('Transaction ID: ${transaction.id}');
+        print('Current Type: ${transaction.type}');
+        print('Current Amount: ${transaction.amount}');
+
         final result = await context.goToEditTransaction<bool>(transaction);
+        print('Edit result: $result');
+
         if (result == true) {
-          setState(() {});
+          print('Transaction was saved, refreshing...');
+          // Add small delay to ensure storage update completes
+          await Future.delayed(const Duration(milliseconds: 100));
+
+          // Verify transaction was updated
+          final updatedTransaction = StorageService.getTransaction(
+            transaction.id,
+          );
+          print('Updated transaction type: ${updatedTransaction?.type}');
+          print('Updated transaction amount: ${updatedTransaction?.amount}');
+
+          setState(() {
+            _refreshKey++; // Force FutureBuilder to refresh
+            print('Refresh key incremented to: $_refreshKey');
+          });
         }
+        print('=============================================');
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),

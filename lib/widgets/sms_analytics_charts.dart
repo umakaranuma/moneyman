@@ -34,8 +34,7 @@ class BankBreakdownPieChart extends StatelessWidget {
 
     final total = entries.fold<double>(
       0.0,
-      (sum, entry) =>
-          sum + entry.value['credits']! + entry.value['debits']!,
+      (sum, entry) => sum + entry.value['credits']! + entry.value['debits']!,
     );
 
     return Container(
@@ -64,10 +63,7 @@ class BankBreakdownPieChart extends StatelessWidget {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      AppColors.primary,
-                      AppColors.primaryLight,
-                    ],
+                    colors: [AppColors.primary, AppColors.primaryLight],
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -102,10 +98,12 @@ class BankBreakdownPieChart extends StatelessWidget {
                       final index = mapEntry.key;
                       final entry = mapEntry.value;
                       final bankData = entry.value;
-                      final bankTotal = bankData['credits']! + bankData['debits']!;
+                      final bankTotal =
+                          bankData['credits']! + bankData['debits']!;
                       final percentage = (bankTotal / total * 100);
-                      final color = AppColors.categoryColors[
-                          index % AppColors.categoryColors.length];
+                      final color =
+                          AppColors.categoryColors[index %
+                              AppColors.categoryColors.length];
 
                       return PieChartSectionData(
                         value: bankTotal,
@@ -152,8 +150,8 @@ class BankBreakdownPieChart extends StatelessWidget {
             final entry = mapEntry.value;
             final bankName = entry.key;
             final bankTotal = entry.value['credits']! + entry.value['debits']!;
-            final color = AppColors.categoryColors[
-                index % AppColors.categoryColors.length];
+            final color = AppColors
+                .categoryColors[index % AppColors.categoryColors.length];
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -222,11 +220,11 @@ class CreditDebitTrendsChart extends StatelessWidget {
       0.0,
       (max, item) => (item['credits'] as double) > (item['debits'] as double)
           ? (item['credits'] as double) > max
-              ? item['credits'] as double
-              : max
+                ? item['credits'] as double
+                : max
           : (item['debits'] as double) > max
-              ? item['debits'] as double
-              : max,
+          ? item['debits'] as double
+          : max,
     );
     // Ensure maxAmount is not zero
     final safeMaxAmount = maxAmount > 0 ? maxAmount : 1000.0;
@@ -290,7 +288,9 @@ class CreditDebitTrendsChart extends StatelessWidget {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: horizontalInterval > 0 ? horizontalInterval : null,
+                  horizontalInterval: horizontalInterval > 0
+                      ? horizontalInterval
+                      : null,
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
                       color: AppColors.surfaceVariant.withValues(alpha: 0.3),
@@ -325,7 +325,9 @@ class CreditDebitTrendsChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 50,
-                      interval: horizontalInterval > 0 ? horizontalInterval : null,
+                      interval: horizontalInterval > 0
+                          ? horizontalInterval
+                          : null,
                       getTitlesWidget: (value, meta) {
                         return Text(
                           _formatShortCurrency(value),
@@ -397,18 +399,12 @@ class CreditDebitTrendsChart extends StatelessWidget {
         Container(
           width: 12,
           height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 8),
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            color: AppColors.textMuted,
-          ),
+          style: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted),
         ),
       ],
     );
@@ -435,10 +431,7 @@ class CreditDebitTrendsChart extends StatelessWidget {
       padding: const EdgeInsets.only(top: 8),
       child: Text(
         label,
-        style: GoogleFonts.inter(
-          fontSize: 10,
-          color: AppColors.textMuted,
-        ),
+        style: GoogleFonts.inter(fontSize: 10, color: AppColors.textMuted),
       ),
     );
   }
@@ -474,10 +467,10 @@ class BalanceOverTimeChart extends StatelessWidget {
     final minBalance = balances.reduce((a, b) => a < b ? a : b);
     final maxBalance = balances.reduce((a, b) => a > b ? a : b);
     final range = maxBalance - minBalance;
-    
+
     // Calculate horizontalInterval with ABSOLUTE guarantee it's never zero
     double calculatedInterval;
-    
+
     if (range.abs() >= 1.0) {
       calculatedInterval = range.abs() / 5.0;
     } else if (maxBalance.abs() >= 1.0) {
@@ -485,7 +478,7 @@ class BalanceOverTimeChart extends StatelessWidget {
     } else {
       calculatedInterval = 1000.0;
     }
-    
+
     // Use helper function to guarantee non-zero value
     final safeHorizontalInterval = _ensureNonZeroInterval(calculatedInterval);
 
@@ -547,7 +540,8 @@ class BalanceOverTimeChart extends StatelessWidget {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: safeHorizontalInterval, // Already guaranteed to be > 0
+                  horizontalInterval:
+                      safeHorizontalInterval, // Already guaranteed to be > 0
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
                       color: AppColors.surfaceVariant.withValues(alpha: 0.3),
@@ -582,7 +576,8 @@ class BalanceOverTimeChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 60,
-                      interval: safeHorizontalInterval, // Already guaranteed to be > 0
+                      interval:
+                          safeHorizontalInterval, // Already guaranteed to be > 0
                       getTitlesWidget: (value, meta) {
                         return Text(
                           _formatShortCurrency(value),
@@ -626,8 +621,12 @@ class BalanceOverTimeChart extends StatelessWidget {
                 ],
                 minX: 0,
                 maxX: (balanceData.length - 1).toDouble(),
-                minY: range > 0 ? minBalance - (range * 0.1) : (minBalance > 0 ? minBalance * 0.9 : minBalance - 100),
-                maxY: range > 0 ? maxBalance + (range * 0.1) : (maxBalance > 0 ? maxBalance * 1.1 : maxBalance + 100),
+                minY: range > 0
+                    ? minBalance - (range * 0.1)
+                    : (minBalance > 0 ? minBalance * 0.9 : minBalance - 100),
+                maxY: range > 0
+                    ? maxBalance + (range * 0.1)
+                    : (maxBalance > 0 ? maxBalance * 1.1 : maxBalance + 100),
               ),
             ),
           ),
@@ -657,10 +656,7 @@ class BalanceOverTimeChart extends StatelessWidget {
       padding: const EdgeInsets.only(top: 8),
       child: Text(
         label,
-        style: GoogleFonts.inter(
-          fontSize: 10,
-          color: AppColors.textMuted,
-        ),
+        style: GoogleFonts.inter(fontSize: 10, color: AppColors.textMuted),
       ),
     );
   }
@@ -867,10 +863,7 @@ class TransactionVolumeChart extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            color: AppColors.textMuted,
-          ),
+          style: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted),
         ),
       ],
     );
@@ -897,12 +890,8 @@ class TransactionVolumeChart extends StatelessWidget {
       padding: const EdgeInsets.only(top: 8),
       child: Text(
         label,
-        style: GoogleFonts.inter(
-          fontSize: 10,
-          color: AppColors.textMuted,
-        ),
+        style: GoogleFonts.inter(fontSize: 10, color: AppColors.textMuted),
       ),
     );
   }
 }
-

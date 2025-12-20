@@ -56,15 +56,18 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       _selectedTime = TimeOfDay.fromDateTime(widget.transaction!.date);
       _fromAccount = widget.transaction!.fromAccount;
       _toAccount = widget.transaction!.toAccount;
-      
+
       // Validate category - if it's not in default categories, reset it
       // This handles SMS transactions with categories like "Bank Transaction" or "Transfer"
-      if (_selectedCategory != null && _transactionType != TransactionType.transfer) {
-        final isValidCategory = DefaultCategories.getCategoryByName(
-          _selectedCategory!,
-          isIncome: _transactionType == TransactionType.income,
-        ) != null;
-        
+      if (_selectedCategory != null &&
+          _transactionType != TransactionType.transfer) {
+        final isValidCategory =
+            DefaultCategories.getCategoryByName(
+              _selectedCategory!,
+              isIncome: _transactionType == TransactionType.income,
+            ) !=
+            null;
+
         if (!isValidCategory) {
           // Category is not in default list (e.g., "Bank Transaction"), reset it
           _selectedCategory = null;
@@ -869,7 +872,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
     );
   }
 
-  void _saveTransaction() {
+  Future<void> _saveTransaction() async {
     if (_formKey.currentState!.validate()) {
       if (_transactionType == TransactionType.transfer) {
         if (_fromAccount == null ||
@@ -886,6 +889,8 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           return;
         }
       }
+
+      final oldType = widget.transaction?.type;
 
       final transaction = Transaction(
         id: widget.transaction?.id ?? Helpers.generateId(),
@@ -906,11 +911,27 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
             : null,
       );
 
+      print('=== SAVE TRANSACTION DEBUG ===');
+      print('Transaction ID: ${transaction.id}');
+      print('Old Type: $oldType, New Type: ${transaction.type}');
+      print('Amount: ${transaction.amount}');
+      print('Is Edit: ${widget.transaction != null}');
+
       if (widget.transaction != null) {
-        StorageService.updateTransaction(transaction);
+        print('Updating transaction from $oldType to ${transaction.type}');
+        await StorageService.updateTransaction(transaction);
+        print('Transaction updated in storage');
       } else {
-        StorageService.addTransaction(transaction);
+        print('Adding new transaction');
+        await StorageService.addTransaction(transaction);
+        print('Transaction added to storage');
       }
+
+      // Verify the transaction was saved correctly
+      final savedTransaction = StorageService.getTransaction(transaction.id);
+      print('Saved transaction type: ${savedTransaction?.type}');
+      print('Saved transaction amount: ${savedTransaction?.amount}');
+      print('==============================');
 
       context.pop(true); // Return true to indicate transaction was saved
     }
@@ -1146,11 +1167,13 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
             // Reset category when type changes
             // Also validate if current category is valid for new type
             if (_selectedCategory != null && type != TransactionType.transfer) {
-              final isValidCategory = DefaultCategories.getCategoryByName(
-                _selectedCategory!,
-                isIncome: type == TransactionType.income,
-              ) != null;
-              
+              final isValidCategory =
+                  DefaultCategories.getCategoryByName(
+                    _selectedCategory!,
+                    isIncome: type == TransactionType.income,
+                  ) !=
+                  null;
+
               if (!isValidCategory) {
                 // Category is not valid for new type, reset it
                 _selectedCategory = null;
