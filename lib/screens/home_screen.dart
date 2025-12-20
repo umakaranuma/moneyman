@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/storage_service.dart';
+import '../services/sms_service.dart';
 import '../models/transaction.dart';
 import '../models/category.dart';
 import '../theme/app_theme.dart';
@@ -51,47 +52,172 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() {});
   }
 
-  List<Transaction> _getFilteredTransactions() {
-    final allTransactions = StorageService.getAllTransactions();
+  Future<List<Transaction>> _getFilteredTransactions() async {
+    // Get manually added transactions
+    final manualTransactions = StorageService.getAllTransactions();
+
+    // Get SMS transactions and convert them to Transaction objects
+    final smsTransactions = await _getSmsTransactionsAsTransactions();
+
+    // Combine both lists
+    final allTransactions = [...manualTransactions, ...smsTransactions];
+
+    // Remove duplicates (if any SMS transaction was already imported)
+    final uniqueTransactions = <String, Transaction>{};
+    for (var t in allTransactions) {
+      // Use a combination of date, amount, and type as unique key
+      final key = '${t.date.toIso8601String()}_${t.amount}_${t.type.name}';
+      if (!uniqueTransactions.containsKey(key)) {
+        uniqueTransactions[key] = t;
+      }
+    }
+
+    final combinedTransactions = uniqueTransactions.values.toList();
 
     switch (_tabController.index) {
       case 0: // Daily - show all transactions for current month grouped by date
       case 2: // Monthly - same as daily but for selected month
-        return allTransactions.where((t) {
+        return combinedTransactions.where((t) {
           return t.date.year == _selectedMonth.year &&
               t.date.month == _selectedMonth.month;
         }).toList();
       case 3: // Total
-        return allTransactions;
+        return combinedTransactions;
       default:
-        return allTransactions.where((t) {
+        return combinedTransactions.where((t) {
           return t.date.year == _selectedMonth.year &&
               t.date.month == _selectedMonth.month;
         }).toList();
     }
   }
 
-  Map<String, double> _getSummary() {
-    List<Transaction> transactions;
+  Future<List<Transaction>> _getSmsTransactionsAsTransactions() async {
+    try {
+      final hasPermission = await SmsService.hasSmsPermission();
+      if (!hasPermission) {
+        return [];
+      }
 
-    // For Monthly view, show yearly summary
-    if (_tabController.index == 2) {
-      final allTransactions = StorageService.getAllTransactions();
-      transactions = allTransactions
-          .where((t) => t.date.year == _selectedMonth.year)
-          .toList();
-    } else {
-      transactions = _getFilteredTransactions();
+      // Fetch SMS transactions
+      final smsTransactions = await SmsService.fetchAndParseSmsMessages(
+        fetchAll: false,
+      );
+
+      // Convert ParsedSmsTransaction to Transaction
+      return smsTransactions.map((smsT) {
+        // Detect if this is a transfer (ATM withdrawal, cash deposit) vs actual expense/income
+        final isTransfer = _isSmsTransactionTransfer(smsT);
+
+        return Transaction(
+          id: 'sms_${smsT.id}',
+          title: isTransfer
+              ? '${smsT.bankName} ${smsT.isCredit ? "Deposit" : "Withdrawal"}'
+              : '${smsT.bankName} ${smsT.isCredit ? "Credit" : "Debit"}',
+          amount: smsT.amount,
+          type: isTransfer
+              ? TransactionType.transfer
+              : (smsT.isCredit
+                    ? TransactionType.income
+                    : TransactionType.expense),
+          date: smsT.date,
+          category: isTransfer
+              ? 'Transfer'
+              : (smsT.isCredit ? 'Bank Transfer' : 'Bank Transaction'),
+          note:
+              'From SMS: ${smsT.rawMessage.substring(0, smsT.rawMessage.length > 50 ? 50 : smsT.rawMessage.length)}${smsT.rawMessage.length > 50 ? "..." : ""}',
+          accountType: AccountType.bank,
+          fromAccount: isTransfer && !smsT.isCredit ? 'Bank Account' : null,
+          toAccount: isTransfer && smsT.isCredit ? 'Bank Account' : null,
+        );
+      }).toList();
+    } catch (e) {
+      // If there's an error, just return empty list
+      return [];
+    }
+  }
+
+  /// Detect if SMS transaction is a transfer (ATM withdrawal/deposit) vs actual expense/income
+  ///
+  /// Rule: Not all debits are expenses!
+  /// - Debit = Transfer (ATM, withdrawal, deposit) → NOT an expense (just moving money)
+  /// - Debit = Actual Expense (payment, purchase, bill) → IS an expense (money spent)
+  bool _isSmsTransactionTransfer(ParsedSmsTransaction smsT) {
+    final upperMessage = smsT.rawMessage.toUpperCase();
+
+    // First, check if it's clearly an actual expense/payment
+    final expenseKeywords = [
+      'PAYMENT',
+      'PAID',
+      'PURCHASE',
+      'PURCHASED',
+      'BILL',
+      'MERCHANT',
+      'POS',
+      'DEBIT CARD',
+      'CREDIT CARD',
+      'ONLINE',
+      'SHOPPING',
+      'RESTAURANT',
+      'FOOD',
+      'GROCERY',
+      'FUEL',
+      'PETROL',
+      'DIESEL',
+      'TAXI',
+      'UBER',
+      'OLA',
+      'RENT',
+      'SALARY',
+      'SERVICE',
+      'CHARGE',
+      'FEE',
+      'TAX',
+    ];
+
+    final isActualExpense = expenseKeywords.any(
+      (keyword) => upperMessage.contains(keyword),
+    );
+
+    // If it's clearly an expense, it's NOT a transfer
+    if (isActualExpense) {
+      return false;
     }
 
-    final income = transactions
-        .where((t) => t.type == TransactionType.income)
-        .fold(0.0, (sum, t) => sum + t.amount);
-    final expense = transactions
-        .where((t) => t.type == TransactionType.expense)
-        .fold(0.0, (sum, t) => sum + t.amount);
+    // Transfer keywords - ATM withdrawals, cash deposits, transfers between accounts
+    final transferKeywords = [
+      'ATM',
+      'CASH WITHDRAWAL',
+      'CASH WITHDRAWN',
+      'WITHDRAWAL',
+      'WITHDRAWN',
+      'CASH DEPOSIT',
+      'DEPOSITED',
+      'CASH DEPOSITED',
+      'TRANSFER',
+      'TRANSFERRED',
+      'NEFT',
+      'RTGS',
+      'IMPS',
+      'UPI TRANSFER',
+      'BANK TRANSFER',
+      'ACCOUNT TRANSFER',
+      'TO ACCOUNT',
+      'FROM ACCOUNT',
+    ];
 
-    return {'income': income, 'expense': expense, 'total': income - expense};
+    // Check if message contains transfer keywords
+    final hasTransferKeyword = transferKeywords.any(
+      (keyword) => upperMessage.contains(keyword),
+    );
+
+    // If it has transfer keywords and no expense keywords, it's a transfer
+    if (hasTransferKeyword) {
+      return true;
+    }
+
+    // Default: If unclear, treat debit as expense (safer assumption)
+    // But user can manually change it later
+    return false;
   }
 
   Map<DateTime, List<Transaction>> _groupTransactionsByDate(
@@ -150,41 +276,77 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final transactions = _getFilteredTransactions();
-    final summary = _getSummary();
-    final groupedTransactions = _groupTransactionsByDate(transactions);
-    final sortedDates = groupedTransactions.keys.toList()
-      ..sort((a, b) => b.compareTo(a));
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            // Header with Month Selector
-            _buildHeader(),
+        child: FutureBuilder<List<Transaction>>(
+          future: _getFilteredTransactions(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Column(
+                children: [
+                  _buildHeader(),
+                  _buildTabs(),
+                  Expanded(
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }
 
-            // Tabs
-            _buildTabs(),
+            final transactions = snapshot.data ?? [];
+            final summary = _getSummaryFromTransactions(transactions);
+            final groupedTransactions = _groupTransactionsByDate(transactions);
+            final sortedDates = groupedTransactions.keys.toList()
+              ..sort((a, b) => b.compareTo(a));
 
-            // Summary Bar
-            _buildSummaryBar(summary),
+            return Column(
+              children: [
+                // Header with Month Selector
+                _buildHeader(),
 
-            // Content based on selected tab
-            Expanded(
-              child: _buildContentForTab(
-                transactions,
-                groupedTransactions,
-                sortedDates,
-                summary,
-              ),
-            ),
-          ],
+                // Tabs
+                _buildTabs(),
+
+                // Summary Bar
+                _buildSummaryBar(summary),
+
+                // Content based on selected tab
+                Expanded(
+                  child: _buildContentForTab(
+                    transactions,
+                    groupedTransactions,
+                    sortedDates,
+                    summary,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
       floatingActionButton: _buildFAB(),
     );
+  }
+
+  Map<String, double> _getSummaryFromTransactions(
+    List<Transaction> transactions,
+  ) {
+    // Only count actual income and expenses, exclude transfers
+    // Transfers just move money between accounts, they don't affect net balance
+    final income = transactions
+        .where((t) => t.type == TransactionType.income)
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final expense = transactions
+        .where((t) => t.type == TransactionType.expense)
+        .fold(0.0, (sum, t) => sum + t.amount);
+
+    return {'income': income, 'expense': expense, 'total': income - expense};
   }
 
   Widget _buildFAB() {
@@ -448,9 +610,9 @@ class _HomeScreenState extends State<HomeScreen>
   ) {
     switch (_tabController.index) {
       case 1: // Calendar
-        return _buildCalendarView();
+        return _buildCalendarView(transactions);
       case 2: // Monthly
-        return _buildMonthlyView();
+        return _buildMonthlyView(transactions);
       case 3: // Total
         return _buildTotalView(summary);
       default: // Daily (0) and others
@@ -471,8 +633,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // Monthly View
-  Widget _buildMonthlyView() {
-    final allTransactions = StorageService.getAllTransactions();
+  Widget _buildMonthlyView(List<Transaction> allTransactions) {
     final yearlyData = _getYearlyData(allTransactions);
 
     return ListView(
@@ -1203,8 +1364,9 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // Calendar view methods
-  Map<DateTime, List<Transaction>> _getTransactionsByDate() {
-    final transactions = StorageService.getAllTransactions();
+  Map<DateTime, List<Transaction>> _getTransactionsByDate(
+    List<Transaction> transactions,
+  ) {
     final map = <DateTime, List<Transaction>>{};
 
     for (var transaction in transactions) {
@@ -1219,8 +1381,11 @@ class _HomeScreenState extends State<HomeScreen>
     return map;
   }
 
-  Map<String, double> _getDayTotals(DateTime day) {
-    final transactionsByDate = _getTransactionsByDate();
+  Map<String, double> _getDayTotals(
+    DateTime day,
+    List<Transaction> allTransactions,
+  ) {
+    final transactionsByDate = _getTransactionsByDate(allTransactions);
     final date = DateTime(day.year, day.month, day.day);
     final transactions = transactionsByDate[date] ?? [];
 
@@ -1238,20 +1403,28 @@ class _HomeScreenState extends State<HomeScreen>
     return {'income': income, 'expense': expense};
   }
 
-  List<Transaction> _getTransactionsForDay(DateTime day) {
-    final transactionsByDate = _getTransactionsByDate();
+  List<Transaction> _getTransactionsForDay(
+    DateTime day,
+    List<Transaction> allTransactions,
+  ) {
+    final transactionsByDate = _getTransactionsByDate(allTransactions);
     final date = DateTime(day.year, day.month, day.day);
     return transactionsByDate[date] ?? [];
   }
 
-  Widget _buildCalendarView() {
-    final transactionsByDate = _getTransactionsByDate();
-    final selectedDayTransactions = _getTransactionsForDay(_selectedDay);
+  Widget _buildCalendarView(List<Transaction> allTransactions) {
+    final transactionsByDate = _getTransactionsByDate(allTransactions);
+    final selectedDayTransactions = _getTransactionsForDay(
+      _selectedDay,
+      allTransactions,
+    );
 
     return Column(
       children: [
         // Calendar Grid
-        Expanded(child: _buildCalendarGrid(transactionsByDate)),
+        Expanded(
+          child: _buildCalendarGrid(transactionsByDate, allTransactions),
+        ),
         // Selected Day Transactions
         if (selectedDayTransactions.isNotEmpty)
           Container(
@@ -1320,6 +1493,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildCalendarGrid(
     Map<DateTime, List<Transaction>> transactionsByDate,
+    List<Transaction> allTransactions,
   ) {
     // Get the first day of the month and calculate calendar grid
     final firstDayOfMonth = DateTime(
@@ -1399,7 +1573,7 @@ class _HomeScreenState extends State<HomeScreen>
                     );
                   }
 
-                  final dayTotals = _getDayTotals(otherDate);
+                  final dayTotals = _getDayTotals(otherDate, allTransactions);
 
                   return _buildCalendarDay(
                     otherDate.day,
@@ -1418,7 +1592,7 @@ class _HomeScreenState extends State<HomeScreen>
                   _selectedMonth.month,
                   dayOffset + 1,
                 );
-                final dayTotals = _getDayTotals(currentDate);
+                final dayTotals = _getDayTotals(currentDate, allTransactions);
                 final isToday = _isToday(currentDate);
                 final isSelected = _isSameDay(currentDate, _selectedDay);
 
@@ -1555,6 +1729,9 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildDateGroup(DateTime date, List<Transaction> transactions) {
+    // Sort transactions by time (newest first)
+    transactions.sort((a, b) => b.date.compareTo(a.date));
+
     final dayIncome = transactions
         .where((t) => t.type == TransactionType.income)
         .fold(0.0, (sum, t) => sum + t.amount);
@@ -1562,89 +1739,175 @@ class _HomeScreenState extends State<HomeScreen>
         .where((t) => t.type == TransactionType.expense)
         .fold(0.0, (sum, t) => sum + t.amount);
 
-    final dayName = DateFormat('E').format(date);
-    final dateStr = DateFormat('MM.yyyy').format(date);
-    final isToday = _isToday(date);
+    final dayName = DateFormat('E').format(date); // Thu, Wed, etc.
+    final dateStr = DateFormat('MM.yyyy').format(date); // 12.2025
+    final dayNumber = date.day;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Date Header
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            gradient: isToday
-                ? LinearGradient(
-                    colors: [
-                      AppColors.primary.withValues(alpha: 0.15),
-                      AppColors.primaryLight.withValues(alpha: 0.05),
-                    ],
-                  )
-                : null,
-            color: isToday ? null : AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: isToday
-                ? Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    width: 1,
-                  )
-                : null,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: isToday
-                      ? const LinearGradient(
-                          colors: [AppColors.primary, AppColors.primaryLight],
-                        )
-                      : null,
-                  color: isToday ? null : AppColors.surfaceVariant,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Text(
-                    '${date.day}',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: isToday ? Colors.white : AppColors.textPrimary,
-                    ),
-                  ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.surfaceVariant.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Date Header with Total
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: AppColors.surfaceVariant.withValues(alpha: 0.3),
+                  width: 1,
                 ),
               ),
-              const SizedBox(width: 12),
-              Column(
+            ),
+            child: Row(
+              children: [
+                // Date Info
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$dayNumber $dayName $dateStr',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                // Daily Total (show expense if any, otherwise show income)
+                Text(
+                  dayExpense > 0
+                      ? 'Rs. ${_formatCurrency(dayExpense)}'
+                      : dayIncome > 0
+                      ? 'Rs. ${_formatCurrency(dayIncome)}'
+                      : 'Rs. 0.00',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: dayExpense > 0
+                        ? AppColors.expense
+                        : dayIncome > 0
+                        ? AppColors.income
+                        : AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Transactions List
+          ...transactions.asMap().entries.map((entry) {
+            final index = entry.key;
+            final transaction = entry.value;
+            final isLast = index == transactions.length - 1;
+            return _buildTransactionItemInCard(transaction, isLast: isLast);
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionItemInCard(
+    Transaction transaction, {
+    bool isLast = false,
+  }) {
+    final emoji = DefaultCategories.getCategoryEmoji(
+      transaction.category,
+      isIncome: transaction.type == TransactionType.income,
+    );
+
+    final accountLabel = _getAccountLabel(transaction);
+
+    return InkWell(
+      onTap: () async {
+        final result = await context.goToEditTransaction<bool>(transaction);
+        if (result == true) {
+          setState(() {});
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: isLast
+              ? null
+              : Border(
+                  bottom: BorderSide(
+                    color: AppColors.surfaceVariant.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                ),
+        ),
+        child: Row(
+          children: [
+            // Category Icon/Emoji
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: transaction.type == TransactionType.income
+                    ? AppColors.income.withValues(alpha: 0.1)
+                    : transaction.type == TransactionType.expense
+                    ? AppColors.expense.withValues(alpha: 0.1)
+                    : AppColors.transfer.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: emoji.isNotEmpty
+                    ? Text(emoji, style: const TextStyle(fontSize: 18))
+                    : Icon(
+                        transaction.type == TransactionType.income
+                            ? Icons.arrow_downward_rounded
+                            : transaction.type == TransactionType.expense
+                            ? Icons.arrow_upward_rounded
+                            : Icons.swap_horiz_rounded,
+                        color: transaction.type == TransactionType.income
+                            ? AppColors.income
+                            : transaction.type == TransactionType.expense
+                            ? AppColors.expense
+                            : AppColors.transfer,
+                        size: 18,
+                      ),
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Description and Account
+            Expanded(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isToday
-                          ? AppColors.primary.withValues(alpha: 0.2)
-                          : AppColors.surface,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      isToday ? 'Today' : dayName,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: isToday
-                            ? AppColors.primary
-                            : AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  // Category name (e.g., "Food snacks", "Bike petrol")
+                  Text(
+                    transaction.category ?? 'Other',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.textMuted,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 2),
+                  // Description (title)
                   Text(
-                    dateStr,
+                    transaction.title,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  // Account type
+                  Text(
+                    accountLabel,
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       color: AppColors.textMuted,
@@ -1652,61 +1915,22 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ],
               ),
-              const Spacer(),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: AppColors.income,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Rs. ${_formatCurrency(dayIncome)}',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.income,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: AppColors.expense,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Rs. ${_formatCurrency(dayExpense)}',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.expense,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+            ),
+
+            // Amount
+            Text(
+              'Rs. ${_formatCurrency(transaction.amount)}',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: transaction.type == TransactionType.income
+                    ? AppColors.income
+                    : AppColors.expense,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        // Transactions
-        ...transactions.map((t) => _buildTransactionItem(t)),
-      ],
+      ),
     );
   }
 
@@ -1722,7 +1946,6 @@ class _HomeScreenState extends State<HomeScreen>
       onTap: () async {
         final result = await context.goToEditTransaction<bool>(transaction);
         if (result == true) {
-          // Transaction was updated, refresh the screen
           setState(() {});
         }
       },
@@ -1739,7 +1962,6 @@ class _HomeScreenState extends State<HomeScreen>
         ),
         child: Row(
           children: [
-            // Category with emoji
             Container(
               width: 44,
               height: 44,
@@ -1770,8 +1992,6 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
             const SizedBox(width: 14),
-
-            // Title and Account
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1808,29 +2028,15 @@ class _HomeScreenState extends State<HomeScreen>
                 ],
               ),
             ),
-
-            // Amount
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  'Rs. ${_formatCurrency(transaction.amount)}',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: transaction.type == TransactionType.income
-                        ? AppColors.income
-                        : AppColors.expense,
-                  ),
-                ),
-                Text(
-                  _getAccountLabel(transaction),
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ],
+            Text(
+              'Rs. ${_formatCurrency(transaction.amount)}',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: transaction.type == TransactionType.income
+                    ? AppColors.income
+                    : AppColors.expense,
+              ),
             ),
           ],
         ),
