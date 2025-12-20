@@ -186,13 +186,29 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Select Category',
-                      style: GoogleFonts.inter(
-                        color: AppColors.textPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Select Category',
+                          style: GoogleFonts.inter(
+                            color: AppColors.textPrimary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _transactionType == TransactionType.income
+                              ? 'Choose your income source'
+                              : 'Choose your expense category',
+                          style: GoogleFonts.inter(
+                            color: AppColors.textMuted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
                     ),
                     Row(
                       children: [
@@ -402,8 +418,12 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
         return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75,
+          ),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -470,12 +490,14 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                             ),
                     ),
                     const SizedBox(width: 12),
-                    Text(
-                      category.name,
-                      style: GoogleFonts.inter(
-                        color: AppColors.textPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: Text(
+                        category.name,
+                        style: GoogleFonts.inter(
+                          color: AppColors.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -483,149 +505,164 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
               ),
               Container(height: 1, color: AppColors.surfaceVariant),
 
-              // Select main category option
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedCategory = category.name;
-                    _selectedSubcategory = null;
-                  });
-                  Navigator.pop(context);
-                  Navigator.pop(context);
-                },
-                child: Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        categoryColor.withValues(alpha: 0.12),
-                        categoryColor.withValues(alpha: 0.05),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: categoryColor.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
+              // Scrollable content
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              categoryColor,
-                              categoryColor.withValues(alpha: 0.7),
+                      // Select main category option
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedCategory = category.name;
+                            _selectedSubcategory = null;
+                          });
+                          Navigator.pop(context);
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                categoryColor.withValues(alpha: 0.12),
+                                categoryColor.withValues(alpha: 0.05),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: categoryColor.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      categoryColor,
+                                      categoryColor.withValues(alpha: 0.7),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Center(
+                                  child: category.emoji.isNotEmpty
+                                      ? Text(
+                                          category.emoji,
+                                          style: const TextStyle(fontSize: 18),
+                                        )
+                                      : const Icon(
+                                          Icons.category_rounded,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'All ${category.name}',
+                                  style: GoogleFonts.inter(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                Icons.check_circle_outline_rounded,
+                                color: categoryColor,
+                                size: 20,
+                              ),
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Center(
-                          child: category.emoji.isNotEmpty
-                              ? Text(
-                                  category.emoji,
-                                  style: const TextStyle(fontSize: 18),
-                                )
-                              : const Icon(
-                                  Icons.category_rounded,
-                                  color: Colors.white,
-                                  size: 18,
+                      ),
+
+                      // Subcategories with colorful styling
+                      ...category.subcategories.asMap().entries.map((entry) {
+                        final subIndex = entry.key;
+                        final sub = entry.value;
+                        final subColor =
+                            AppColors.categoryColors[(categoryIndex +
+                                    subIndex +
+                                    1) %
+                                AppColors.categoryColors.length];
+
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedCategory = category.name;
+                              _selectedSubcategory = sub;
+                            });
+                            Navigator.pop(context);
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 4,
+                            ),
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: AppColors.cardBackground,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: subColor.withValues(alpha: 0.15),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: subColor.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Center(
+                                    child: Container(
+                                      width: 10,
+                                      height: 10,
+                                      decoration: BoxDecoration(
+                                        color: subColor,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'All ${category.name}',
-                          style: GoogleFonts.inter(
-                            color: AppColors.textPrimary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    sub,
+                                    style: GoogleFonts.inter(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ),
-                      Icon(
-                        Icons.check_circle_outline_rounded,
-                        color: categoryColor,
-                        size: 20,
-                      ),
+                        );
+                      }),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
               ),
-
-              // Subcategories with colorful styling
-              ...category.subcategories.asMap().entries.map((entry) {
-                final subIndex = entry.key;
-                final sub = entry.value;
-                final subColor =
-                    AppColors.categoryColors[(categoryIndex + subIndex + 1) %
-                        AppColors.categoryColors.length];
-
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedCategory = category.name;
-                      _selectedSubcategory = sub;
-                    });
-                    Navigator.pop(context);
-                    Navigator.pop(context);
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: AppColors.cardBackground,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: subColor.withValues(alpha: 0.15),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: subColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Center(
-                            child: Container(
-                              width: 10,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                color: subColor,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          sub,
-                          style: GoogleFonts.inter(
-                            color: AppColors.textPrimary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-              const SizedBox(height: 20),
             ],
           ),
         );
@@ -1103,59 +1140,75 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Rs. ',
-                style: GoogleFonts.inter(
-                  color: _activeColor,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _activeColor.withValues(alpha: 0.3),
+                width: 1.5,
               ),
-              IntrinsicWidth(
-                child: TextFormField(
-                  controller: _amountController,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Rs. ',
                   style: GoogleFonts.inter(
                     color: _activeColor,
-                    fontSize: 40,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
                   ),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: '0.00',
-                    hintStyle: GoogleFonts.inter(
-                      color: _activeColor.withValues(alpha: 0.3),
+                ),
+                Expanded(
+                  child: TextFormField(
+                    controller: _amountController,
+                    style: GoogleFonts.inter(
+                      color: _activeColor,
                       fontSize: 40,
                       fontWeight: FontWeight.w700,
                     ),
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                      RegExp(r'^\d+\.?\d{0,2}'),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      focusedErrorBorder: InputBorder.none,
+                      hintText: '0.00',
+                      hintStyle: GoogleFonts.inter(
+                        color: _activeColor.withValues(alpha: 0.3),
+                        fontSize: 40,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
                     ),
-                  ],
-                  textAlign: TextAlign.center,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Required';
-                    }
-                    if (double.tryParse(value.trim()) == null ||
-                        double.parse(value.trim()) <= 0) {
-                      return 'Invalid';
-                    }
-                    return null;
-                  },
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}'),
+                      ),
+                    ],
+                    textAlign: TextAlign.center,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Required';
+                      }
+                      if (double.tryParse(value.trim()) == null ||
+                          double.parse(value.trim()) <= 0) {
+                        return 'Invalid';
+                      }
+                      return null;
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -1190,7 +1243,11 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           _buildDetailRow(
             icon: Icons.category_rounded,
             label: 'Category',
-            value: _selectedCategory ?? 'Select category',
+            value: _selectedCategory != null
+                ? (_selectedSubcategory != null
+                      ? '$_selectedCategory • $_selectedSubcategory'
+                      : _selectedCategory!)
+                : 'Select category',
             valueColor: _selectedCategory != null ? _activeColor : null,
             emoji: _selectedCategory != null
                 ? DefaultCategories.getCategoryEmoji(
@@ -1314,21 +1371,45 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     fontSize: 11,
                   ),
                 ),
-                TextFormField(
-                  controller: _noteController,
-                  style: GoogleFonts.inter(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
                   ),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: 'Add a note',
-                    hintStyle: GoogleFonts.inter(
-                      color: AppColors.textMuted,
-                      fontSize: 14,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.surfaceVariant,
+                      width: 1,
                     ),
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
+                  ),
+                  child: TextFormField(
+                    controller: _noteController,
+                    style: GoogleFonts.inter(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      focusedErrorBorder: InputBorder.none,
+                      hintText: 'Add a note',
+                      hintStyle: GoogleFonts.inter(
+                        color: AppColors.textMuted,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    maxLines: 3,
+                    minLines: 1,
                   ),
                 ),
               ],
@@ -1399,23 +1480,45 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     fontSize: 11,
                   ),
                 ),
-                TextFormField(
-                  initialValue: value,
-                  style: GoogleFonts.inter(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
                   ),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: 'Enter $label',
-                    hintStyle: GoogleFonts.inter(
-                      color: AppColors.textMuted,
-                      fontSize: 14,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.transfer.withValues(alpha: 0.3),
+                      width: 1,
                     ),
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
                   ),
-                  onChanged: onChanged,
+                  child: TextFormField(
+                    initialValue: value,
+                    style: GoogleFonts.inter(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      focusedErrorBorder: InputBorder.none,
+                      hintText: 'Enter $label',
+                      hintStyle: GoogleFonts.inter(
+                        color: AppColors.textMuted,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    onChanged: onChanged,
+                  ),
                 ),
               ],
             ),
@@ -1459,28 +1562,44 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     fontSize: 11,
                   ),
                 ),
-                TextFormField(
-                  controller: _titleController,
-                  style: GoogleFonts.inter(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
                   ),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: 'What was this for?',
-                    hintStyle: GoogleFonts.inter(
-                      color: AppColors.textMuted,
-                      fontSize: 14,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _activeColor.withValues(alpha: 0.2),
+                      width: 1,
                     ),
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
                   ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Required';
-                    }
-                    return null;
-                  },
+                  child: TextFormField(
+                    controller: _titleController,
+                    style: GoogleFonts.inter(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      focusedErrorBorder: InputBorder.none,
+                      hintText: 'What was this for? (Optional)',
+                      hintStyle: GoogleFonts.inter(
+                        color: AppColors.textMuted,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
                 ),
               ],
             ),

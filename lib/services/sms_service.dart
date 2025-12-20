@@ -119,7 +119,7 @@ class SmsService {
     return await Permission.sms.isGranted;
   }
 
-  static Future<List<ParsedSmsTransaction>> fetchAndParseSmsMessages() async {
+  static Future<List<ParsedSmsTransaction>> fetchAndParseSmsMessages({bool fetchAll = false}) async {
     final hasPermission = await requestSmsPermission();
     if (!hasPermission) {
       return [];
@@ -135,8 +135,8 @@ class SmsService {
     final List<ParsedSmsTransaction> transactions = [];
 
     for (final message in messages) {
-      // Filter by date - only get messages from install month onwards
-      if (message.date != null && message.date!.isBefore(
+      // Filter by date - only get messages from install month onwards (unless fetchAll is true)
+      if (!fetchAll && message.date != null && message.date!.isBefore(
         DateTime(installDate.year, installDate.month, 1)
       )) {
         continue;

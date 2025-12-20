@@ -29,6 +29,9 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
   TransactionFilter _transactionFilter = TransactionFilter.all;
   ImportFilter _importFilter = ImportFilter.all;
   bool _showFilters = false;
+  
+  // Fetch all transactions toggle
+  bool _fetchAllTransactions = false;
 
   @override
   void initState() {
@@ -100,7 +103,9 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
       }
 
       if (_hasPermission) {
-        final transactions = await SmsService.fetchAndParseSmsMessages();
+        final transactions = await SmsService.fetchAndParseSmsMessages(
+          fetchAll: _fetchAllTransactions,
+        );
         
         // Mark already imported ones
         for (var t in transactions) {
@@ -533,6 +538,77 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          
+          // Date Range Option
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _fetchAllTransactions 
+                    ? AppColors.income.withValues(alpha: 0.5)
+                    : AppColors.surfaceVariant,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _fetchAllTransactions 
+                        ? AppColors.income.withValues(alpha: 0.15)
+                        : AppColors.surfaceVariant.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.history,
+                    size: 20,
+                    color: _fetchAllTransactions 
+                        ? AppColors.income 
+                        : AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Fetch All Historical Transactions',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        _fetchAllTransactions 
+                            ? 'Showing all SMS transactions'
+                            : 'Only showing from install date',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: _fetchAllTransactions,
+                  onChanged: (value) {
+                    setState(() {
+                      _fetchAllTransactions = value;
+                    });
+                    _loadTransactions();
+                  },
+                  activeColor: AppColors.income,
+                  activeTrackColor: AppColors.income.withValues(alpha: 0.3),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -805,13 +881,31 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'No bank SMS messages found since $monthName',
+              _fetchAllTransactions 
+                  ? 'No bank SMS messages found in your inbox'
+                  : 'No bank SMS messages found since $monthName',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,
               ),
             ),
+            if (!_fetchAllTransactions) ...[
+              const SizedBox(height: 16),
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _fetchAllTransactions = true;
+                  });
+                  _loadTransactions();
+                },
+                icon: const Icon(Icons.history, size: 18),
+                label: const Text('Fetch All Historical Transactions'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.income,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -863,16 +957,31 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.income.withValues(alpha: 0.2),
+                  color: _fetchAllTransactions 
+                      ? AppColors.success.withValues(alpha: 0.2)
+                      : AppColors.income.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
-                  'Since ${DateFormat('MMM').format(installDate)}',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.income,
-                    fontWeight: FontWeight.w500,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _fetchAllTransactions ? Icons.all_inclusive : Icons.calendar_today,
+                      size: 10,
+                      color: _fetchAllTransactions ? AppColors.success : AppColors.income,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _fetchAllTransactions 
+                          ? 'All Time'
+                          : 'Since ${DateFormat('MMM').format(installDate)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: _fetchAllTransactions ? AppColors.success : AppColors.income,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
