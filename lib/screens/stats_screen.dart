@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/storage_service.dart';
+import '../services/sms_service.dart';
 import '../models/transaction.dart';
 import '../models/category.dart';
 import '../theme/app_theme.dart';
@@ -46,12 +47,270 @@ class _StatsScreenState extends State<StatsScreen>
     });
   }
 
-  List<Transaction> _getFilteredTransactions() {
-    final allTransactions = StorageService.getAllTransactions();
-    return allTransactions.where((t) {
+  Future<List<Transaction>> _getFilteredTransactions() async {
+    // Get manually added transactions
+    final manualTransactions = StorageService.getAllTransactions();
+
+    // Get SMS transactions and convert them to Transaction objects
+    final smsTransactions = await _getSmsTransactionsAsTransactions();
+
+    // Combine both lists using the same logic as home screen
+    // Use transaction ID as the key to ensure edited transactions replace old ones
+    final uniqueTransactions = <String, Transaction>{};
+
+    // First, add all manual transactions (these are edited/imported, so they take precedence)
+    for (var t in manualTransactions) {
+      uniqueTransactions[t.id] = t;
+    }
+
+    // Then, add SMS transactions only if they don't already exist in manual storage
+    // This ensures that edited transactions replace the original SMS versions
+    for (var t in smsTransactions) {
+      if (!uniqueTransactions.containsKey(t.id)) {
+        uniqueTransactions[t.id] = t;
+      }
+    }
+
+    final combinedTransactions = uniqueTransactions.values.toList();
+
+    // Filter by selected month
+    return combinedTransactions.where((t) {
       return t.date.year == _selectedMonth.year &&
           t.date.month == _selectedMonth.month;
     }).toList();
+  }
+
+  Future<List<Transaction>> _getSmsTransactionsAsTransactions() async {
+    try {
+      final hasPermission = await SmsService.hasSmsPermission();
+      if (!hasPermission) {
+        return [];
+      }
+
+      // Fetch SMS transactions
+      final smsTransactions = await SmsService.fetchAndParseSmsMessages(
+        fetchAll: false,
+      );
+
+      // Convert ParsedSmsTransaction to Transaction using the same logic as home screen
+      return smsTransactions.map((smsT) {
+        // Use the same transfer detection logic as home screen
+        final isTransfer = _isSmsTransactionTransfer(smsT);
+
+        // Extract account information for transfers
+        String? fromAccount;
+        String? toAccount;
+
+        if (isTransfer) {
+          if (smsT.isCredit) {
+            toAccount = smsT.accountNumber ?? 'Bank Account';
+            fromAccount = 'Cash';
+          } else {
+            fromAccount = smsT.accountNumber ?? 'Bank Account';
+            final upperMessage = smsT.rawMessage.toUpperCase();
+            if (upperMessage.contains('TO ACCOUNT') ||
+                upperMessage.contains('TRANSFERRED TO') ||
+                upperMessage.contains('NEFT') ||
+                upperMessage.contains('RTGS') ||
+                upperMessage.contains('IMPS') ||
+                upperMessage.contains('UPI')) {
+              toAccount =
+                  _extractRecipientAccount(smsT.rawMessage) ?? 'Other Account';
+            } else {
+              toAccount = 'Cash';
+            }
+          }
+        }
+
+        return Transaction(
+          id: 'sms_${smsT.id}',
+          title: isTransfer
+              ? (smsT.isCredit
+                    ? '${smsT.bankName} Deposit'
+                    : (smsT.rawMessage.toUpperCase().contains('TO ACCOUNT') ||
+                              smsT.rawMessage.toUpperCase().contains(
+                                'TRANSFERRED TO',
+                              ) ||
+                              smsT.rawMessage.toUpperCase().contains('NEFT') ||
+                              smsT.rawMessage.toUpperCase().contains('RTGS') ||
+                              smsT.rawMessage.toUpperCase().contains('IMPS')
+                          ? '${smsT.bankName} Transfer'
+                          : '${smsT.bankName} Withdrawal'))
+              : '${smsT.bankName} ${smsT.isCredit ? "Credit" : "Debit"}',
+          amount: smsT.amount,
+          type: isTransfer
+              ? TransactionType.transfer
+              : (smsT.isCredit
+                    ? TransactionType.income
+                    : TransactionType.expense),
+          date: smsT.date,
+          category: isTransfer
+              ? 'Transfer'
+              : (smsT.isCredit ? 'Bank Transfer' : 'Bank Transaction'),
+          note:
+              'From SMS: ${smsT.rawMessage.substring(0, smsT.rawMessage.length > 50 ? 50 : smsT.rawMessage.length)}${smsT.rawMessage.length > 50 ? "..." : ""}',
+          accountType: AccountType.bank,
+          fromAccount: fromAccount,
+          toAccount: toAccount,
+        );
+      }).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Detect if SMS transaction is a transfer (same logic as home screen)
+  bool _isSmsTransactionTransfer(ParsedSmsTransaction smsT) {
+    final upperMessage = smsT.rawMessage.toUpperCase();
+
+    if (smsT.isCredit) {
+      final cashDepositKeywords = [
+        'CASH DEPOSIT',
+        'CASH DEPOSITED',
+        'DEPOSIT CASH',
+        'CASH DEPOSITED TO',
+      ];
+      return cashDepositKeywords.any(
+        (keyword) => upperMessage.contains(keyword),
+      );
+    }
+
+    // For debits - check for transfers FIRST
+    if (upperMessage.contains('ATM') &&
+        (upperMessage.contains('WITHDRAWAL') ||
+            upperMessage.contains('WITHDRAWN'))) {
+      return true;
+    }
+
+    if (RegExp(
+      r'ATM\s+WITHDRAW(?:AL|N)',
+      caseSensitive: false,
+    ).hasMatch(upperMessage)) {
+      return true;
+    }
+
+    if (upperMessage.contains('CASH WITHDRAWAL') ||
+        upperMessage.contains('CASH WITHDRAWN')) {
+      return true;
+    }
+
+    if ((upperMessage.contains('WITHDRAWAL') ||
+            upperMessage.contains('WITHDRAWN')) &&
+        (upperMessage.contains('FROM ACCOUNT') ||
+            upperMessage.contains('FROM A/C') ||
+            upperMessage.contains('FROM AC') ||
+            RegExp(
+              r'FROM\s+[A/C\s]*NO',
+              caseSensitive: false,
+            ).hasMatch(upperMessage) ||
+            upperMessage.contains('A/C NO') ||
+            upperMessage.contains('ACCOUNT NO') ||
+            upperMessage.contains('A/C:'))) {
+      return true;
+    }
+
+    if ((upperMessage.contains('NEFT') ||
+            upperMessage.contains('RTGS') ||
+            upperMessage.contains('IMPS') ||
+            upperMessage.contains('UPI')) &&
+        (upperMessage.contains('TO ACCOUNT') ||
+            upperMessage.contains('TO A/C') ||
+            upperMessage.contains('TO AC') ||
+            RegExp(
+              r'DEBITED\s+TO\s+(?:AC|ACCOUNT|A/C)',
+              caseSensitive: false,
+            ).hasMatch(upperMessage) ||
+            RegExp(
+              r'TO\s+(?:AC|ACCOUNT|A/C)\s+NO',
+              caseSensitive: false,
+            ).hasMatch(upperMessage))) {
+      return true;
+    }
+
+    if (upperMessage.contains('TRANSFER') &&
+        (upperMessage.contains('TO ACCOUNT') ||
+            upperMessage.contains('TO A/C') ||
+            upperMessage.contains('TO AC') ||
+            upperMessage.contains('FROM ACCOUNT') ||
+            upperMessage.contains('FROM A/C') ||
+            upperMessage.contains('FROM AC') ||
+            RegExp(
+              r'TO\s+[A/C\s]*NO',
+              caseSensitive: false,
+            ).hasMatch(upperMessage) ||
+            RegExp(
+              r'FROM\s+[A/C\s]*NO',
+              caseSensitive: false,
+            ).hasMatch(upperMessage))) {
+      return true;
+    }
+
+    // Check for expenses
+    final expenseKeywords = [
+      'PAYMENT',
+      'PAID',
+      'PURCHASE',
+      'PURCHASED',
+      'BILL',
+      'MERCHANT',
+      'POS',
+      'DEBIT CARD',
+      'CREDIT CARD',
+      'ONLINE',
+      'SHOPPING',
+      'RESTAURANT',
+      'FOOD',
+      'GROCERY',
+      'FUEL',
+      'PETROL',
+      'DIESEL',
+      'TAXI',
+      'UBER',
+      'OLA',
+      'RENT',
+      'SALARY',
+      'SERVICE',
+      'CHARGE',
+      'FEE',
+      'TAX',
+    ];
+
+    final isActualExpense = expenseKeywords.any(
+      (keyword) => upperMessage.contains(keyword),
+    );
+    if (isActualExpense) {
+      return false;
+    }
+
+    return false;
+  }
+
+  /// Extract recipient account number from SMS message
+  String? _extractRecipientAccount(String message) {
+    final upperMessage = message.toUpperCase();
+    final patterns = [
+      RegExp(
+        r'TO\s+(?:ACCOUNT|A/C|ACCT)[:\s]*[X*]*([0-9]{4,})',
+        caseSensitive: false,
+      ),
+      RegExp(r'TRANSFERRED\s+TO[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
+      RegExp(r'BEN(?:EFICIARY)?[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
+      RegExp(r'TO\s+([A-Z0-9]+@[A-Z]+)', caseSensitive: false),
+      RegExp(r'TO[:\s]+[A-Z\s]*([0-9]{4,})', caseSensitive: false),
+    ];
+
+    for (final pattern in patterns) {
+      final match = pattern.firstMatch(upperMessage);
+      if (match != null && match.group(1) != null) {
+        final account = match.group(1)!;
+        if (account.contains('@')) {
+          return account;
+        } else {
+          return '****${account.length > 4 ? account.substring(account.length - 4) : account}';
+        }
+      }
+    }
+    return null;
   }
 
   String _formatCurrency(double amount) {
@@ -61,63 +320,82 @@ class _StatsScreenState extends State<StatsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final transactions = _getFilteredTransactions();
-
-    final income = transactions
-        .where((t) => t.type == TransactionType.income)
-        .fold(0.0, (sum, t) => sum + t.amount);
-
-    final expense = transactions
-        .where((t) => t.type == TransactionType.expense)
-        .fold(0.0, (sum, t) => sum + t.amount);
-
-    // Category breakdown for expenses
-    final categoryExpenses = <String, double>{};
-    for (var transaction in transactions) {
-      if (transaction.type == TransactionType.expense &&
-          transaction.category != null) {
-        categoryExpenses[transaction.category!] =
-            (categoryExpenses[transaction.category!] ?? 0) + transaction.amount;
-      }
-    }
-
-    // Category breakdown for income
-    final categoryIncome = <String, double>{};
-    for (var transaction in transactions) {
-      if (transaction.type == TransactionType.income &&
-          transaction.category != null) {
-        categoryIncome[transaction.category!] =
-            (categoryIncome[transaction.category!] ?? 0) + transaction.amount;
-      }
-    }
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // Header
-            _buildHeader(),
-
-            // Income/Expenses Tab Bar
-            _buildTabBar(income, expense),
-
-            // Content
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  // Income Tab
-                  _buildStatsContent(categoryIncome, income, true),
-                  // Expenses Tab
-                  _buildStatsContent(categoryExpenses, expense, false),
-                ],
+    return FutureBuilder<List<Transaction>>(
+      future: _getFilteredTransactions(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            body: SafeArea(
+              bottom: false,
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
               ),
             ),
-          ],
-        ),
-      ),
+          );
+        }
+
+        final transactions = snapshot.data ?? [];
+
+        final income = transactions
+            .where((t) => t.type == TransactionType.income)
+            .fold(0.0, (sum, t) => sum + t.amount);
+
+        final expense = transactions
+            .where((t) => t.type == TransactionType.expense)
+            .fold(0.0, (sum, t) => sum + t.amount);
+
+        // Category breakdown for expenses
+        final categoryExpenses = <String, double>{};
+        for (var transaction in transactions) {
+          if (transaction.type == TransactionType.expense &&
+              transaction.category != null) {
+            categoryExpenses[transaction.category!] =
+                (categoryExpenses[transaction.category!] ?? 0) +
+                transaction.amount;
+          }
+        }
+
+        // Category breakdown for income
+        final categoryIncome = <String, double>{};
+        for (var transaction in transactions) {
+          if (transaction.type == TransactionType.income &&
+              transaction.category != null) {
+            categoryIncome[transaction.category!] =
+                (categoryIncome[transaction.category!] ?? 0) +
+                transaction.amount;
+          }
+        }
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                // Header
+                _buildHeader(),
+
+                // Income/Expenses Tab Bar
+                _buildTabBar(income, expense),
+
+                // Content
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      // Income Tab
+                      _buildStatsContent(categoryIncome, income, true),
+                      // Expenses Tab
+                      _buildStatsContent(categoryExpenses, expense, false),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
