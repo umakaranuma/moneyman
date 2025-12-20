@@ -12,24 +12,9 @@ class AppColors {
   static const Color cardBackground = Color(0xFF1C2433); // Same as surface
 
   // Primary Accent - Warm Orange (Premium Color)
-  static const Color primary = Color.fromARGB(
-    255,
-    249,
-    106,
-    70,
-  ); // Warm Orange-Red
-  static const Color primaryLight = Color.fromARGB(
-    255,
-    255,
-    140,
-    100,
-  ); // Lighter Orange-Red
-  static const Color primaryDark = Color.fromARGB(
-    255,
-    220,
-    80,
-    50,
-  ); // Darker Orange-Red
+  static const Color primary = Color(0xFFF96A46); // Warm Orange-Red
+  static const Color primaryLight = Color(0xFFFF8C64); // Lighter Orange-Red
+  static const Color primaryDark = Color(0xFFDC5032); // Darker Orange-Red
 
   // Secondary Accent - Soft Blue
   static const Color secondary = Color(0xFF60A5FA); // Soft Blue
