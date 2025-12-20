@@ -355,7 +355,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
       floatingActionButton: Container(
         margin: const EdgeInsets.only(bottom: 16),
         child: GestureDetector(
-          onTap: () => context.goToAddTransaction(),
+          onTap: () async {
+            final result = await context.goToAddTransaction<bool>();
+            if (result == true) {
+              // Transaction was saved, refresh the screen
+              setState(() {});
+            }
+          },
           child: Container(
             width: 56,
             height: 56,

@@ -4,8 +4,10 @@ import '../services/sms_service.dart';
 import '../services/storage_service.dart';
 import '../models/transaction.dart';
 import '../theme/app_theme.dart';
+import '../widgets/sms_analytics_tab.dart';
 
 enum TransactionFilter { all, credit, debit }
+
 enum ImportFilter { all, imported, notImported }
 
 class SmsTransactionsScreen extends StatefulWidget {
@@ -15,7 +17,9 @@ class SmsTransactionsScreen extends StatefulWidget {
   State<SmsTransactionsScreen> createState() => _SmsTransactionsScreenState();
 }
 
-class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
+class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   List<ParsedSmsTransaction> _allTransactions = [];
   List<ParsedSmsTransaction> _filteredTransactions = [];
   bool _isLoading = true;
@@ -29,14 +33,22 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
   TransactionFilter _transactionFilter = TransactionFilter.all;
   ImportFilter _importFilter = ImportFilter.all;
   bool _showFilters = false;
-  
+
   // Fetch all transactions toggle
   bool _fetchAllTransactions = false;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() => setState(() {}));
     _loadTransactions();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   List<String> get _availableBanks {
@@ -52,7 +64,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
         if (_selectedBank != null && t.bankName != _selectedBank) {
           return false;
         }
-        
+
         // Transaction type filter
         if (_transactionFilter == TransactionFilter.credit && !t.isCredit) {
           return false;
@@ -60,7 +72,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
         if (_transactionFilter == TransactionFilter.debit && t.isCredit) {
           return false;
         }
-        
+
         // Import status filter
         if (_importFilter == ImportFilter.imported && !t.isImported) {
           return false;
@@ -68,7 +80,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
         if (_importFilter == ImportFilter.notImported && t.isImported) {
           return false;
         }
-        
+
         return true;
       }).toList();
     });
@@ -97,7 +109,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
 
     try {
       _hasPermission = await SmsService.hasSmsPermission();
-      
+
       if (!_hasPermission) {
         _hasPermission = await SmsService.requestSmsPermission();
       }
@@ -106,12 +118,12 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
         final transactions = await SmsService.fetchAndParseSmsMessages(
           fetchAll: _fetchAllTransactions,
         );
-        
+
         // Mark already imported ones
         for (var t in transactions) {
           t.isImported = SmsService.isAlreadyImported(t.id);
         }
-        
+
         setState(() {
           _allTransactions = transactions;
           _filteredTransactions = List.from(transactions);
@@ -134,9 +146,12 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
   Future<void> _importTransaction(ParsedSmsTransaction smsTransaction) async {
     final transaction = Transaction(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: '${smsTransaction.bankName} ${smsTransaction.isCredit ? "Credit" : "Debit"}',
+      title:
+          '${smsTransaction.bankName} ${smsTransaction.isCredit ? "Credit" : "Debit"}',
       amount: smsTransaction.amount,
-      type: smsTransaction.isCredit ? TransactionType.income : TransactionType.expense,
+      type: smsTransaction.isCredit
+          ? TransactionType.income
+          : TransactionType.expense,
       date: smsTransaction.date,
       category: smsTransaction.isCredit ? 'Bank Transfer' : 'Bank Transaction',
       note: 'Imported from SMS: ${smsTransaction.rawMessage}',
@@ -153,7 +168,9 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Transaction imported: Rs. ${_formatCurrency(smsTransaction.amount)}'),
+          content: Text(
+            'Transaction imported: Rs. ${_formatCurrency(smsTransaction.amount)}',
+          ),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
         ),
@@ -163,7 +180,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
 
   Future<void> _importSelected() async {
     int importedCount = 0;
-    
+
     for (final id in _selectedIds) {
       final transaction = _allTransactions.firstWhere((t) => t.id == id);
       if (!transaction.isImported) {
@@ -219,11 +236,15 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary, size: 20),
+                  child: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: AppColors.textPrimary,
+                    size: 20,
+                  ),
                 ),
               ),
         title: Text(
-          _isSelectionMode 
+          _isSelectionMode
               ? '${_selectedIds.length} Selected'
               : 'Bank SMS Transactions',
           style: const TextStyle(
@@ -232,6 +253,22 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
+        bottom: _isSelectionMode
+            ? null
+            : TabBar(
+                controller: _tabController,
+                indicatorColor: AppColors.primary,
+                labelColor: AppColors.primary,
+                unselectedLabelColor: AppColors.textMuted,
+                labelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                tabs: const [
+                  Tab(text: 'Transactions'),
+                  Tab(text: 'Analytics'),
+                ],
+              ),
         actions: [
           if (_isSelectionMode && _selectedIds.isNotEmpty)
             TextButton.icon(
@@ -249,7 +286,9 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                   IconButton(
                     icon: Icon(
                       Icons.filter_list,
-                      color: _hasActiveFilters ? AppColors.income : AppColors.textSecondary,
+                      color: _hasActiveFilters
+                          ? AppColors.income
+                          : AppColors.textSecondary,
                     ),
                     onPressed: () {
                       setState(() {
@@ -274,7 +313,10 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
               ),
             if (!_isLoading && _allTransactions.isNotEmpty)
               IconButton(
-                icon: const Icon(Icons.checklist, color: AppColors.textSecondary),
+                icon: const Icon(
+                  Icons.checklist,
+                  color: AppColors.textSecondary,
+                ),
                 onPressed: () {
                   setState(() {
                     _isSelectionMode = true;
@@ -288,7 +330,15 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
           ),
         ],
       ),
-      body: _buildBody(),
+      body: _isSelectionMode
+          ? _buildBody()
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildBody(),
+                SmsAnalyticsTab(transactions: _allTransactions),
+              ],
+            ),
     );
   }
 
@@ -348,10 +398,10 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
       children: [
         // Filter Section
         if (_showFilters) _buildFilterSection(),
-        
+
         // Active Filters Chips
         if (_hasActiveFilters && !_showFilters) _buildActiveFiltersBar(),
-        
+
         _buildSummaryCard(),
         Expanded(
           child: _filteredTransactions.isEmpty
@@ -404,7 +454,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Bank Filter
           const Text(
             'Bank',
@@ -429,21 +479,23 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                     _applyFilters();
                   },
                 ),
-                ..._availableBanks.map((bank) => _buildFilterChip(
-                  label: bank,
-                  isSelected: _selectedBank == bank,
-                  onTap: () {
-                    setState(() {
-                      _selectedBank = bank;
-                    });
-                    _applyFilters();
-                  },
-                )),
+                ..._availableBanks.map(
+                  (bank) => _buildFilterChip(
+                    label: bank,
+                    isSelected: _selectedBank == bank,
+                    onTap: () {
+                      setState(() {
+                        _selectedBank = bank;
+                      });
+                      _applyFilters();
+                    },
+                  ),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Transaction Type Filter
           const Text(
             'Transaction Type',
@@ -491,7 +543,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Import Status Filter
           const Text(
             'Import Status',
@@ -539,7 +591,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Date Range Option
           Container(
             padding: const EdgeInsets.all(12),
@@ -547,7 +599,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
               color: AppColors.background,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: _fetchAllTransactions 
+                color: _fetchAllTransactions
                     ? AppColors.income.withValues(alpha: 0.5)
                     : AppColors.surfaceVariant,
               ),
@@ -557,7 +609,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: _fetchAllTransactions 
+                    color: _fetchAllTransactions
                         ? AppColors.income.withValues(alpha: 0.15)
                         : AppColors.surfaceVariant.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(8),
@@ -565,8 +617,8 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                   child: Icon(
                     Icons.history,
                     size: 20,
-                    color: _fetchAllTransactions 
-                        ? AppColors.income 
+                    color: _fetchAllTransactions
+                        ? AppColors.income
                         : AppColors.textSecondary,
                   ),
                 ),
@@ -584,7 +636,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                         ),
                       ),
                       Text(
-                        _fetchAllTransactions 
+                        _fetchAllTransactions
                             ? 'Showing all SMS transactions'
                             : 'Only showing from install date',
                         style: const TextStyle(
@@ -621,7 +673,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
     Color? color,
   }) {
     final chipColor = color ?? AppColors.income;
-    
+
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: GestureDetector(
@@ -629,8 +681,8 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected 
-                ? chipColor.withValues(alpha: 0.2) 
+            color: isSelected
+                ? chipColor.withValues(alpha: 0.2)
                 : AppColors.background,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
@@ -683,11 +735,11 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                     ),
                   if (_transactionFilter != TransactionFilter.all)
                     _buildActiveFilterChip(
-                      label: _transactionFilter == TransactionFilter.credit 
-                          ? 'Credit' 
+                      label: _transactionFilter == TransactionFilter.credit
+                          ? 'Credit'
                           : 'Debit',
-                      color: _transactionFilter == TransactionFilter.credit 
-                          ? AppColors.income 
+                      color: _transactionFilter == TransactionFilter.credit
+                          ? AppColors.income
                           : AppColors.expense,
                       onRemove: () {
                         setState(() {
@@ -698,8 +750,8 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                     ),
                   if (_importFilter != ImportFilter.all)
                     _buildActiveFilterChip(
-                      label: _importFilter == ImportFilter.imported 
-                          ? 'Imported' 
+                      label: _importFilter == ImportFilter.imported
+                          ? 'Imported'
                           : 'Not Imported',
                       onRemove: () {
                         setState(() {
@@ -754,11 +806,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
           const SizedBox(width: 4),
           GestureDetector(
             onTap: onRemove,
-            child: Icon(
-              Icons.close,
-              size: 14,
-              color: color,
-            ),
+            child: Icon(Icons.close, size: 14, color: color),
           ),
         ],
       ),
@@ -830,10 +878,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
             const Text(
               'To automatically import bank transactions, we need permission to read your SMS messages. We only look for bank transaction messages.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 32),
             ElevatedButton.icon(
@@ -843,7 +888,10 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.income,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -858,7 +906,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
   Widget _buildEmptyState() {
     final installDate = SmsService.getInstallDate();
     final monthName = DateFormat('MMMM yyyy').format(installDate);
-    
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -881,7 +929,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              _fetchAllTransactions 
+              _fetchAllTransactions
                   ? 'No bank SMS messages found in your inbox'
                   : 'No bank SMS messages found since $monthName',
               textAlign: TextAlign.center,
@@ -901,9 +949,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                 },
                 icon: const Icon(Icons.history, size: 18),
                 label: const Text('Fetch All Historical Transactions'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.income,
-                ),
+                style: TextButton.styleFrom(foregroundColor: AppColors.income),
               ),
             ],
           ],
@@ -920,7 +966,9 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
     final totalDebit = _filteredTransactions
         .where((t) => !t.isCredit)
         .fold(0.0, (sum, t) => sum + t.amount);
-    final importedCount = _filteredTransactions.where((t) => t.isImported).length;
+    final importedCount = _filteredTransactions
+        .where((t) => t.isImported)
+        .length;
     final installDate = SmsService.getInstallDate();
 
     return Container(
@@ -957,7 +1005,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _fetchAllTransactions 
+                  color: _fetchAllTransactions
                       ? AppColors.success.withValues(alpha: 0.2)
                       : AppColors.income.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
@@ -966,18 +1014,24 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      _fetchAllTransactions ? Icons.all_inclusive : Icons.calendar_today,
+                      _fetchAllTransactions
+                          ? Icons.all_inclusive
+                          : Icons.calendar_today,
                       size: 10,
-                      color: _fetchAllTransactions ? AppColors.success : AppColors.income,
+                      color: _fetchAllTransactions
+                          ? AppColors.success
+                          : AppColors.income,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      _fetchAllTransactions 
+                      _fetchAllTransactions
                           ? 'All Time'
                           : 'Since ${DateFormat('MMM').format(installDate)}',
                       style: TextStyle(
                         fontSize: 11,
-                        color: _fetchAllTransactions ? AppColors.success : AppColors.income,
+                        color: _fetchAllTransactions
+                            ? AppColors.success
+                            : AppColors.income,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -997,11 +1051,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                   Icons.arrow_downward,
                 ),
               ),
-              Container(
-                width: 1,
-                height: 40,
-                color: AppColors.surfaceVariant,
-              ),
+              Container(width: 1, height: 40, color: AppColors.surfaceVariant),
               Expanded(
                 child: _buildSummaryItem(
                   'Debited',
@@ -1035,7 +1085,9 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                   '$importedCount imported',
                   style: TextStyle(
                     fontSize: 12,
-                    color: importedCount > 0 ? AppColors.income : AppColors.textMuted,
+                    color: importedCount > 0
+                        ? AppColors.income
+                        : AppColors.textMuted,
                   ),
                 ),
               ],
@@ -1046,7 +1098,12 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
     );
   }
 
-  Widget _buildSummaryItem(String label, String value, Color color, IconData icon) {
+  Widget _buildSummaryItem(
+    String label,
+    String value,
+    Color color,
+    IconData icon,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -1056,13 +1113,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
             children: [
               Icon(icon, size: 14, color: color),
               const SizedBox(width: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: color,
-                ),
-              ),
+              Text(label, style: TextStyle(fontSize: 12, color: color)),
             ],
           ),
           const SizedBox(height: 4),
@@ -1113,16 +1164,16 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected 
+          color: isSelected
               ? AppColors.income.withValues(alpha: 0.1)
               : AppColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected 
+            color: isSelected
                 ? AppColors.income
-                : transaction.isImported 
-                    ? AppColors.surfaceVariant.withValues(alpha: 0.5)
-                    : AppColors.surfaceVariant,
+                : transaction.isImported
+                ? AppColors.surfaceVariant.withValues(alpha: 0.5)
+                : AppColors.surfaceVariant,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -1139,11 +1190,11 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                     shape: BoxShape.circle,
                     color: isSelected ? AppColors.income : Colors.transparent,
                     border: Border.all(
-                      color: transaction.isImported 
+                      color: transaction.isImported
                           ? AppColors.textMuted
-                          : isSelected 
-                              ? AppColors.income 
-                              : AppColors.textSecondary,
+                          : isSelected
+                          ? AppColors.income
+                          : AppColors.textSecondary,
                       width: 2,
                     ),
                   ),
@@ -1167,11 +1218,13 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                   transaction.isCredit
                       ? Icons.arrow_downward_rounded
                       : Icons.arrow_upward_rounded,
-                  color: transaction.isCredit ? AppColors.income : AppColors.expense,
+                  color: transaction.isCredit
+                      ? AppColors.income
+                      : AppColors.expense,
                   size: 22,
                 ),
               ),
-            
+
             // Transaction details
             Expanded(
               child: Column(
@@ -1185,8 +1238,8 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: transaction.isImported 
-                                ? AppColors.textMuted 
+                            color: transaction.isImported
+                                ? AppColors.textMuted
                                 : AppColors.textPrimary,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -1195,7 +1248,10 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                       if (transaction.isImported)
                         Container(
                           margin: const EdgeInsets.only(left: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.income.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
@@ -1218,7 +1274,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                         dateStr,
                         style: TextStyle(
                           fontSize: 12,
-                          color: transaction.isImported 
+                          color: transaction.isImported
                               ? AppColors.textMuted.withValues(alpha: 0.7)
                               : AppColors.textSecondary,
                         ),
@@ -1228,7 +1284,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                         timeStr,
                         style: TextStyle(
                           fontSize: 11,
-                          color: transaction.isImported 
+                          color: transaction.isImported
                               ? AppColors.textMuted.withValues(alpha: 0.5)
                               : AppColors.textMuted,
                         ),
@@ -1242,7 +1298,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                         transaction.accountNumber!,
                         style: TextStyle(
                           fontSize: 11,
-                          color: transaction.isImported 
+                          color: transaction.isImported
                               ? AppColors.textMuted.withValues(alpha: 0.5)
                               : AppColors.textMuted,
                         ),
@@ -1251,7 +1307,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                 ],
               ),
             ),
-            
+
             // Amount
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -1263,20 +1319,23 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                     fontWeight: FontWeight.bold,
                     color: transaction.isImported
                         ? AppColors.textMuted
-                        : transaction.isCredit 
-                            ? AppColors.income 
-                            : AppColors.expense,
+                        : transaction.isCredit
+                        ? AppColors.income
+                        : AppColors.expense,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: transaction.isImported
                         ? AppColors.textMuted.withValues(alpha: 0.2)
                         : transaction.isCredit
-                            ? AppColors.income.withValues(alpha: 0.15)
-                            : AppColors.expense.withValues(alpha: 0.15),
+                        ? AppColors.income.withValues(alpha: 0.15)
+                        : AppColors.expense.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -1286,9 +1345,9 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                       fontWeight: FontWeight.w600,
                       color: transaction.isImported
                           ? AppColors.textMuted
-                          : transaction.isCredit 
-                              ? AppColors.income 
-                              : AppColors.expense,
+                          : transaction.isCredit
+                          ? AppColors.income
+                          : AppColors.expense,
                     ),
                   ),
                 ),
@@ -1326,7 +1385,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Header
               Row(
                 children: [
@@ -1343,7 +1402,9 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                       transaction.isCredit
                           ? Icons.arrow_downward_rounded
                           : Icons.arrow_upward_rounded,
-                      color: transaction.isCredit ? AppColors.income : AppColors.expense,
+                      color: transaction.isCredit
+                          ? AppColors.income
+                          : AppColors.expense,
                       size: 24,
                     ),
                   ),
@@ -1361,7 +1422,9 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                           ),
                         ),
                         Text(
-                          DateFormat('MMM dd, yyyy - hh:mm a').format(transaction.date),
+                          DateFormat(
+                            'MMM dd, yyyy - hh:mm a',
+                          ).format(transaction.date),
                           style: const TextStyle(
                             fontSize: 13,
                             color: AppColors.textSecondary,
@@ -1375,13 +1438,15 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: transaction.isCredit ? AppColors.income : AppColors.expense,
+                      color: transaction.isCredit
+                          ? AppColors.income
+                          : AppColors.expense,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
-              
+
               // Message content
               Container(
                 width: double.infinity,
@@ -1414,7 +1479,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Action button
               if (!transaction.isImported)
                 SizedBox(
@@ -1447,7 +1512,11 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen> {
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.check_circle, color: AppColors.income, size: 20),
+                      Icon(
+                        Icons.check_circle,
+                        color: AppColors.income,
+                        size: 20,
+                      ),
                       SizedBox(width: 8),
                       Text(
                         'Already Imported',

@@ -194,12 +194,14 @@ class AppRouter {
 
 // Extension for easy navigation
 extension GoRouterExtension on BuildContext {
-  void goToAddTransaction({TransactionType? type}) {
-    GoRouter.of(this).pushNamed('addTransaction', extra: type);
+  Future<T?> goToAddTransaction<T>({TransactionType? type}) async {
+    final result = await GoRouter.of(this).pushNamed('addTransaction', extra: type);
+    return result as T?;
   }
   
-  void goToEditTransaction(Transaction transaction) {
-    GoRouter.of(this).pushNamed('editTransaction', extra: transaction);
+  Future<T?> goToEditTransaction<T>(Transaction transaction) async {
+    final result = await GoRouter.of(this).pushNamed('editTransaction', extra: transaction);
+    return result as T?;
   }
   
   void goToNotes() {

@@ -191,8 +191,12 @@ class _HomeScreenState extends State<HomeScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 80),
       child: GestureDetector(
-        onTap: () {
-          context.goToAddTransaction();
+        onTap: () async {
+          final result = await context.goToAddTransaction<bool>();
+          if (result == true) {
+            // Transaction was saved, refresh the screen
+            setState(() {});
+          }
         },
         child: Container(
           width: 60,
@@ -1715,8 +1719,12 @@ class _HomeScreenState extends State<HomeScreen>
     final subcategory = _getSubcategory(transaction);
 
     return InkWell(
-      onTap: () {
-        context.goToEditTransaction(transaction);
+      onTap: () async {
+        final result = await context.goToEditTransaction<bool>(transaction);
+        if (result == true) {
+          // Transaction was updated, refresh the screen
+          setState(() {});
+        }
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),

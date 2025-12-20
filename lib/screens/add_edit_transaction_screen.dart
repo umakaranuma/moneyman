@@ -893,12 +893,28 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         StorageService.addTransaction(transaction);
       }
 
-      context.pop();
+      context.pop(true); // Return true to indicate transaction was saved
     }
   }
 
   void _saveAndContinue() {
     if (_formKey.currentState!.validate()) {
+      if (_transactionType == TransactionType.transfer) {
+        if (_fromAccount == null ||
+            _fromAccount!.trim().isEmpty ||
+            _toAccount == null ||
+            _toAccount!.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Please enter both From and To accounts for transfer',
+              ),
+            ),
+          );
+          return;
+        }
+      }
+
       final transaction = Transaction(
         id: Helpers.generateId(),
         title: _titleController.text.trim(),
@@ -910,6 +926,12 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
             ? null
             : _noteController.text.trim(),
         accountType: _accountType,
+        fromAccount: _transactionType == TransactionType.transfer
+            ? _fromAccount?.trim()
+            : null,
+        toAccount: _transactionType == TransactionType.transfer
+            ? _toAccount?.trim()
+            : null,
       );
 
       StorageService.addTransaction(transaction);
@@ -921,6 +943,8 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         _noteController.clear();
         _selectedCategory = null;
         _selectedSubcategory = null;
+        _fromAccount = null;
+        _toAccount = null;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1686,43 +1710,73 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                       ),
                     ),
                     SizedBox(height: padding * 0.4),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: padding * 0.75,
-                        vertical: padding * 0.6,
+                    TextFormField(
+                      controller: _titleController,
+                      style: GoogleFonts.inter(
+                        color: AppColors.textPrimary,
+                        fontSize: _getResponsiveFontSize(context, 13),
+                        fontWeight: FontWeight.w500,
                       ),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(padding * 0.75),
-                        border: Border.all(
-                          color: _activeColor.withValues(alpha: 0.2),
-                          width: 1,
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: padding * 0.75,
+                          vertical: padding * 0.6,
                         ),
-                      ),
-                      child: TextFormField(
-                        controller: _titleController,
-                        style: GoogleFonts.inter(
-                          color: AppColors.textPrimary,
-                          fontSize: _getResponsiveFontSize(context, 13),
-                          fontWeight: FontWeight.w500,
-                        ),
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          errorBorder: InputBorder.none,
-                          disabledBorder: InputBorder.none,
-                          focusedErrorBorder: InputBorder.none,
-                          hintText: 'What was this for? (Optional)',
-                          hintStyle: GoogleFonts.inter(
-                            color: AppColors.textMuted,
-                            fontSize: _getResponsiveFontSize(context, 13),
-                            fontWeight: FontWeight.w400,
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(padding * 0.75),
+                          borderSide: BorderSide(
+                            color: _activeColor.withValues(alpha: 0.2),
+                            width: 1,
                           ),
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(padding * 0.75),
+                          borderSide: BorderSide(
+                            color: _activeColor.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(padding * 0.75),
+                          borderSide: BorderSide(
+                            color: _activeColor,
+                            width: 1.5,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(padding * 0.75),
+                          borderSide: BorderSide(
+                            color: AppColors.expense,
+                            width: 1.5,
+                          ),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(padding * 0.75),
+                          borderSide: BorderSide(
+                            color: AppColors.expense,
+                            width: 1.5,
+                          ),
+                        ),
+                        hintText: 'What was this for?',
+                        hintStyle: GoogleFonts.inter(
+                          color: AppColors.textMuted,
+                          fontSize: _getResponsiveFontSize(context, 13),
+                          fontWeight: FontWeight.w400,
+                        ),
+                        isDense: true,
+                        errorStyle: GoogleFonts.inter(
+                          color: AppColors.expense,
+                          fontSize: _getResponsiveFontSize(context, 11),
                         ),
                       ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Description is required';
+                        }
+                        return null;
+                      },
                     ),
                   ],
                 ),
