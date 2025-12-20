@@ -11,10 +11,25 @@ class AppColors {
   static const Color surfaceVariant = Color(0xFF2A3446); // Dividers/Borders
   static const Color cardBackground = Color(0xFF1C2433); // Same as surface
 
-  // Primary Accent - Royal Blue
-  static const Color primary = Color(0xFF2563EB); // Royal Blue
-  static const Color primaryLight = Color(0xFF3B82F6); // Lighter Blue
-  static const Color primaryDark = Color(0xFF1D4ED8); // Darker Blue
+  // Primary Accent - Warm Orange (Premium Color)
+  static const Color primary = Color.fromARGB(
+    255,
+    249,
+    106,
+    70,
+  ); // Warm Orange-Red
+  static const Color primaryLight = Color.fromARGB(
+    255,
+    255,
+    140,
+    100,
+  ); // Lighter Orange-Red
+  static const Color primaryDark = Color.fromARGB(
+    255,
+    220,
+    80,
+    50,
+  ); // Darker Orange-Red
 
   // Secondary Accent - Soft Blue
   static const Color secondary = Color(0xFF60A5FA); // Soft Blue
@@ -66,25 +81,30 @@ class AppColors {
     Color(0xFF38BDF8), // Light Sky
   ];
 
-  // FAB - Royal Blue
-  static const Color fab = Color(0xFF2563EB);
-  static const Color fabPressed = Color(0xFF1D4ED8);
+  // FAB - Warm Orange
+  static const Color fab = Color(0xFFF97316);
+  static const Color fabPressed = Color(0xFFEA580C);
 
   // Navigation
-  static const Color navSelected = Color(0xFF2563EB);
+  static const Color navSelected = Color.fromARGB(255, 249, 106, 70);
   static const Color navUnselected = Color(0xFF6B7280);
 
   // Tab indicator
-  static const Color tabIndicator = Color(0xFF2563EB);
+  static const Color tabIndicator = Color.fromARGB(255, 249, 106, 70);
 
   // Shimmer
   static const Color shimmerBase = Color(0xFF1C2433);
   static const Color shimmerHighlight = Color(0xFF2A3446);
 
   // Glow effects
-  static const Color primaryGlow = Color(0x402563EB);
+  static const Color primaryGlow = Color.fromARGB(64, 249, 106, 70);
   static const Color incomeGlow = Color(0x402563EB); // Blue glow
-  static const Color expenseGlow = Color(0x40F97316); // Orange glow
+  static const Color expenseGlow = Color.fromARGB(
+    64,
+    249,
+    106,
+    70,
+  ); // Orange-Red glow
 }
 
 class AppTheme {
