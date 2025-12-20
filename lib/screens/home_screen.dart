@@ -807,9 +807,7 @@ class _HomeScreenState extends State<HomeScreen>
           _buildSummaryItem(
             'Balance',
             summary['total']!,
-            summary['total']! >= 0
-                ? AppColors.income
-                : AppColors.expense, // Green if positive, red if negative
+            AppColors.textSecondary, // Light gray color for balance
             Icons.account_balance_wallet_rounded,
             showSign: true, // Show minus sign for negative balance
           ),
