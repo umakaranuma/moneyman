@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -26,7 +28,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
   List<ParsedSmsTransaction> _filteredTransactions = [];
   bool _isLoading = false;
   String? _errorMessage;
-  Set<String> _selectedIds = {};
+  final Set<String> _selectedIds = {};
   bool _isSelectionMode = false;
   bool _hasLoadedOnce = false;
 
@@ -807,12 +809,17 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Could not parse transaction from SMS text. Please check the format.',
+              SnackBar(
+                content: const Text(
+                  'Could not parse transaction from SMS text.\n\n'
+                  'Please ensure the message contains:\n'
+                  '• A transaction type (debited/credited/paid/received)\n'
+                  '• An amount (e.g., LKR 5,025.00 or 5025.00)\n\n'
+                  'Check the console logs for more details.',
                 ),
                 backgroundColor: AppColors.expense,
                 behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 5),
               ),
             );
           }

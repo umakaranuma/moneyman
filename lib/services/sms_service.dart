@@ -103,35 +103,31 @@ class SmsService {
   }
 
   // MethodChannel for SMS User Consent API
-  static const MethodChannel _channel = MethodChannel('com.fynux.finzo/sms_consent');
+  static const MethodChannel _channel = MethodChannel(
+    'com.fynux.finzo/sms_consent',
+  );
 
   /// Request SMS using User Consent API (Play Store approved method)
   /// Shows Android system dialog, user selects SMS, we get the message
   /// This is the user-friendly method - no copy-paste needed!
   static Future<String?> requestSmsConsent() async {
     try {
-      final String? smsText = await _channel.invokeMethod<String>('requestSmsConsent')
+      final String? smsText = await _channel
+          .invokeMethod<String>('requestSmsConsent')
           .timeout(
             const Duration(seconds: 60),
             onTimeout: () {
-              print('SMS consent request timed out');
               return null;
             },
           );
       return smsText;
     } on PlatformException catch (e) {
-      print('Error requesting SMS consent: $e');
       // Handle specific error codes
       if (e.code == 'TIMEOUT') {
-        print('SMS consent timeout - user may have dismissed the dialog');
       } else if (e.code == 'SMS_CONSENT_ERROR') {
-        print('SMS consent error: ${e.message}');
-      } else if (e.code == 'GOOGLE_PLAY_SERVICES_UNAVAILABLE') {
-        print('Google Play Services not available: ${e.message}');
-      }
+      } else if (e.code == 'GOOGLE_PLAY_SERVICES_UNAVAILABLE') {}
       return null;
     } catch (e) {
-      print('Error requesting SMS consent: $e');
       return null;
     }
   }
@@ -142,7 +138,7 @@ class SmsService {
     try {
       // Request SMS via User Consent API (shows Android system dialog)
       final smsText = await requestSmsConsent();
-      
+
       if (smsText == null || smsText.isEmpty) {
         // User cancelled or no SMS selected
         return null;
@@ -158,13 +154,16 @@ class SmsService {
 
       return parsed;
     } catch (e) {
-      print('Error importing SMS transaction: $e');
       return null;
     }
   }
 
   /// Parse SMS text (used by both manual paste and User Consent API)
-  static ParsedSmsTransaction? parseSmsText(String smsText, {String? sender, String? bankName}) {
+  static ParsedSmsTransaction? parseSmsText(
+    String smsText, {
+    String? sender,
+    String? bankName,
+  }) {
     try {
       // Parse the SMS message
       final parsed = _parseTransactionMessage(
@@ -177,7 +176,6 @@ class SmsService {
 
       return parsed;
     } catch (e) {
-      print('Error parsing SMS: $e');
       return null;
     }
   }
@@ -208,11 +206,30 @@ class SmsService {
     final isCredit = _isCredit(upperBody);
     final isDebit = _isDebit(upperBody);
 
-    if (!isCredit && !isDebit) return null;
+    // Special handling: If message contains "FROM A/C" or "FROM ACCOUNT", it's likely a debit
+    // Also "POS/ATM Transaction" indicates a debit
+    final isLikelyDebit =
+        upperBody.contains('FROM A/C') ||
+        upperBody.contains('FROM ACCOUNT') ||
+        upperBody.contains('POS/ATM') ||
+        upperBody.contains('ATM TRANSACTION') ||
+        upperBody.contains('POS TRANSACTION');
+
+    if (!isCredit && !isDebit && !isLikelyDebit) {
+      print('No transaction type detected in: $body');
+      return null;
+    }
 
     // Extract amount
     final amount = _extractAmount(body);
-    if (amount == null || amount <= 0) return null;
+    if (amount == null || amount <= 0) {
+      print('Could not extract amount from: $body');
+      return null;
+    }
+
+    // If it's a likely debit but not explicitly marked, treat as debit
+    // If it's explicitly credit, it's credit; otherwise if it's debit or likely debit, it's debit
+    final finalIsCredit = isCredit && !isLikelyDebit;
 
     // Extract account number
     final accountNumber = _extractAccountNumber(body);
@@ -227,7 +244,7 @@ class SmsService {
       id: id,
       sender: sender,
       amount: amount,
-      isCredit: isCredit,
+      isCredit: finalIsCredit,
       date: date,
       rawMessage: body,
       accountNumber: accountNumber,
@@ -263,6 +280,15 @@ class SmsService {
       'DR',
       'SPENT',
       'DEDUCTED',
+      'WITHDRAWAL',
+      'PURCHASED',
+      'CHARGED',
+      'DEDUCT',
+      'TRANSACTION', // POS/ATM Transaction
+      'POS', // Point of Sale
+      'ATM', // ATM withdrawal
+      'WITHDRAW', // ATM withdraw
+      'CASH', // Cash withdrawal
     ];
     return debitKeywords.any((keyword) => body.contains(keyword));
   }
@@ -270,15 +296,26 @@ class SmsService {
   static double? _extractAmount(String body) {
     // Common patterns for amounts in bank messages
     final patterns = [
+      // Pattern: LKR 5,025.00 or LKR 5025.00 or LKR5,025.00
       RegExp(
         r'(?:RS\.?|LKR|INR|USD|\$)\s*([0-9,]+\.?[0-9]*)',
         caseSensitive: false,
       ),
+      // Pattern: AMOUNT: LKR 5,025.00
       RegExp(
         r'(?:AMOUNT|AMT)[:\s]*(?:RS\.?|LKR|INR|USD|\$)?\s*([0-9,]+\.?[0-9]*)',
         caseSensitive: false,
       ),
+      // Pattern: 5,025.00 LKR or 5025.00 LKR
       RegExp(r'([0-9,]+\.?[0-9]*)\s*(?:RS\.?|LKR|INR)', caseSensitive: false),
+      // Pattern: Rs 450.00 (with space after currency) - more specific
+      RegExp(r'(?:RS\.?|LKR|INR)\s+([0-9,]+\.?[0-9]*)', caseSensitive: false),
+      // Pattern: Just numbers with commas and decimals (e.g., 5,025.00 or 5025.00)
+      // This is more flexible and will catch amounts even without currency symbols
+      // But prioritize larger numbers that look like amounts (not dates or small numbers)
+      RegExp(r'\b([0-9]{2,}(?:,[0-9]{2,3})*(?:\.[0-9]{1,2})?)\b'),
+      // Pattern: Simple decimal number (e.g., 450.00 or 5025.00) - but avoid dates
+      RegExp(r'\b([0-9]{2,}(?:\.[0-9]{1,2})?)\b'),
     ];
 
     for (final pattern in patterns) {
@@ -287,7 +324,11 @@ class SmsService {
         final amountStr = match.group(1)!.replaceAll(',', '');
         final amount = double.tryParse(amountStr);
         if (amount != null && amount > 0) {
-          return amount;
+          // Filter out very small numbers that might be dates or other numbers
+          // Also filter out very large numbers that are likely account numbers
+          if (amount >= 0.01 && amount <= 999999999) {
+            return amount;
+          }
         }
       }
     }
@@ -323,7 +364,6 @@ class SmsService {
     return null;
   }
 
-
   static String? _extractBalance(String body) {
     final patterns = [
       RegExp(
@@ -340,7 +380,6 @@ class SmsService {
     }
     return null;
   }
-
 
   static String _determineBankName(String sender, String body) {
     final combined = '$sender $body'.toUpperCase();
@@ -387,7 +426,6 @@ class SmsService {
     return 'Unknown Bank';
   }
 
-
   /// Get list of available banks for selection
   static List<String> getAvailableBanks() {
     return [
@@ -428,12 +466,16 @@ class SmsService {
   }
 
   /// Save a parsed SMS transaction to persistent storage
-  static Future<void> saveSmsTransaction(ParsedSmsTransaction transaction) async {
+  static Future<void> saveSmsTransaction(
+    ParsedSmsTransaction transaction,
+  ) async {
     final transactions = getAllSmsTransactions();
-    
+
     // Check if transaction already exists
-    final existingIndex = transactions.indexWhere((t) => t.id == transaction.id);
-    
+    final existingIndex = transactions.indexWhere(
+      (t) => t.id == transaction.id,
+    );
+
     if (existingIndex >= 0) {
       // Update existing transaction
       transactions[existingIndex] = transaction;
@@ -441,7 +483,7 @@ class SmsService {
       // Add new transaction at the beginning
       transactions.insert(0, transaction);
     }
-    
+
     // Save to storage
     final jsonList = transactions.map((t) => t.toJson()).toList();
     await _smsBox.put(_smsTransactionsListKey, jsonList);
@@ -451,15 +493,16 @@ class SmsService {
   static List<ParsedSmsTransaction> getAllSmsTransactions() {
     final jsonList = _smsBox.get(_smsTransactionsListKey);
     if (jsonList == null) return [];
-    
+
     try {
       final List<dynamic> list = jsonList as List<dynamic>;
       return list
-          .map((json) => ParsedSmsTransaction.fromJson(
-              Map<String, dynamic>.from(json)))
+          .map(
+            (json) =>
+                ParsedSmsTransaction.fromJson(Map<String, dynamic>.from(json)),
+          )
           .toList();
     } catch (e) {
-      print('Error loading SMS transactions: $e');
       return [];
     }
   }
@@ -468,7 +511,7 @@ class SmsService {
   static Future<void> deleteSmsTransaction(String id) async {
     final transactions = getAllSmsTransactions();
     transactions.removeWhere((t) => t.id == id);
-    
+
     final jsonList = transactions.map((t) => t.toJson()).toList();
     await _smsBox.put(_smsTransactionsListKey, jsonList);
   }

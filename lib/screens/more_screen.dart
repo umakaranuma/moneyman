@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -16,15 +15,11 @@ class MoreScreen extends StatelessWidget {
         child: CustomScrollView(
           slivers: [
             // Header
-            SliverToBoxAdapter(
-              child: _buildHeader(),
-            ),
-            
+            SliverToBoxAdapter(child: _buildHeader()),
+
             // Pro Banner
-            SliverToBoxAdapter(
-              child: _buildProBanner(context),
-            ),
-            
+            SliverToBoxAdapter(child: _buildProBanner(context)),
+
             // Settings Grid
             SliverPadding(
               padding: const EdgeInsets.all(16),
@@ -40,14 +35,20 @@ class MoreScreen extends StatelessWidget {
                     context,
                     icon: Icons.sms_rounded,
                     label: 'SMS Import',
-                    gradient: [AppColors.income, AppColors.income.withValues(alpha: 0.7)],
+                    gradient: [
+                      AppColors.income,
+                      AppColors.income.withValues(alpha: 0.7),
+                    ],
                     onTap: () => context.goToSmsTransactions(),
                   ),
                   _buildSettingsItem(
                     context,
                     icon: Icons.settings_rounded,
                     label: 'Settings',
-                    gradient: [AppColors.textMuted, AppColors.textMuted.withValues(alpha: 0.7)],
+                    gradient: [
+                      AppColors.textMuted,
+                      AppColors.textMuted.withValues(alpha: 0.7),
+                    ],
                     onTap: () {},
                   ),
                   _buildSettingsItem(
@@ -68,28 +69,40 @@ class MoreScreen extends StatelessWidget {
                     context,
                     icon: Icons.calculate_rounded,
                     label: 'Calculator',
-                    gradient: [AppColors.transfer, AppColors.transfer.withValues(alpha: 0.7)],
+                    gradient: [
+                      AppColors.transfer,
+                      AppColors.transfer.withValues(alpha: 0.7),
+                    ],
                     onTap: () {},
                   ),
                   _buildSettingsItem(
                     context,
                     icon: Icons.devices_rounded,
                     label: 'Sync',
-                    gradient: [const Color(0xFFE879F9), const Color(0xFFD946EF)],
+                    gradient: [
+                      const Color(0xFFE879F9),
+                      const Color(0xFFD946EF),
+                    ],
                     onTap: () {},
                   ),
                   _buildSettingsItem(
                     context,
                     icon: Icons.cloud_upload_rounded,
                     label: 'Backup',
-                    gradient: [const Color(0xFF48DBFB), const Color(0xFF0ABDE3)],
+                    gradient: [
+                      const Color(0xFF48DBFB),
+                      const Color(0xFF0ABDE3),
+                    ],
                     onTap: () {},
                   ),
                   _buildSettingsItem(
                     context,
                     icon: Icons.chat_bubble_rounded,
                     label: 'Feedback',
-                    gradient: [const Color(0xFFFECA57), const Color(0xFFFF9F43)],
+                    gradient: [
+                      const Color(0xFFFECA57),
+                      const Color(0xFFFF9F43),
+                    ],
                     onTap: () {},
                   ),
                   _buildSettingsItem(
@@ -102,16 +115,12 @@ class MoreScreen extends StatelessWidget {
                 ]),
               ),
             ),
-            
+
             // About Section
-            SliverToBoxAdapter(
-              child: _buildAboutSection(context),
-            ),
-            
+            SliverToBoxAdapter(child: _buildAboutSection(context)),
+
             // Bottom spacing
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 100),
-            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
       ),
@@ -197,10 +206,7 @@ class MoreScreen extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF2D1B69),
-            Color(0xFF1A1040),
-          ],
+          colors: [Color(0xFF2D1B69), Color(0xFF1A1040)],
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
@@ -254,7 +260,7 @@ class MoreScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Content
             Padding(
               padding: const EdgeInsets.all(20),
@@ -290,7 +296,10 @@ class MoreScreen extends StatelessWidget {
                           children: [
                             ShaderMask(
                               shaderCallback: (bounds) => const LinearGradient(
-                                colors: [AppColors.primary, AppColors.secondary],
+                                colors: [
+                                  AppColors.primary,
+                                  AppColors.secondary,
+                                ],
                               ).createShader(bounds),
                               child: Text(
                                 'PRO',
@@ -322,7 +331,10 @@ class MoreScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                               colors: [AppColors.secondary, AppColors.primary],
@@ -330,7 +342,9 @@ class MoreScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.secondary.withValues(alpha: 0.4),
+                                color: AppColors.secondary.withValues(
+                                  alpha: 0.4,
+                                ),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -398,11 +412,7 @@ class MoreScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 22,
-              ),
+              child: Icon(icon, color: Colors.white, size: 22),
             ),
             const SizedBox(height: 10),
             Text(
@@ -434,10 +444,7 @@ class MoreScreen extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.surfaceVariant,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.surfaceVariant, width: 1),
       ),
       child: Column(
         children: [
@@ -453,7 +460,10 @@ class MoreScreen extends StatelessWidget {
             icon: Icons.share_rounded,
             title: 'Share App',
             subtitle: 'Share with friends and family',
-            gradient: [AppColors.transfer, AppColors.transfer.withValues(alpha: 0.7)],
+            gradient: [
+              AppColors.transfer,
+              AppColors.transfer.withValues(alpha: 0.7),
+            ],
             onTap: () {},
           ),
           const SizedBox(height: 12),

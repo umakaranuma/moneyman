@@ -1,9 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/storage_service.dart';
-import '../services/sms_service.dart';
 import '../models/transaction.dart';
 import '../models/category.dart';
 import '../theme/app_theme.dart';
@@ -85,23 +83,15 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<List<Transaction>> _getFilteredTransactions() async {
-    print('=== FETCHING TRANSACTIONS DEBUG ===');
-    print('Refresh Key: $_refreshKey');
-
     // Get manually added transactions
     final manualTransactions = StorageService.getAllTransactions();
-    print('Manual transactions from storage: ${manualTransactions.length}');
 
     if (manualTransactions.isNotEmpty) {
-      print('First 3 manual transactions:');
-      manualTransactions.take(3).forEach((t) {
-        print('  - ${t.id}: ${t.title} - Rs. ${t.amount} (Type: ${t.type})');
-      });
+      manualTransactions.take(3).forEach((t) {});
     }
 
     // Get SMS transactions and convert them to Transaction objects
     final smsTransactions = await _getSmsTransactionsAsTransactions();
-    print('SMS transactions: ${smsTransactions.length}');
 
     // Remove duplicates (if any SMS transaction was already imported)
     // Use transaction ID as the key to ensure edited transactions replace old ones
@@ -121,25 +111,8 @@ class _HomeScreenState extends State<HomeScreen>
     }
 
     final combinedTransactions = uniqueTransactions.values.toList();
-    print('Combined unique transactions: ${combinedTransactions.length}');
-    print(
-      'Deduplication: Manual transactions take precedence over SMS transactions',
-    );
 
     // Count by type
-    final incomeCount = combinedTransactions
-        .where((t) => t.type == TransactionType.income)
-        .length;
-    final expenseCount = combinedTransactions
-        .where((t) => t.type == TransactionType.expense)
-        .length;
-    final transferCount = combinedTransactions
-        .where((t) => t.type == TransactionType.transfer)
-        .length;
-    print(
-      'Combined - Income: $incomeCount, Expense: $expenseCount, Transfer: $transferCount',
-    );
-    print('====================================');
 
     switch (_tabController.index) {
       case 0: // Daily - show all transactions for current month grouped by date
@@ -241,201 +214,6 @@ class _HomeScreenState extends State<HomeScreen>
       // If there's an error, just return empty list
       return [];
     }
-  }
-
-  /// Detect if SMS transaction is a transfer (ATM withdrawal/cash deposit) vs actual expense/income
-  ///
-  /// Rule: Not all debits are expenses!
-  /// - Debit = Transfer (ATM withdrawal) → NOT an expense (just moving money)
-  /// - Debit = Actual Expense (payment, purchase, bill) → IS an expense (money spent)
-  /// - Credit = Bank Deposit (money received) → IS income (not a transfer)
-  /// - Credit = Cash Deposit to Bank → IS transfer (moving money)
-  bool _isSmsTransactionTransfer(ParsedSmsTransaction smsT) {
-    final upperMessage = smsT.rawMessage.toUpperCase();
-
-    // If it's a credit (money coming in), check if it's a bank deposit (income) or cash deposit (transfer)
-    if (smsT.isCredit) {
-      // Bank deposit (money credited to account) = Income, NOT transfer
-      // Cash deposit (depositing cash to bank) = Transfer
-
-      // Check if it's a cash deposit (transfer from cash to bank)
-      final cashDepositKeywords = [
-        'CASH DEPOSIT',
-        'CASH DEPOSITED',
-        'DEPOSIT CASH',
-        'CASH DEPOSITED TO',
-      ];
-
-      final isCashDeposit = cashDepositKeywords.any(
-        (keyword) => upperMessage.contains(keyword),
-      );
-
-      // If it's a cash deposit, it's a transfer
-      // Otherwise, bank deposits are income (money received)
-      return isCashDeposit;
-    }
-
-    // For debits (money going out)
-    // First, check if it's clearly an actual expense/payment
-    final expenseKeywords = [
-      'PAYMENT',
-      'PAID',
-      'PURCHASE',
-      'PURCHASED',
-      'BILL',
-      'MERCHANT',
-      'POS',
-      'DEBIT CARD',
-      'CREDIT CARD',
-      'ONLINE',
-      'SHOPPING',
-      'RESTAURANT',
-      'FOOD',
-      'GROCERY',
-      'FUEL',
-      'PETROL',
-      'DIESEL',
-      'TAXI',
-      'UBER',
-      'OLA',
-      'RENT',
-      'SALARY',
-      'SERVICE',
-      'CHARGE',
-      'FEE',
-      'TAX',
-    ];
-
-    // FIRST: Check for transfers/withdrawals BEFORE checking for expenses
-    // This ensures withdrawals are correctly identified even if they contain expense keywords
-
-    // ATM withdrawals - must have both "ATM" AND "WITHDRAWAL/WITHDRAWN"
-    // Check this FIRST to catch messages like "HNB ATM Withdrawal e-Receipt"
-    if (upperMessage.contains('ATM') &&
-        (upperMessage.contains('WITHDRAWAL') ||
-            upperMessage.contains('WITHDRAWN'))) {
-      return true;
-    }
-
-    // Also check for "ATM WITHDRAWAL" or "ATM WITHDRAWN" as a phrase
-    if (RegExp(
-      r'ATM\s+WITHDRAW(?:AL|N)',
-      caseSensitive: false,
-    ).hasMatch(upperMessage)) {
-      return true;
-    }
-
-    // Cash withdrawals - must have "CASH WITHDRAWAL" or "CASH WITHDRAWN" (exact phrases)
-    if (upperMessage.contains('CASH WITHDRAWAL') ||
-        upperMessage.contains('CASH WITHDRAWN')) {
-      return true;
-    }
-
-    // Check for standalone "WITHDRAWAL" or "WITHDRAWN" with account patterns
-    // This catches messages like "Withdrawal Rs X From A/C No XXXX"
-    if ((upperMessage.contains('WITHDRAWAL') ||
-            upperMessage.contains('WITHDRAWN')) &&
-        (upperMessage.contains('FROM ACCOUNT') ||
-            upperMessage.contains('FROM A/C') ||
-            upperMessage.contains('FROM AC') ||
-            RegExp(
-              r'FROM\s+[A/C\s]*NO',
-              caseSensitive: false,
-            ).hasMatch(upperMessage) ||
-            upperMessage.contains('A/C NO') ||
-            upperMessage.contains('ACCOUNT NO') ||
-            upperMessage.contains('A/C:'))) {
-      return true;
-    }
-
-    // Bank-to-bank transfers - must have NEFT/RTGS/IMPS/UPI AND "TO ACCOUNT" or "DEBITED TO AC" pattern
-    if ((upperMessage.contains('NEFT') ||
-            upperMessage.contains('RTGS') ||
-            upperMessage.contains('IMPS') ||
-            upperMessage.contains('UPI')) &&
-        (upperMessage.contains('TO ACCOUNT') ||
-            upperMessage.contains('TO A/C') ||
-            upperMessage.contains('TO AC') ||
-            RegExp(
-              r'DEBITED\s+TO\s+(?:AC|ACCOUNT|A/C)',
-              caseSensitive: false,
-            ).hasMatch(upperMessage) ||
-            RegExp(
-              r'TO\s+(?:AC|ACCOUNT|A/C)\s+NO',
-              caseSensitive: false,
-            ).hasMatch(upperMessage))) {
-      return true;
-    }
-
-    // Check for "TRANSFER" with account number patterns (bank-to-bank transfers)
-    if (upperMessage.contains('TRANSFER') &&
-        (upperMessage.contains('TO ACCOUNT') ||
-            upperMessage.contains('TO A/C') ||
-            upperMessage.contains('TO AC') ||
-            upperMessage.contains('FROM ACCOUNT') ||
-            upperMessage.contains('FROM A/C') ||
-            upperMessage.contains('FROM AC') ||
-            RegExp(
-              r'TO\s+[A/C\s]*NO',
-              caseSensitive: false,
-            ).hasMatch(upperMessage) ||
-            RegExp(
-              r'FROM\s+[A/C\s]*NO',
-              caseSensitive: false,
-            ).hasMatch(upperMessage))) {
-      return true;
-    }
-
-    // NOW check for expenses - if it's clearly an expense, it's NOT a transfer
-    final isActualExpense = expenseKeywords.any(
-      (keyword) => upperMessage.contains(keyword),
-    );
-
-    // If it's clearly an expense, it's NOT a transfer
-    if (isActualExpense) {
-      return false;
-    }
-
-    // Default: If unclear, treat debit as expense (safer assumption)
-    // But user can manually change it later
-    return false;
-  }
-
-  /// Extract recipient account number from SMS message for bank-to-bank transfers
-  String? _extractRecipientAccount(String message) {
-    final upperMessage = message.toUpperCase();
-
-    // Patterns to find recipient account in transfer messages
-    final patterns = [
-      // "TO ACCOUNT XXXX" or "TO A/C XXXX"
-      RegExp(
-        r'TO\s+(?:ACCOUNT|A/C|ACCT)[:\s]*[X*]*([0-9]{4,})',
-        caseSensitive: false,
-      ),
-      // "TRANSFERRED TO XXXX"
-      RegExp(r'TRANSFERRED\s+TO[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
-      // "BENEFICIARY XXXX" or "BEN XXXX"
-      RegExp(r'BEN(?:EFICIARY)?[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
-      // UPI: "TO XXXX@bank"
-      RegExp(r'TO\s+([A-Z0-9]+@[A-Z]+)', caseSensitive: false),
-      // Account number after "TO" keyword
-      RegExp(r'TO[:\s]+[A-Z\s]*([0-9]{4,})', caseSensitive: false),
-    ];
-
-    for (final pattern in patterns) {
-      final match = pattern.firstMatch(upperMessage);
-      if (match != null && match.group(1) != null) {
-        final account = match.group(1)!;
-        // If it's a UPI ID, return as is, otherwise mask it
-        if (account.contains('@')) {
-          return account;
-        } else {
-          return '****${account.length > 4 ? account.substring(account.length - 4) : account}';
-        }
-      }
-    }
-
-    return null;
   }
 
   Map<DateTime, List<Transaction>> _groupTransactionsByDate(
@@ -561,9 +339,6 @@ class _HomeScreenState extends State<HomeScreen>
     // Only count actual income and expenses, exclude transfers
     // Transfers just move money between accounts, they don't affect net balance
 
-    print('=== SUMMARY CALCULATION DEBUG ===');
-    print('Total transactions: ${transactions.length}');
-
     final incomeTransactions = transactions
         .where((t) => t.type == TransactionType.income)
         .toList();
@@ -574,33 +349,17 @@ class _HomeScreenState extends State<HomeScreen>
         .where((t) => t.type == TransactionType.transfer)
         .toList();
 
-    print('Income transactions: ${incomeTransactions.length}');
-    print('Expense transactions: ${expenseTransactions.length}');
-    print('Transfer transactions: ${transferTransactions.length}');
-
     final income = incomeTransactions.fold(0.0, (sum, t) => sum + t.amount);
     final expense = expenseTransactions.fold(0.0, (sum, t) => sum + t.amount);
     final total = income - expense;
 
-    print('Income total: $income');
-    print('Expense total: $expense');
-    print('Balance total: $total');
-
     // Print first few transactions of each type for debugging
     if (expenseTransactions.isNotEmpty) {
-      print('First 3 Expense transactions:');
-      expenseTransactions.take(3).forEach((t) {
-        print('  - ${t.id}: ${t.title} - Rs. ${t.amount} (Type: ${t.type})');
-      });
+      expenseTransactions.take(3).forEach((t) {});
     }
     if (transferTransactions.isNotEmpty) {
-      print('First 3 Transfer transactions:');
-      transferTransactions.take(3).forEach((t) {
-        print('  - ${t.id}: ${t.title} - Rs. ${t.amount} (Type: ${t.type})');
-      });
+      transferTransactions.take(3).forEach((t) {});
     }
-
-    print('==================================');
 
     return {'income': income, 'expense': expense, 'total': total};
   }
@@ -938,8 +697,9 @@ class _HomeScreenState extends State<HomeScreen>
 
       if (monthTransactions.isEmpty &&
           month > now.month &&
-          _selectedMonth.year == now.year)
+          _selectedMonth.year == now.year) {
         continue;
+      }
 
       final income = monthTransactions
           .where((t) => t.type == TransactionType.income)
@@ -2099,32 +1859,19 @@ class _HomeScreenState extends State<HomeScreen>
 
     return InkWell(
       onTap: () async {
-        print('=== EDIT TRANSACTION CLICKED (Card View) ===');
-        print('Transaction ID: ${transaction.id}');
-        print('Current Type: ${transaction.type}');
-        print('Current Amount: ${transaction.amount}');
-
         final result = await context.goToEditTransaction<bool>(transaction);
-        print('Edit result: $result');
 
         if (result == true) {
-          print('Transaction was saved, refreshing...');
           // Add small delay to ensure storage update completes
           await Future.delayed(const Duration(milliseconds: 100));
 
           // Verify transaction was updated
-          final updatedTransaction = StorageService.getTransaction(
-            transaction.id,
-          );
-          print('Updated transaction type: ${updatedTransaction?.type}');
-          print('Updated transaction amount: ${updatedTransaction?.amount}');
+          StorageService.getTransaction(transaction.id);
 
           setState(() {
             _refreshKey++; // Force FutureBuilder to refresh
-            print('Refresh key incremented to: $_refreshKey');
           });
         }
-        print('=============================================');
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -2236,32 +1983,19 @@ class _HomeScreenState extends State<HomeScreen>
 
     return InkWell(
       onTap: () async {
-        print('=== EDIT TRANSACTION CLICKED (List View) ===');
-        print('Transaction ID: ${transaction.id}');
-        print('Current Type: ${transaction.type}');
-        print('Current Amount: ${transaction.amount}');
-
         final result = await context.goToEditTransaction<bool>(transaction);
-        print('Edit result: $result');
 
         if (result == true) {
-          print('Transaction was saved, refreshing...');
           // Add small delay to ensure storage update completes
           await Future.delayed(const Duration(milliseconds: 100));
 
           // Verify transaction was updated
-          final updatedTransaction = StorageService.getTransaction(
-            transaction.id,
-          );
-          print('Updated transaction type: ${updatedTransaction?.type}');
-          print('Updated transaction amount: ${updatedTransaction?.amount}');
+          StorageService.getTransaction(transaction.id);
 
           setState(() {
             _refreshKey++; // Force FutureBuilder to refresh
-            print('Refresh key incremented to: $_refreshKey');
           });
         }
-        print('=============================================');
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),

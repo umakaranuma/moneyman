@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -890,8 +892,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         }
       }
 
-      final oldType = widget.transaction?.type;
-
       final transaction = Transaction(
         id: widget.transaction?.id ?? Helpers.generateId(),
         title: _titleController.text.trim(),
@@ -911,27 +911,14 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
             : null,
       );
 
-      print('=== SAVE TRANSACTION DEBUG ===');
-      print('Transaction ID: ${transaction.id}');
-      print('Old Type: $oldType, New Type: ${transaction.type}');
-      print('Amount: ${transaction.amount}');
-      print('Is Edit: ${widget.transaction != null}');
-
       if (widget.transaction != null) {
-        print('Updating transaction from $oldType to ${transaction.type}');
         await StorageService.updateTransaction(transaction);
-        print('Transaction updated in storage');
       } else {
-        print('Adding new transaction');
         await StorageService.addTransaction(transaction);
-        print('Transaction added to storage');
       }
 
       // Verify the transaction was saved correctly
-      final savedTransaction = StorageService.getTransaction(transaction.id);
-      print('Saved transaction type: ${savedTransaction?.type}');
-      print('Saved transaction amount: ${savedTransaction?.amount}');
-      print('==============================');
+      StorageService.getTransaction(transaction.id);
 
       context.pop(true); // Return true to indicate transaction was saved
     }
