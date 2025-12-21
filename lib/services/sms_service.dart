@@ -164,7 +164,7 @@ class SmsService {
   }
 
   /// Parse SMS text (used by both manual paste and User Consent API)
-  static ParsedSmsTransaction? parseSmsText(String smsText, {String? sender}) {
+  static ParsedSmsTransaction? parseSmsText(String smsText, {String? sender, String? bankName}) {
     try {
       // Parse the SMS message
       final parsed = _parseTransactionMessage(
@@ -172,6 +172,7 @@ class SmsService {
         sender: sender ?? _extractSenderFromMessage(smsText),
         body: smsText,
         date: DateTime.now(),
+        bankName: bankName, // Use provided bank name if available
       );
 
       return parsed;
@@ -199,6 +200,7 @@ class SmsService {
     required String sender,
     required String body,
     required DateTime date,
+    String? bankName,
   }) {
     final upperBody = body.toUpperCase();
 
@@ -218,8 +220,8 @@ class SmsService {
     // Extract balance
     final balance = _extractBalance(body);
 
-    // Determine bank name
-    final bankName = _determineBankName(sender, body);
+    // Determine bank name (use provided bankName if available, otherwise detect)
+    final finalBankName = bankName ?? _determineBankName(sender, body);
 
     return ParsedSmsTransaction(
       id: id,
@@ -230,7 +232,7 @@ class SmsService {
       rawMessage: body,
       accountNumber: accountNumber,
       balance: balance,
-      bankName: bankName,
+      bankName: finalBankName,
     );
   }
 
@@ -294,6 +296,12 @@ class SmsService {
 
   static String? _extractAccountNumber(String body) {
     final patterns = [
+      // Pattern for "Ac No:11702XXXXX71" - most specific, captures full pattern with X's
+      RegExp(r'AC\s+NO[:\s]*([0-9X*]+)', caseSensitive: false),
+      RegExp(r'A/C[:\s]*([0-9X*]+)', caseSensitive: false),
+      RegExp(r'ACCOUNT[:\s]*([0-9X*]+)', caseSensitive: false),
+      RegExp(r'ACCT[:\s]*([0-9X*]+)', caseSensitive: false),
+      // Fallback patterns for digits only
       RegExp(r'A/C[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
       RegExp(r'ACCOUNT[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
       RegExp(r'ACCT[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
@@ -302,12 +310,19 @@ class SmsService {
 
     for (final pattern in patterns) {
       final match = pattern.firstMatch(body);
-      if (match != null) {
-        return '****${match.group(1)}';
+      if (match != null && match.group(1) != null) {
+        final accountPart = match.group(1)!;
+        // Extract last 4-6 digits if available
+        final digitsOnly = accountPart.replaceAll(RegExp(r'[^0-9]'), '');
+        if (digitsOnly.length >= 4) {
+          return '****${digitsOnly.substring(digitsOnly.length - 4)}';
+        }
+        return '****$accountPart';
       }
     }
     return null;
   }
+
 
   static String? _extractBalance(String body) {
     final patterns = [
@@ -326,9 +341,11 @@ class SmsService {
     return null;
   }
 
+
   static String _determineBankName(String sender, String body) {
     final combined = '$sender $body'.toUpperCase();
 
+    // Only detect from explicit message content - no account number pattern detection
     if (combined.contains('BOC') || combined.contains('BANK OF CEYLON')) {
       return 'Bank of Ceylon';
     } else if (combined.contains('HNB') || combined.contains('HATTON')) {
@@ -365,11 +382,38 @@ class SmsService {
       return 'PhonePe';
     }
 
-    return sender;
+    // If bank name is not explicitly in message, return "Unknown Bank"
+    // This will trigger user selection dialog
+    return 'Unknown Bank';
+  }
+
+
+  /// Get list of available banks for selection
+  static List<String> getAvailableBanks() {
+    return [
+      'Bank of Ceylon',
+      'HNB',
+      'Commercial Bank',
+      'Sampath Bank',
+      'Seylan Bank',
+      'NDB Bank',
+      'DFCC Bank',
+      "People's Bank",
+      'NSB',
+      'HDFC',
+      'ICICI',
+      'SBI',
+      'Axis Bank',
+      'Paytm',
+      'Google Pay',
+      'PhonePe',
+      'Other',
+    ];
   }
 
   // Storage methods
   static Box get _smsBox => Hive.box(_smsBoxName);
+  static const String _smsTransactionsListKey = 'sms_transactions_list';
 
   static Future<void> markAsImported(String id) async {
     await _smsBox.put(id, true);
@@ -381,5 +425,56 @@ class SmsService {
 
   static Future<void> clearImportedStatus() async {
     await _smsBox.clear();
+  }
+
+  /// Save a parsed SMS transaction to persistent storage
+  static Future<void> saveSmsTransaction(ParsedSmsTransaction transaction) async {
+    final transactions = getAllSmsTransactions();
+    
+    // Check if transaction already exists
+    final existingIndex = transactions.indexWhere((t) => t.id == transaction.id);
+    
+    if (existingIndex >= 0) {
+      // Update existing transaction
+      transactions[existingIndex] = transaction;
+    } else {
+      // Add new transaction at the beginning
+      transactions.insert(0, transaction);
+    }
+    
+    // Save to storage
+    final jsonList = transactions.map((t) => t.toJson()).toList();
+    await _smsBox.put(_smsTransactionsListKey, jsonList);
+  }
+
+  /// Get all saved SMS transactions from persistent storage
+  static List<ParsedSmsTransaction> getAllSmsTransactions() {
+    final jsonList = _smsBox.get(_smsTransactionsListKey);
+    if (jsonList == null) return [];
+    
+    try {
+      final List<dynamic> list = jsonList as List<dynamic>;
+      return list
+          .map((json) => ParsedSmsTransaction.fromJson(
+              Map<String, dynamic>.from(json)))
+          .toList();
+    } catch (e) {
+      print('Error loading SMS transactions: $e');
+      return [];
+    }
+  }
+
+  /// Delete a saved SMS transaction
+  static Future<void> deleteSmsTransaction(String id) async {
+    final transactions = getAllSmsTransactions();
+    transactions.removeWhere((t) => t.id == id);
+    
+    final jsonList = transactions.map((t) => t.toJson()).toList();
+    await _smsBox.put(_smsTransactionsListKey, jsonList);
+  }
+
+  /// Clear all saved SMS transactions
+  static Future<void> clearAllSmsTransactions() async {
+    await _smsBox.delete(_smsTransactionsListKey);
   }
 }

@@ -20,7 +20,7 @@ class SmsTransactionsScreen extends StatefulWidget {
 }
 
 class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
   List<ParsedSmsTransaction> _allTransactions = [];
   List<ParsedSmsTransaction> _filteredTransactions = [];
@@ -28,6 +28,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
   String? _errorMessage;
   Set<String> _selectedIds = {};
   bool _isSelectionMode = false;
+  bool _hasLoadedOnce = false;
 
   // Filter state
   String? _selectedBank;
@@ -49,16 +50,75 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
   // Track if any transaction was imported (for home screen refresh)
   bool _hasImportedTransaction = false;
 
+  // Selected bank for import (pre-selected from dropdown)
+  String? _selectedBankForImport;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() => setState(() {}));
-    // No auto-loading - user must manually import SMS via consent API
+    // Load saved SMS transactions
+    _loadSavedTransactions();
+    _hasLoadedOnce = true;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload transactions when screen becomes visible again
+    // This helps when navigating back to the screen
+    if (_hasLoadedOnce && !_isLoading) {
+      // Use a small delay to avoid too frequent reloads
+      Future.microtask(() {
+        if (mounted) {
+          _loadSavedTransactions();
+        }
+      });
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Reload when app comes back to foreground
+    if (state == AppLifecycleState.resumed && _hasLoadedOnce) {
+      _loadSavedTransactions();
+    }
+  }
+
+  /// Load saved SMS transactions from storage
+  void _loadSavedTransactions() {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final savedTransactions = SmsService.getAllSmsTransactions();
+      if (mounted) {
+        setState(() {
+          _allTransactions = savedTransactions;
+          _filteredTransactions = List.from(_allTransactions);
+          _applyFilters();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Error loading transactions: $e';
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tabController.dispose();
     _timeoutTimer?.cancel();
     super.dispose();
@@ -190,16 +250,53 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
       if (!mounted) break;
 
       if (parsed != null) {
+        var transactionToSave = parsed;
+
+        // Use pre-selected bank if available, otherwise check if bank is in message
+        String? bankToUse = _selectedBankForImport;
+
+        // If bank is not pre-selected and not found in message, ask user
+        if ((bankToUse == null || bankToUse.isEmpty) &&
+            (transactionToSave.bankName == 'Unknown Bank' ||
+                transactionToSave.bankName == 'Unknown')) {
+          final selectedBank = await _showBankSelectionDialog(
+            message: 'Bank name not found in SMS. Please select the bank:',
+          );
+
+          if (selectedBank == null || selectedBank == 'Other') {
+            // User cancelled or selected "Other" - skip this transaction
+            continue;
+          }
+
+          bankToUse = selectedBank;
+        }
+
+        // Re-parse with selected bank name if needed
+        if (bankToUse != null && bankToUse.isNotEmpty) {
+          final updatedParsed = SmsService.parseSmsText(
+            transactionToSave.rawMessage,
+            sender: transactionToSave.sender,
+            bankName: bankToUse,
+          );
+
+          if (updatedParsed != null) {
+            transactionToSave = updatedParsed;
+          }
+        }
+
+        // Save to persistent storage
+        await SmsService.saveSmsTransaction(transactionToSave);
+
         // Successfully imported
         setState(() {
-          _allTransactions.insert(0, parsed);
+          _allTransactions.insert(0, transactionToSave);
           _filteredTransactions = List.from(_allTransactions);
           _applyFilters();
           _bulkImportCount++;
         });
 
         // Import to main transaction list
-        await _importTransaction(parsed);
+        await _importTransaction(transactionToSave);
 
         // Ask if user wants to continue
         final continueImport = await showDialog<bool>(
@@ -335,6 +432,241 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
     }
   }
 
+  /// Show import options dialog with bank selection
+  Future<void> _showImportOptionsDialog() async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Import Bank Transactions'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Bank Selection Dropdown
+              const Text(
+                'Select Bank (Optional)',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.surfaceVariant, width: 1),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedBankForImport,
+                    isExpanded: true,
+                    hint: const Text(
+                      'Auto-detect from SMS',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.arrow_drop_down,
+                      color: AppColors.textSecondary,
+                    ),
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: null,
+                        child: Text('Auto-detect from SMS'),
+                      ),
+                      ...SmsService.getAvailableBanks().map((bank) {
+                        return DropdownMenuItem<String>(
+                          value: bank,
+                          child: Text(
+                            bank,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedBankForImport = value;
+                      });
+                      Navigator.pop(context);
+                      _showImportOptionsDialog(); // Reopen to show updated selection
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Import New SMS Button
+              ElevatedButton.icon(
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        Navigator.pop(context);
+                        _importSmsTransaction();
+                      },
+                icon: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.sms),
+                label: Text(_isLoading ? 'Importing...' : 'Import New SMS'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.income,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Paste Existing SMS Button
+              OutlinedButton.icon(
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        Navigator.pop(context);
+                        _importFromPaste();
+                      },
+                icon: const Icon(Icons.paste),
+                label: const Text('Paste Existing SMS'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.income,
+                  side: const BorderSide(color: AppColors.income),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Bulk Import Button
+              OutlinedButton.icon(
+                onPressed: _isLoading || _isBulkImporting
+                    ? null
+                    : () {
+                        Navigator.pop(context);
+                        _startBulkImport();
+                      },
+                icon: _isBulkImporting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.upload_file),
+                label: Text(
+                  _isBulkImporting
+                      ? 'Bulk Importing... ($_bulkImportCount imported)'
+                      : 'Bulk Import Multiple SMS',
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.income,
+                  side: const BorderSide(color: AppColors.income),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Show bank selection dialog
+  Future<String?> _showBankSelectionDialog({String? message}) async {
+    final banks = SmsService.getAvailableBanks();
+    String? selectedBank;
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Select Bank'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (message != null) ...[
+                  Text(
+                    message,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                ...banks.map((bank) {
+                  return RadioListTile<String>(
+                    title: Text(bank),
+                    value: bank,
+                    groupValue: selectedBank,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedBank = value;
+                      });
+                      Navigator.pop(context, value);
+                    },
+                  );
+                }),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            if (selectedBank != null)
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, selectedBank),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.income,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Select'),
+              ),
+          ],
+        ),
+      ),
+    );
+
+    return result;
+  }
+
   /// Import SMS by pasting text (for messages that already arrived)
   Future<void> _importFromPaste() async {
     final TextEditingController textController = TextEditingController();
@@ -388,18 +720,75 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
     if (result == true && textController.text.trim().isNotEmpty) {
       try {
         // Parse the pasted SMS text
-        final parsed = SmsService.parseSmsText(textController.text.trim());
+        var parsed = SmsService.parseSmsText(textController.text.trim());
 
         if (parsed != null) {
+          // Use pre-selected bank if available, otherwise check if bank is in message
+          String? bankToUse = _selectedBankForImport;
+
+          // If bank is not pre-selected and not found in message, ask user
+          if ((bankToUse == null || bankToUse.isEmpty) &&
+              (parsed.bankName == 'Unknown Bank' ||
+                  parsed.bankName == 'Unknown')) {
+            final selectedBank = await _showBankSelectionDialog(
+              message: 'Bank name not found in SMS. Please select the bank:',
+            );
+
+            if (selectedBank == null || selectedBank == 'Other') {
+              // User cancelled or selected "Other"
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Bank selection is required. Transaction not imported.',
+                    ),
+                    backgroundColor: AppColors.expense,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+              return;
+            }
+
+            bankToUse = selectedBank;
+          }
+
+          // Re-parse with selected bank name if needed
+          if (bankToUse != null && bankToUse.isNotEmpty) {
+            parsed = SmsService.parseSmsText(
+              textController.text.trim(),
+              bankName: bankToUse,
+            );
+
+            if (parsed == null) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Error: Could not parse transaction.'),
+                    backgroundColor: AppColors.expense,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+              return;
+            }
+          }
+
+          // parsed is guaranteed to be non-null here after the check above
+          final finalParsed = parsed;
+
+          // Save to persistent storage
+          await SmsService.saveSmsTransaction(finalParsed);
+
           // Add to transactions list
           setState(() {
-            _allTransactions.insert(0, parsed);
+            _allTransactions.insert(0, finalParsed);
             _filteredTransactions = List.from(_allTransactions);
             _applyFilters();
           });
 
           // Import to main transaction list
-          await _importTransaction(parsed);
+          await _importTransaction(finalParsed);
 
           // Mark that a transaction was imported
           _hasImportedTransaction = true;
@@ -408,7 +797,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'Transaction imported: ${parsed.bankName} - Rs. ${_formatCurrency(parsed.amount)}',
+                  'Transaction imported: ${finalParsed.bankName} - Rs. ${_formatCurrency(finalParsed.amount)}',
                 ),
                 backgroundColor: AppColors.success,
                 behavior: SnackBarBehavior.floating,
@@ -487,16 +876,81 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
       if (!mounted) return;
 
       if (parsed != null) {
+        var transactionToSave = parsed;
+
+        // Use pre-selected bank if available, otherwise check if bank is in message
+        String? bankToUse = _selectedBankForImport;
+
+        // If bank is not pre-selected and not found in message, ask user
+        if ((bankToUse == null || bankToUse.isEmpty) &&
+            (transactionToSave.bankName == 'Unknown Bank' ||
+                transactionToSave.bankName == 'Unknown')) {
+          final selectedBank = await _showBankSelectionDialog(
+            message: 'Bank name not found in SMS. Please select the bank:',
+          );
+
+          if (selectedBank == null || selectedBank == 'Other') {
+            // User cancelled or selected "Other"
+            setState(() {
+              _isLoading = false;
+            });
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Bank selection is required. Transaction not imported.',
+                  ),
+                  backgroundColor: AppColors.expense,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+            return;
+          }
+
+          bankToUse = selectedBank;
+        }
+
+        // Re-parse with selected bank name if needed
+        if (bankToUse != null && bankToUse.isNotEmpty) {
+          final updatedParsed = SmsService.parseSmsText(
+            transactionToSave.rawMessage,
+            sender: transactionToSave.sender,
+            bankName: bankToUse,
+          );
+
+          if (updatedParsed == null) {
+            setState(() {
+              _isLoading = false;
+            });
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Error: Could not parse transaction.'),
+                  backgroundColor: AppColors.expense,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+            return;
+          }
+
+          transactionToSave = updatedParsed;
+        }
+
+        // Save to persistent storage
+        await SmsService.saveSmsTransaction(transactionToSave);
+
         // Add to transactions list
         setState(() {
-          _allTransactions.insert(0, parsed);
+          _allTransactions.insert(0, transactionToSave);
           _filteredTransactions = List.from(_allTransactions);
           _applyFilters();
           _isLoading = false;
         });
 
         // Import directly to main transaction list
-        await _importTransaction(parsed);
+        await _importTransaction(transactionToSave);
 
         // Mark that a transaction was imported
         _hasImportedTransaction = true;
@@ -732,6 +1186,15 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                 },
               ),
           ],
+          // Import button - always visible
+          IconButton(
+            icon: const Icon(
+              Icons.add_circle_outline,
+              color: AppColors.textSecondary,
+            ),
+            onPressed: _showImportOptionsDialog,
+            tooltip: 'Import Transactions',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh, color: AppColors.textSecondary),
             onPressed: _importSmsTransaction,
@@ -1481,18 +1944,72 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                 'Import bank transactions from SMS messages.\n\n'
                 '⚠️ IMPORTANT: This only works with NEW SMS messages.\n\n'
                 'How it works:\n'
-                '1. Tap "Import Bank SMS" below\n'
-                '2. Keep the app open and wait\n'
-                '3. Complete a bank transaction (UPI, transfer, etc.)\n'
-                '4. OR wait for a bank alert SMS\n'
-                '5. When SMS arrives, Android shows "Allow" dialog\n'
-                '6. Tap "Allow" to import the transaction\n\n'
+                '1. Select your bank (optional) below\n'
+                '2. Tap "Import Bank SMS" below\n'
+                '3. Keep the app open and wait\n'
+                '4. Complete a bank transaction (UPI, transfer, etc.)\n'
+                '5. OR wait for a bank alert SMS\n'
+                '6. When SMS arrives, Android shows "Allow" dialog\n'
+                '7. Tap "Allow" to import the transaction\n\n'
                 '✨ No copy-paste needed!\n'
                 '🔒 Privacy: We only read SMS you explicitly allow. All data stays on your device.',
                 textAlign: TextAlign.left,
                 style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
+              // Bank Selection Dropdown
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.surfaceVariant, width: 1),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedBankForImport,
+                    isExpanded: true,
+                    hint: const Text(
+                      'Select Bank (Optional)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.arrow_drop_down,
+                      color: AppColors.textSecondary,
+                    ),
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: null,
+                        child: Text('Auto-detect from SMS'),
+                      ),
+                      ...SmsService.getAvailableBanks().map((bank) {
+                        return DropdownMenuItem<String>(
+                          value: bank,
+                          child: Text(
+                            bank,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedBankForImport = value;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: _isLoading ? null : _importSmsTransaction,
                 icon: _isLoading
