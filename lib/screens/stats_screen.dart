@@ -82,12 +82,11 @@ class _StatsScreenState extends State<StatsScreen>
 
   Future<List<Transaction>> _getSmsTransactionsAsTransactions() async {
     try {
-      final hasPermission = await SmsService.hasSmsPermission();
-      if (!hasPermission) {
-        return [];
-      }
+      // With manual paste method, SMS transactions are imported directly as regular transactions
+      // No need to fetch separately - they're already in the main transaction list
+      return [];
 
-      // Fetch SMS transactions
+      /* Old code (removed - no longer needed with manual paste method):
       final smsTransactions = await SmsService.fetchAndParseSmsMessages(
         fetchAll: false,
       );
@@ -154,6 +153,7 @@ class _StatsScreenState extends State<StatsScreen>
           toAccount: toAccount,
         );
       }).toList();
+      */
     } catch (e) {
       return [];
     }

@@ -160,12 +160,11 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<List<Transaction>> _getSmsTransactionsAsTransactions() async {
     try {
-      final hasPermission = await SmsService.hasSmsPermission();
-      if (!hasPermission) {
-        return [];
-      }
+      // With manual paste method, SMS transactions are imported directly as regular transactions
+      // No need to fetch separately - they're already in the main transaction list
+      return [];
 
-      // Fetch SMS transactions
+      /* Old code (removed - no longer needed with manual paste method):
       final smsTransactions = await SmsService.fetchAndParseSmsMessages(
         fetchAll: false,
       );
@@ -237,6 +236,7 @@ class _HomeScreenState extends State<HomeScreen>
           toAccount: toAccount,
         );
       }).toList();
+      */
     } catch (e) {
       // If there's an error, just return empty list
       return [];
@@ -670,7 +670,15 @@ class _HomeScreenState extends State<HomeScreen>
           _buildGlassButton(
             icon: Icons.sms_outlined,
             color: AppColors.income,
-            onTap: () => context.goToSmsTransactions(),
+            onTap: () async {
+              final result = await context.goToSmsTransactions<bool>();
+              // Refresh if a transaction was imported
+              if (result == true && mounted) {
+                setState(() {
+                  _refreshKey++;
+                });
+              }
+            },
           ),
           const SizedBox(width: 8),
           _buildGlassButton(

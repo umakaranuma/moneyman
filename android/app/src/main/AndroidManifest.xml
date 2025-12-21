@@ -1,7 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- SMS Permission for reading bank transaction messages -->
-    <uses-permission android:name="android.permission.READ_SMS"/>
-    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
+    <!-- 
+        NO READ_SMS permission needed!
+        Using SMS User Consent API (Play Store approved method)
+        User explicitly selects SMS messages one at a time via Android system dialog
+    -->
     
     <application
         android:label="Finzo"

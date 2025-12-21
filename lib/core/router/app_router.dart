@@ -220,8 +220,9 @@ extension GoRouterExtension on BuildContext {
     GoRouter.of(this).pushNamed('categories', extra: isExpense);
   }
   
-  void goToSmsTransactions() {
-    GoRouter.of(this).pushNamed('smsTransactions');
+  Future<T?> goToSmsTransactions<T>() async {
+    final result = await GoRouter.of(this).pushNamed('smsTransactions');
+    return result as T?;
   }
 }
 

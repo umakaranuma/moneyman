@@ -52,9 +52,10 @@ dependencies:
   # Table calendar for calendar view
   table_calendar: ^3.0.9
   
-  # SMS reading for transaction import
-  flutter_sms_inbox: ^1.0.4
-  permission_handler: ^11.3.1
+  # SMS reading for transaction import (Play Store approved method)
+  # Using SMS Retriever API for user consent
+  # Note: We'll implement using platform channels or find appropriate package
+  permission_handler: ^11.3.1  # Still needed for other permissions if any
   
   # Navigation
   go_router: ^14.2.0

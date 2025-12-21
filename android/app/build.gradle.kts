@@ -1,6 +1,6 @@
 plugins {
     id("com.android.application")
-    id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -16,7 +16,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = "17"
     }
 
     defaultConfig {
@@ -31,12 +31,19 @@ android {
     }
 
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+        getByName("release") {
+            // Signing with debug keys for distribution (default)
+            // For production, create a proper release keystore
+            // Enable code shrinking and optimization
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
+}
+
+dependencies {
+    // SMS User Consent API (Play Store approved method)
+    implementation("com.google.android.gms:play-services-auth-api-phone:18.0.2")
 }
 
 flutter {

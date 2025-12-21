@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../services/sms_service.dart';
 import '../services/storage_service.dart';
@@ -22,8 +24,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
   late TabController _tabController;
   List<ParsedSmsTransaction> _allTransactions = [];
   List<ParsedSmsTransaction> _filteredTransactions = [];
-  bool _isLoading = true;
-  bool _hasPermission = false;
+  bool _isLoading = false;
   String? _errorMessage;
   Set<String> _selectedIds = {};
   bool _isSelectionMode = false;
@@ -37,17 +38,29 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
   // Fetch all transactions toggle
   bool _fetchAllTransactions = false;
 
+  // Bulk import state
+  bool _isBulkImporting = false;
+  int _bulkImportCount = 0;
+
+  // Timer for SMS consent timeout
+  int _timeoutSeconds = 300; // 5 minutes default
+  Timer? _timeoutTimer;
+
+  // Track if any transaction was imported (for home screen refresh)
+  bool _hasImportedTransaction = false;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() => setState(() {}));
-    _loadTransactions();
+    // No auto-loading - user must manually import SMS via consent API
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _timeoutTimer?.cancel();
     super.dispose();
   }
 
@@ -101,45 +114,432 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
         _importFilter != ImportFilter.all;
   }
 
-  Future<void> _loadTransactions() async {
+  /// Bulk import: Import multiple SMS transactions one by one
+  /// Keeps asking user to select SMS until they cancel
+  Future<void> _startBulkImport() async {
+    if (!mounted) return;
+
+    // Show confirmation dialog
+    final shouldContinue = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Bulk Import SMS Transactions'),
+        content: const Text(
+          'This will import multiple bank SMS transactions.\n\n'
+          '⚠️ IMPORTANT: This only works with NEW SMS messages.\n\n'
+          'How it works:\n'
+          '1. Keep the app open\n'
+          '2. Complete bank transactions (UPI, transfers, etc.)\n'
+          '3. When each SMS arrives, Android shows "Allow" dialog\n'
+          '4. Tap "Allow" to import\n'
+          '5. Repeat for each transaction\n\n'
+          'Tap "Cancel" when you\'re done importing.\n\n'
+          'Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.income,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Start Import'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldContinue != true) return;
+
+    setState(() {
+      _isBulkImporting = true;
+      _bulkImportCount = 0;
+      _errorMessage = null;
+      _timeoutSeconds = 300; // Reset to 5 minutes
+    });
+
+    // Start countdown timer
+    _timeoutTimer?.cancel();
+    _timeoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted || !_isBulkImporting) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        if (_timeoutSeconds > 0) {
+          _timeoutSeconds--;
+        } else {
+          timer.cancel();
+        }
+      });
+    });
+
+    // Keep importing until user cancels
+    while (_isBulkImporting && mounted) {
+      final parsed = await SmsService.importSmsTransaction().timeout(
+        const Duration(seconds: 60),
+        onTimeout: () {
+          return null;
+        },
+      );
+
+      if (!mounted) break;
+
+      if (parsed != null) {
+        // Successfully imported
+        setState(() {
+          _allTransactions.insert(0, parsed);
+          _filteredTransactions = List.from(_allTransactions);
+          _applyFilters();
+          _bulkImportCount++;
+        });
+
+        // Import to main transaction list
+        await _importTransaction(parsed);
+
+        // Ask if user wants to continue
+        final continueImport = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Transaction Imported'),
+            content: Text(
+              'Successfully imported: ${parsed.bankName} - Rs. ${_formatCurrency(parsed.amount)}\n\n'
+              'Total imported: $_bulkImportCount\n\n'
+              'Import another transaction?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+                child: const Text('Done'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context, true);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.income,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Import More'),
+              ),
+            ],
+          ),
+        );
+
+        if (continueImport != true) {
+          _timeoutTimer?.cancel();
+          setState(() {
+            _isBulkImporting = false;
+          });
+          break;
+        } else {
+          // Reset timer for next import
+          setState(() {
+            _timeoutSeconds = 300;
+          });
+        }
+      } else {
+        // User cancelled or timeout - ask what to do
+        if (!mounted) break;
+
+        final action = await showDialog<String>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('SMS Import Issue'),
+            content: Text(
+              _bulkImportCount > 0
+                  ? 'No SMS was selected or the request timed out.\n\n'
+                        'Total imported so far: $_bulkImportCount\n\n'
+                        'Possible reasons:\n'
+                        '• SMS consent dialog was dismissed\n'
+                        '• No SMS was selected\n'
+                        '• Request timed out\n\n'
+                        'What would you like to do?'
+                  : 'No SMS was selected or the request timed out.\n\n'
+                        'Possible reasons:\n'
+                        '• SMS consent dialog was dismissed\n'
+                        '• No SMS messages on device\n'
+                        '• Google Play Services issue\n'
+                        '• Request timed out\n\n'
+                        'Make sure:\n'
+                        '1. SMS consent dialog appears\n'
+                        '2. Select a bank SMS message\n'
+                        '3. Tap "Allow" button\n\n'
+                        'What would you like to do?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'done'),
+                child: const Text('Done'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, 'retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.income,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Retry'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'cancel'),
+                child: const Text('Cancel Import'),
+              ),
+            ],
+          ),
+        );
+
+        if (action == 'done' || action == 'cancel') {
+          _timeoutTimer?.cancel();
+          setState(() {
+            _isBulkImporting = false;
+          });
+
+          if (mounted && _bulkImportCount > 0) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Bulk import completed. Imported $_bulkImportCount transaction(s).',
+                ),
+                backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          } else if (mounted && _bulkImportCount == 0) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'No transactions were imported. Please make sure to select an SMS when the dialog appears.',
+                ),
+                backgroundColor: AppColors.expense,
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 5),
+              ),
+            );
+          }
+          break;
+        }
+        // If 'retry', continue the loop to try again
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _isBulkImporting = false;
+      });
+    }
+  }
+
+  /// Import SMS by pasting text (for messages that already arrived)
+  Future<void> _importFromPaste() async {
+    final TextEditingController textController = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Paste SMS Text'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Copy the SMS text from your Messages app and paste it here:',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: textController,
+                maxLines: 8,
+                decoration: const InputDecoration(
+                  hintText: 'Paste SMS text here...',
+                  border: OutlineInputBorder(),
+                ),
+                autofocus: true,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (textController.text.trim().isNotEmpty) {
+                Navigator.pop(context, true);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.income,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Import'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && textController.text.trim().isNotEmpty) {
+      try {
+        // Parse the pasted SMS text
+        final parsed = SmsService.parseSmsText(textController.text.trim());
+
+        if (parsed != null) {
+          // Add to transactions list
+          setState(() {
+            _allTransactions.insert(0, parsed);
+            _filteredTransactions = List.from(_allTransactions);
+            _applyFilters();
+          });
+
+          // Import to main transaction list
+          await _importTransaction(parsed);
+
+          // Mark that a transaction was imported
+          _hasImportedTransaction = true;
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Transaction imported: ${parsed.bankName} - Rs. ${_formatCurrency(parsed.amount)}',
+                ),
+                backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Could not parse transaction from SMS text. Please check the format.',
+                ),
+                backgroundColor: AppColors.expense,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: AppColors.expense,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  /// Import SMS using User Consent API (Play Store approved, user-friendly method)
+  /// User taps button → Android shows SMS picker → User selects SMS → We parse and import
+  /// ⚠️ Only works with NEW SMS that arrive AFTER tapping the button
+  Future<void> _importSmsTransaction() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _timeoutSeconds = 300; // Reset to 5 minutes
+    });
+
+    // Start countdown timer
+    _timeoutTimer?.cancel();
+    _timeoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted || !_isLoading) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        if (_timeoutSeconds > 0) {
+          _timeoutSeconds--;
+        } else {
+          timer.cancel();
+        }
+      });
     });
 
     try {
-      _hasPermission = await SmsService.hasSmsPermission();
+      // Request SMS via User Consent API with timeout
+      // Android will show system dialog with SMS messages
+      // User selects one SMS and taps Allow
+      final parsed = await SmsService.importSmsTransaction().timeout(
+        const Duration(seconds: 60),
+        onTimeout: () {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'SMS consent request timed out. Please try again.';
+          });
+          return null;
+        },
+      );
 
-      if (!_hasPermission) {
-        _hasPermission = await SmsService.requestSmsPermission();
-      }
+      // Ensure loading is reset even if parsed is null
+      if (!mounted) return;
 
-      if (_hasPermission) {
-        final transactions = await SmsService.fetchAndParseSmsMessages(
-          fetchAll: _fetchAllTransactions,
-        );
-
-        // Mark already imported ones
-        for (var t in transactions) {
-          t.isImported = SmsService.isAlreadyImported(t.id);
-        }
-
+      if (parsed != null) {
+        // Add to transactions list
         setState(() {
-          _allTransactions = transactions;
-          _filteredTransactions = List.from(transactions);
+          _allTransactions.insert(0, parsed);
+          _filteredTransactions = List.from(_allTransactions);
+          _applyFilters();
           _isLoading = false;
         });
+
+        // Import directly to main transaction list
+        await _importTransaction(parsed);
+
+        // Mark that a transaction was imported
+        _hasImportedTransaction = true;
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Transaction imported: ${parsed.bankName} - Rs. ${_formatCurrency(parsed.amount)}',
+              ),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       } else {
+        // User cancelled, timed out, or no valid transaction found
+        _timeoutTimer?.cancel();
         setState(() {
           _isLoading = false;
-          _errorMessage = 'SMS permission is required to read bank messages';
+          _errorMessage =
+              'No new SMS received or request timed out.\n\n'
+              'Remember: This only works with NEW SMS messages that arrive after tapping the button.';
         });
       }
     } catch (e) {
+      if (!mounted) return;
+
+      _timeoutTimer?.cancel();
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Error loading messages: $e';
+        _errorMessage = 'Error importing SMS: $e';
       });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.expense,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
@@ -228,7 +628,15 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                 },
               )
             : GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () {
+                  // Return true if a transaction was imported, so home screen can refresh
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context, _hasImportedTransaction);
+                  } else {
+                    // If using GoRouter, use context.pop
+                    context.pop(_hasImportedTransaction);
+                  }
+                },
                 child: Container(
                   margin: const EdgeInsets.all(8),
                   padding: const EdgeInsets.all(8),
@@ -326,7 +734,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
           ],
           IconButton(
             icon: const Icon(Icons.refresh, color: AppColors.textSecondary),
-            onPressed: _loadTransactions,
+            onPressed: _importSmsTransaction,
           ),
         ],
       ),
@@ -343,24 +751,215 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
   }
 
   Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: AppColors.income),
-            SizedBox(height: 16),
-            Text(
-              'Reading SMS messages...',
-              style: TextStyle(color: AppColors.textSecondary),
+    if (_isLoading || _isBulkImporting) {
+      final minutes = _timeoutSeconds ~/ 60;
+      final seconds = _timeoutSeconds % 60;
+      final timeString =
+          '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+
+      return Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CircularProgressIndicator(color: AppColors.income),
+                const SizedBox(height: 24),
+                Text(
+                  _isBulkImporting
+                      ? 'Bulk Importing...\n$_bulkImportCount imported so far'
+                      : 'Waiting for New Bank SMS',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.income.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.timer,
+                            color: AppColors.income,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Timeout: $timeString',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.income,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        '⚠️ IMPORTANT: This only works with NEW SMS',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.expense,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'The app is waiting for a NEW bank SMS to arrive.\n\n'
+                        'It will NOT read existing messages.\n\n'
+                        'To import a transaction:\n'
+                        '1. Keep this screen open\n'
+                        '2. Complete a bank transaction (UPI, transfer, etc.)\n'
+                        '3. OR wait for a bank alert SMS\n'
+                        '4. When SMS arrives, Android will show "Allow" dialog\n'
+                        '5. Tap "Allow" to import',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                if (_isBulkImporting) ...[
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _isBulkImporting = false;
+                        _timeoutTimer?.cancel();
+                      });
+                    },
+                    icon: const Icon(Icons.stop),
+                    label: const Text('Stop Bulk Import'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.expense,
+                      side: const BorderSide(color: AppColors.expense),
+                    ),
+                  ),
+                ] else ...[
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _isLoading = false;
+                        _timeoutTimer?.cancel();
+                      });
+                    },
+                    icon: const Icon(Icons.cancel),
+                    label: const Text('Cancel'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceVariant.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 16,
+                            color: AppColors.textSecondary,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Why this limitation?',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Google requires explicit user consent for each SMS.\n'
+                        'This ensures privacy and Play Store compliance.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceVariant.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.income.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons.battery_charging_full,
+                            size: 16,
+                            color: AppColors.income,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Motorola / Android 14 Tip',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.income,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'If SMS delays occur, disable battery optimization:\n'
+                        'Settings → Apps → Finzo → Battery → Unrestricted',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       );
     }
 
-    if (!_hasPermission) {
-      return _buildPermissionRequest();
+    if (_allTransactions.isEmpty && !_isLoading) {
+      return _buildImportButton();
     }
 
     if (_errorMessage != null) {
@@ -377,7 +976,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: _loadTransactions,
+              onPressed: _importSmsTransaction,
               icon: const Icon(Icons.refresh),
               label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
@@ -653,7 +1252,8 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                     setState(() {
                       _fetchAllTransactions = value;
                     });
-                    _loadTransactions();
+                    // Transactions are imported manually via paste dialog
+                    // No need to reload - user will import when needed
                   },
                   activeColor: AppColors.income,
                   activeTrackColor: AppColors.income.withValues(alpha: 0.3),
@@ -845,59 +1445,134 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
     );
   }
 
-  Widget _buildPermissionRequest() {
+  Widget _buildImportButton() {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.surfaceVariant, width: 2),
-              ),
-              child: const Icon(
-                Icons.sms_outlined,
-                size: 64,
-                color: AppColors.income,
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'SMS Permission Required',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'To automatically import bank transactions, we need permission to read your SMS messages. We only look for bank transaction messages.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: _loadTransactions,
-              icon: const Icon(Icons.lock_open),
-              label: const Text('Grant Permission'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.income,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.surfaceVariant, width: 2),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                child: const Icon(
+                  Icons.sms_outlined,
+                  size: 64,
+                  color: AppColors.income,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+              const Text(
+                'Import Bank Transaction',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Import bank transactions from SMS messages.\n\n'
+                '⚠️ IMPORTANT: This only works with NEW SMS messages.\n\n'
+                'How it works:\n'
+                '1. Tap "Import Bank SMS" below\n'
+                '2. Keep the app open and wait\n'
+                '3. Complete a bank transaction (UPI, transfer, etc.)\n'
+                '4. OR wait for a bank alert SMS\n'
+                '5. When SMS arrives, Android shows "Allow" dialog\n'
+                '6. Tap "Allow" to import the transaction\n\n'
+                '✨ No copy-paste needed!\n'
+                '🔒 Privacy: We only read SMS you explicitly allow. All data stays on your device.',
+                textAlign: TextAlign.left,
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: _isLoading ? null : _importSmsTransaction,
+                icon: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.sms),
+                label: Text(_isLoading ? 'Importing...' : 'Import New SMS'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.income,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: _isLoading ? null : _importFromPaste,
+                icon: const Icon(Icons.paste),
+                label: const Text('Paste Existing SMS'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.income,
+                  side: const BorderSide(color: AppColors.income),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '💡 Tip: Use "Paste Existing SMS" for messages that already arrived',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                  fontStyle: FontStyle.italic,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: _isLoading || _isBulkImporting
+                    ? null
+                    : _startBulkImport,
+                icon: _isBulkImporting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.upload_file),
+                label: Text(
+                  _isBulkImporting
+                      ? 'Bulk Importing... ($_bulkImportCount imported)'
+                      : 'Bulk Import Multiple SMS',
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.income,
+                  side: const BorderSide(color: AppColors.income),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -945,7 +1620,8 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                   setState(() {
                     _fetchAllTransactions = true;
                   });
-                  _loadTransactions();
+                  // Transactions are imported manually via paste dialog
+                  // No need to reload - user will import when needed
                 },
                 icon: const Icon(Icons.history, size: 18),
                 label: const Text('Fetch All Historical Transactions'),
@@ -1488,6 +2164,8 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                     onPressed: () {
                       Navigator.pop(context);
                       _importTransaction(transaction);
+                      // Mark that a transaction was imported
+                      _hasImportedTransaction = true;
                     },
                     icon: const Icon(Icons.download),
                     label: const Text('Import as Transaction'),

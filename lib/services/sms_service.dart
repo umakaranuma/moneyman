@@ -1,6 +1,5 @@
-import 'package:flutter_sms_inbox/flutter_sms_inbox.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter/services.dart';
 
 class ParsedSmsTransaction {
   final String id;
@@ -62,8 +61,6 @@ class SmsService {
   static const String _smsBoxName = 'sms_transactions';
   static const String _installDateKey = 'app_install_date';
   static const String _settingsBoxName = 'app_settings';
-  
-  static final SmsQuery _query = SmsQuery();
 
   // Bank sender patterns - add more as needed
   static const List<String> _bankSenders = [
@@ -88,7 +85,7 @@ class SmsService {
   static Future<void> init() async {
     await Hive.openBox(_smsBoxName);
     await Hive.openBox(_settingsBoxName);
-    
+
     // Store install date if not already stored
     final settingsBox = Hive.box(_settingsBoxName);
     if (settingsBox.get(_installDateKey) == null) {
@@ -105,71 +102,98 @@ class SmsService {
     return DateTime.now();
   }
 
-  static Future<bool> requestSmsPermission() async {
-    final status = await Permission.sms.status;
-    if (status.isGranted) {
-      return true;
+  // MethodChannel for SMS User Consent API
+  static const MethodChannel _channel = MethodChannel('com.fynux.finzo/sms_consent');
+
+  /// Request SMS using User Consent API (Play Store approved method)
+  /// Shows Android system dialog, user selects SMS, we get the message
+  /// This is the user-friendly method - no copy-paste needed!
+  static Future<String?> requestSmsConsent() async {
+    try {
+      final String? smsText = await _channel.invokeMethod<String>('requestSmsConsent')
+          .timeout(
+            const Duration(seconds: 60),
+            onTimeout: () {
+              print('SMS consent request timed out');
+              return null;
+            },
+          );
+      return smsText;
+    } on PlatformException catch (e) {
+      print('Error requesting SMS consent: $e');
+      // Handle specific error codes
+      if (e.code == 'TIMEOUT') {
+        print('SMS consent timeout - user may have dismissed the dialog');
+      } else if (e.code == 'SMS_CONSENT_ERROR') {
+        print('SMS consent error: ${e.message}');
+      } else if (e.code == 'GOOGLE_PLAY_SERVICES_UNAVAILABLE') {
+        print('Google Play Services not available: ${e.message}');
+      }
+      return null;
+    } catch (e) {
+      print('Error requesting SMS consent: $e');
+      return null;
     }
-    
-    final result = await Permission.sms.request();
-    return result.isGranted;
   }
 
-  static Future<bool> hasSmsPermission() async {
-    return await Permission.sms.isGranted;
-  }
-
-  static Future<List<ParsedSmsTransaction>> fetchAndParseSmsMessages({bool fetchAll = false}) async {
-    final hasPermission = await requestSmsPermission();
-    if (!hasPermission) {
-      return [];
-    }
-
-    final installDate = getInstallDate();
-    
-    // Fetch all inbox messages
-    final messages = await _query.querySms(
-      kinds: [SmsQueryKind.inbox],
-    );
-
-    final List<ParsedSmsTransaction> transactions = [];
-
-    for (final message in messages) {
-      // Filter by date - only get messages from install month onwards (unless fetchAll is true)
-      if (!fetchAll && message.date != null && message.date!.isBefore(
-        DateTime(installDate.year, installDate.month, 1)
-      )) {
-        continue;
+  /// Import SMS transaction using User Consent API
+  /// User taps button → Android shows SMS picker → User selects SMS → We parse and import
+  static Future<ParsedSmsTransaction?> importSmsTransaction() async {
+    try {
+      // Request SMS via User Consent API (shows Android system dialog)
+      final smsText = await requestSmsConsent();
+      
+      if (smsText == null || smsText.isEmpty) {
+        // User cancelled or no SMS selected
+        return null;
       }
 
-      // Check if sender is a bank
-      final sender = message.sender?.toUpperCase() ?? '';
-      final isBankMessage = _bankSenders.any(
-        (bank) => sender.contains(bank) || 
-                  (message.body?.toUpperCase().contains(bank) ?? false)
-      );
-
-      if (!isBankMessage) continue;
-
-      // Try to parse the message
-      final parsed = _parseTransactionMessage(
-        id: '${message.id}',
-        sender: message.sender ?? 'Unknown',
-        body: message.body ?? '',
-        date: message.date ?? DateTime.now(),
-      );
+      // Parse the SMS message
+      final parsed = parseSmsText(smsText);
 
       if (parsed != null) {
-        transactions.add(parsed);
+        // Mark as imported
+        await markAsImported(parsed.id);
       }
+
+      return parsed;
+    } catch (e) {
+      print('Error importing SMS transaction: $e');
+      return null;
     }
-
-    // Sort by date, newest first
-    transactions.sort((a, b) => b.date.compareTo(a.date));
-
-    return transactions;
   }
 
+  /// Parse SMS text (used by both manual paste and User Consent API)
+  static ParsedSmsTransaction? parseSmsText(String smsText, {String? sender}) {
+    try {
+      // Parse the SMS message
+      final parsed = _parseTransactionMessage(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        sender: sender ?? _extractSenderFromMessage(smsText),
+        body: smsText,
+        date: DateTime.now(),
+      );
+
+      return parsed;
+    } catch (e) {
+      print('Error parsing SMS: $e');
+      return null;
+    }
+  }
+
+  /// Extract sender from SMS message text
+  static String _extractSenderFromMessage(String message) {
+    // Try to find bank name in message
+    final upperMessage = message.toUpperCase();
+    for (final bank in _bankSenders) {
+      if (upperMessage.contains(bank)) {
+        return bank;
+      }
+    }
+    return 'Unknown';
+  }
+
+  /// Parse transaction message
   static ParsedSmsTransaction? _parseTransactionMessage({
     required String id,
     required String sender,
@@ -177,11 +201,11 @@ class SmsService {
     required DateTime date,
   }) {
     final upperBody = body.toUpperCase();
-    
+
     // Determine if credit or debit
     final isCredit = _isCredit(upperBody);
     final isDebit = _isDebit(upperBody);
-    
+
     if (!isCredit && !isDebit) return null;
 
     // Extract amount
@@ -190,10 +214,10 @@ class SmsService {
 
     // Extract account number
     final accountNumber = _extractAccountNumber(body);
-    
+
     // Extract balance
     final balance = _extractBalance(body);
-    
+
     // Determine bank name
     final bankName = _determineBankName(sender, body);
 
@@ -243,10 +267,15 @@ class SmsService {
 
   static double? _extractAmount(String body) {
     // Common patterns for amounts in bank messages
-    // Rs.1,234.56 or Rs 1234.56 or LKR 1,234.56 or INR 1234 or $1234.56
     final patterns = [
-      RegExp(r'(?:RS\.?|LKR|INR|USD|\$)\s*([0-9,]+\.?[0-9]*)', caseSensitive: false),
-      RegExp(r'(?:AMOUNT|AMT)[:\s]*(?:RS\.?|LKR|INR|USD|\$)?\s*([0-9,]+\.?[0-9]*)', caseSensitive: false),
+      RegExp(
+        r'(?:RS\.?|LKR|INR|USD|\$)\s*([0-9,]+\.?[0-9]*)',
+        caseSensitive: false,
+      ),
+      RegExp(
+        r'(?:AMOUNT|AMT)[:\s]*(?:RS\.?|LKR|INR|USD|\$)?\s*([0-9,]+\.?[0-9]*)',
+        caseSensitive: false,
+      ),
       RegExp(r'([0-9,]+\.?[0-9]*)\s*(?:RS\.?|LKR|INR)', caseSensitive: false),
     ];
 
@@ -264,7 +293,6 @@ class SmsService {
   }
 
   static String? _extractAccountNumber(String body) {
-    // Pattern for account numbers (usually last 4-6 digits shown)
     final patterns = [
       RegExp(r'A/C[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
       RegExp(r'ACCOUNT[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
@@ -283,7 +311,10 @@ class SmsService {
 
   static String? _extractBalance(String body) {
     final patterns = [
-      RegExp(r'(?:BAL|BALANCE|AVAIL|AVL)[:\s]*(?:RS\.?|LKR|INR|USD|\$)?\s*([0-9,]+\.?[0-9]*)', caseSensitive: false),
+      RegExp(
+        r'(?:BAL|BALANCE|AVAIL|AVL)[:\s]*(?:RS\.?|LKR|INR|USD|\$)?\s*([0-9,]+\.?[0-9]*)',
+        caseSensitive: false,
+      ),
     ];
 
     for (final pattern in patterns) {
@@ -297,12 +328,13 @@ class SmsService {
 
   static String _determineBankName(String sender, String body) {
     final combined = '$sender $body'.toUpperCase();
-    
+
     if (combined.contains('BOC') || combined.contains('BANK OF CEYLON')) {
       return 'Bank of Ceylon';
     } else if (combined.contains('HNB') || combined.contains('HATTON')) {
       return 'HNB';
-    } else if (combined.contains('COMBANK') || combined.contains('COMMERCIAL')) {
+    } else if (combined.contains('COMBANK') ||
+        combined.contains('COMMERCIAL')) {
       return 'Commercial Bank';
     } else if (combined.contains('SAMPATH')) {
       return 'Sampath Bank';
@@ -314,7 +346,8 @@ class SmsService {
       return 'DFCC Bank';
     } else if (combined.contains('PEOPLES') || combined.contains("PEOPLE'S")) {
       return "People's Bank";
-    } else if (combined.contains('NSB') || combined.contains('NATIONAL SAVINGS')) {
+    } else if (combined.contains('NSB') ||
+        combined.contains('NATIONAL SAVINGS')) {
       return 'NSB';
     } else if (combined.contains('HDFC')) {
       return 'HDFC';
@@ -331,7 +364,7 @@ class SmsService {
     } else if (combined.contains('PHONEPE')) {
       return 'PhonePe';
     }
-    
+
     return sender;
   }
 
@@ -350,4 +383,3 @@ class SmsService {
     await _smsBox.clear();
   }
 }
-
