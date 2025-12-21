@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -85,23 +84,15 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<List<Transaction>> _getFilteredTransactions() async {
-    print('=== FETCHING TRANSACTIONS DEBUG ===');
-    print('Refresh Key: $_refreshKey');
-
     // Get manually added transactions
     final manualTransactions = StorageService.getAllTransactions();
-    print('Manual transactions from storage: ${manualTransactions.length}');
 
     if (manualTransactions.isNotEmpty) {
-      print('First 3 manual transactions:');
-      manualTransactions.take(3).forEach((t) {
-        print('  - ${t.id}: ${t.title} - Rs. ${t.amount} (Type: ${t.type})');
-      });
+      manualTransactions.take(3).forEach((t) {});
     }
 
     // Get SMS transactions and convert them to Transaction objects
     final smsTransactions = await _getSmsTransactionsAsTransactions();
-    print('SMS transactions: ${smsTransactions.length}');
 
     // Remove duplicates (if any SMS transaction was already imported)
     // Use transaction ID as the key to ensure edited transactions replace old ones
@@ -121,25 +112,8 @@ class _HomeScreenState extends State<HomeScreen>
     }
 
     final combinedTransactions = uniqueTransactions.values.toList();
-    print('Combined unique transactions: ${combinedTransactions.length}');
-    print(
-      'Deduplication: Manual transactions take precedence over SMS transactions',
-    );
 
     // Count by type
-    final incomeCount = combinedTransactions
-        .where((t) => t.type == TransactionType.income)
-        .length;
-    final expenseCount = combinedTransactions
-        .where((t) => t.type == TransactionType.expense)
-        .length;
-    final transferCount = combinedTransactions
-        .where((t) => t.type == TransactionType.transfer)
-        .length;
-    print(
-      'Combined - Income: $incomeCount, Expense: $expenseCount, Transfer: $transferCount',
-    );
-    print('====================================');
 
     switch (_tabController.index) {
       case 0: // Daily - show all transactions for current month grouped by date
@@ -561,9 +535,6 @@ class _HomeScreenState extends State<HomeScreen>
     // Only count actual income and expenses, exclude transfers
     // Transfers just move money between accounts, they don't affect net balance
 
-    print('=== SUMMARY CALCULATION DEBUG ===');
-    print('Total transactions: ${transactions.length}');
-
     final incomeTransactions = transactions
         .where((t) => t.type == TransactionType.income)
         .toList();
@@ -574,33 +545,17 @@ class _HomeScreenState extends State<HomeScreen>
         .where((t) => t.type == TransactionType.transfer)
         .toList();
 
-    print('Income transactions: ${incomeTransactions.length}');
-    print('Expense transactions: ${expenseTransactions.length}');
-    print('Transfer transactions: ${transferTransactions.length}');
-
     final income = incomeTransactions.fold(0.0, (sum, t) => sum + t.amount);
     final expense = expenseTransactions.fold(0.0, (sum, t) => sum + t.amount);
     final total = income - expense;
 
-    print('Income total: $income');
-    print('Expense total: $expense');
-    print('Balance total: $total');
-
     // Print first few transactions of each type for debugging
     if (expenseTransactions.isNotEmpty) {
-      print('First 3 Expense transactions:');
-      expenseTransactions.take(3).forEach((t) {
-        print('  - ${t.id}: ${t.title} - Rs. ${t.amount} (Type: ${t.type})');
-      });
+      expenseTransactions.take(3).forEach((t) {});
     }
     if (transferTransactions.isNotEmpty) {
-      print('First 3 Transfer transactions:');
-      transferTransactions.take(3).forEach((t) {
-        print('  - ${t.id}: ${t.title} - Rs. ${t.amount} (Type: ${t.type})');
-      });
+      transferTransactions.take(3).forEach((t) {});
     }
-
-    print('==================================');
 
     return {'income': income, 'expense': expense, 'total': total};
   }
@@ -930,8 +885,9 @@ class _HomeScreenState extends State<HomeScreen>
 
       if (monthTransactions.isEmpty &&
           month > now.month &&
-          _selectedMonth.year == now.year)
+          _selectedMonth.year == now.year) {
         continue;
+      }
 
       final income = monthTransactions
           .where((t) => t.type == TransactionType.income)
@@ -2091,32 +2047,19 @@ class _HomeScreenState extends State<HomeScreen>
 
     return InkWell(
       onTap: () async {
-        print('=== EDIT TRANSACTION CLICKED (Card View) ===');
-        print('Transaction ID: ${transaction.id}');
-        print('Current Type: ${transaction.type}');
-        print('Current Amount: ${transaction.amount}');
-
         final result = await context.goToEditTransaction<bool>(transaction);
-        print('Edit result: $result');
 
         if (result == true) {
-          print('Transaction was saved, refreshing...');
           // Add small delay to ensure storage update completes
           await Future.delayed(const Duration(milliseconds: 100));
 
           // Verify transaction was updated
-          final updatedTransaction = StorageService.getTransaction(
-            transaction.id,
-          );
-          print('Updated transaction type: ${updatedTransaction?.type}');
-          print('Updated transaction amount: ${updatedTransaction?.amount}');
+          StorageService.getTransaction(transaction.id);
 
           setState(() {
             _refreshKey++; // Force FutureBuilder to refresh
-            print('Refresh key incremented to: $_refreshKey');
           });
         }
-        print('=============================================');
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -2228,32 +2171,19 @@ class _HomeScreenState extends State<HomeScreen>
 
     return InkWell(
       onTap: () async {
-        print('=== EDIT TRANSACTION CLICKED (List View) ===');
-        print('Transaction ID: ${transaction.id}');
-        print('Current Type: ${transaction.type}');
-        print('Current Amount: ${transaction.amount}');
-
         final result = await context.goToEditTransaction<bool>(transaction);
-        print('Edit result: $result');
 
         if (result == true) {
-          print('Transaction was saved, refreshing...');
           // Add small delay to ensure storage update completes
           await Future.delayed(const Duration(milliseconds: 100));
 
           // Verify transaction was updated
-          final updatedTransaction = StorageService.getTransaction(
-            transaction.id,
-          );
-          print('Updated transaction type: ${updatedTransaction?.type}');
-          print('Updated transaction amount: ${updatedTransaction?.amount}');
+          StorageService.getTransaction(transaction.id);
 
           setState(() {
             _refreshKey++; // Force FutureBuilder to refresh
-            print('Refresh key incremented to: $_refreshKey');
           });
         }
-        print('=============================================');
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),

@@ -25,7 +25,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
   bool _isLoading = true;
   bool _hasPermission = false;
   String? _errorMessage;
-  Set<String> _selectedIds = {};
+  final Set<String> _selectedIds = {};
   bool _isSelectionMode = false;
 
   // Filter state
@@ -655,7 +655,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                     });
                     _loadTransactions();
                   },
-                  activeColor: AppColors.income,
+                  activeThumbColor: AppColors.income,
                   activeTrackColor: AppColors.income.withValues(alpha: 0.3),
                 ),
               ],

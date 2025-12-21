@@ -36,11 +36,7 @@ class SmsAnalyticsService {
     for (var transaction in transactions) {
       final bankName = transaction.bankName;
       if (!bankData.containsKey(bankName)) {
-        bankData[bankName] = {
-          'credits': 0.0,
-          'debits': 0.0,
-          'count': 0.0,
-        };
+        bankData[bankName] = {'credits': 0.0, 'debits': 0.0, 'count': 0.0};
       }
 
       if (transaction.isCredit) {
@@ -166,8 +162,7 @@ class SmsAnalyticsService {
       }
 
       if (transaction.isCredit) {
-        grouped[periodKey]!['credits'] =
-            grouped[periodKey]!['credits']! + 1;
+        grouped[periodKey]!['credits'] = grouped[periodKey]!['credits']! + 1;
       } else {
         grouped[periodKey]!['debits'] = grouped[periodKey]!['debits']! + 1;
       }
@@ -228,7 +223,7 @@ class SmsAnalyticsService {
         final week = int.parse(parts[1]);
         return _getDateFromWeekNumber(year, week);
       case TimePeriod.monthly:
-        return DateFormat('yyyy-MM').parse(key + '-01');
+        return DateFormat('yyyy-MM').parse('$key-01');
       case TimePeriod.custom:
         return DateFormat('yyyy-MM-dd').parse(key);
     }
@@ -248,5 +243,3 @@ class SmsAnalyticsService {
     return firstDayOfYear.add(Duration(days: daysToAdd));
   }
 }
-
-
