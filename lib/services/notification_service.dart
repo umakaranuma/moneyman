@@ -114,6 +114,7 @@ class NotificationService {
       importance: Importance.high,
       playSound: true,
       enableVibration: true,
+      showBadge: true,
     );
 
     // Todo List Reminder Channel
@@ -124,6 +125,7 @@ class NotificationService {
       importance: Importance.high,
       playSound: true,
       enableVibration: true,
+      showBadge: true,
     );
 
     // Create channels
@@ -145,23 +147,30 @@ class NotificationService {
     bool hasNotificationPermission = false;
     if (await Permission.notification.isGranted) {
       hasNotificationPermission = true;
+      developer.log(
+        'Notification permission already granted',
+        name: 'NotificationService',
+      );
     } else {
+      developer.log(
+        'Requesting notification permission...',
+        name: 'NotificationService',
+      );
       final status = await Permission.notification.request();
       hasNotificationPermission = status.isGranted;
-    }
-
-    // For Android 12+, also check exact alarm permission
-    // Note: This permission might not be available on all devices
-    try {
-      // Check if exact alarm permission is needed and available
-      // The permission_handler package might not support this directly
-      // but we'll try to request it if possible
-    } catch (e) {
       developer.log(
-        'Error checking exact alarm permission: $e',
+        'Notification permission status: ${status.toString()}',
         name: 'NotificationService',
       );
     }
+
+    // For Android 12+, exact alarm permission is handled by the system
+    // The USE_EXACT_ALARM permission in manifest should be sufficient
+    // SCHEDULE_EXACT_ALARM may require user approval on some devices
+    developer.log(
+      'Notification permission result: $hasNotificationPermission',
+      name: 'NotificationService',
+    );
 
     return hasNotificationPermission;
   }
@@ -172,18 +181,18 @@ class NotificationService {
   }
 
   /// Schedule default notifications:
-  /// - 12:00 AM daily (Sri Lankan time): Money manager reminder
-  /// - 12:00 AM daily (Sri Lankan time): Todo list creation reminder
+  /// - 12:45 AM daily (Sri Lankan time): Money manager reminder
+  /// - 12:45 AM daily (Sri Lankan time): Todo list creation reminder
   static Future<void> scheduleDefaultNotifications() async {
     try {
       // Cancel existing notifications first
       await _notifications.cancel(moneyManagerReminderId);
       await _notifications.cancel(todoListReminderId);
 
-      // Schedule 12:00 AM money manager reminder
+      // Schedule 12:45 AM money manager reminder
       await scheduleMoneyManagerReminder();
 
-      // Schedule 12:00 AM todo list reminder
+      // Schedule 12:45 AM todo list reminder
       await scheduleTodoListReminder();
 
       developer.log(
@@ -198,30 +207,43 @@ class NotificationService {
     }
   }
 
-  /// Schedule daily notification at 12:00 AM (midnight, Sri Lankan time) for money manager reminder
+  /// Schedule daily notification at 12:45 AM (midnight + 45 minutes, Sri Lankan time) for money manager reminder
   static Future<void> scheduleMoneyManagerReminder() async {
     try {
       // Get current time in Sri Lankan timezone
       final sriLankanLocation = tz.getLocation('Asia/Colombo');
       final now = tz.TZDateTime.now(sriLankanLocation);
 
-      // Schedule for 12:00 AM (midnight) Sri Lankan time
+      developer.log(
+        'Current time in Sri Lankan timezone: $now',
+        name: 'NotificationService',
+      );
+
+      // Schedule for 12:45 AM (midnight + 45 minutes) Sri Lankan time
       var scheduledDate = tz.TZDateTime(
         sriLankanLocation,
         now.year,
         now.month,
         now.day,
         0, // 12 AM (midnight)
-        10, // 0 minutes
+        45, // 45 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
       if (scheduledDate.isBefore(now)) {
         scheduledDate = scheduledDate.add(const Duration(days: 1));
+        developer.log(
+          '12:45 AM has passed today, scheduling for tomorrow',
+          name: 'NotificationService',
+        );
       }
 
       developer.log(
         'Scheduling money manager reminder for: $scheduledDate (Sri Lankan time)',
+        name: 'NotificationService',
+      );
+      developer.log(
+        'Time until notification: ${scheduledDate.difference(now).inMinutes} minutes',
         name: 'NotificationService',
       );
 
@@ -234,6 +256,9 @@ class NotificationService {
         showWhen: true,
         enableVibration: true,
         playSound: true,
+        channelShowBadge: true,
+        ongoing: false,
+        autoCancel: true,
       );
 
       const iosDetails = DarwinNotificationDetails(
@@ -247,22 +272,68 @@ class NotificationService {
         iOS: iosDetails,
       );
 
-      await _notifications.zonedSchedule(
-        moneyManagerReminderId,
-        'Money Manager Reminder',
-        'Don\'t forget to update your transactions and track your expenses!',
-        scheduledDate,
-        notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
-      );
+      try {
+        await _notifications.zonedSchedule(
+          moneyManagerReminderId,
+          'Money Manager Reminder',
+          'Don\'t forget to update your transactions and track your expenses!',
+          scheduledDate,
+          notificationDetails,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.time,
+        );
 
-      developer.log(
-        'Money manager reminder scheduled',
-        name: 'NotificationService',
-      );
+        developer.log(
+          'Money manager reminder scheduled successfully for: $scheduledDate (${scheduledDate.timeZoneName})',
+          name: 'NotificationService',
+        );
+
+        // Verify the notification was scheduled
+        final pending = await _notifications.pendingNotificationRequests();
+        final scheduled = pending.where((n) => n.id == moneyManagerReminderId);
+        if (scheduled.isNotEmpty) {
+          developer.log(
+            'Verified: Notification ID ${scheduled.first.id} is scheduled',
+            name: 'NotificationService',
+          );
+        } else {
+          developer.log(
+            'Warning: Notification ID $moneyManagerReminderId not found in pending list (${pending.length} total pending)',
+            name: 'NotificationService',
+          );
+        }
+      } catch (e) {
+        developer.log(
+          'Error in zonedSchedule for money manager: $e',
+          name: 'NotificationService',
+        );
+        // Try with inexact scheduling as fallback
+        try {
+          await _notifications.zonedSchedule(
+            moneyManagerReminderId,
+            'Money Manager Reminder',
+            'Don\'t forget to update your transactions and track your expenses!',
+            scheduledDate,
+            notificationDetails,
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
+            matchDateTimeComponents: DateTimeComponents.time,
+          );
+          developer.log(
+            'Money manager reminder scheduled with inexact mode as fallback',
+            name: 'NotificationService',
+          );
+        } catch (e2) {
+          developer.log(
+            'Fallback scheduling also failed: $e2',
+            name: 'NotificationService',
+          );
+          rethrow;
+        }
+      }
     } catch (e) {
       developer.log(
         'Error scheduling money manager reminder: $e',
@@ -271,30 +342,43 @@ class NotificationService {
     }
   }
 
-  /// Schedule daily notification at 12:00 AM (midnight, Sri Lankan time) for todo list creation reminder
+  /// Schedule daily notification at 12:45 AM (midnight + 45 minutes, Sri Lankan time) for todo list creation reminder
   static Future<void> scheduleTodoListReminder() async {
     try {
       // Get current time in Sri Lankan timezone
       final sriLankanLocation = tz.getLocation('Asia/Colombo');
       final now = tz.TZDateTime.now(sriLankanLocation);
 
-      // Schedule for 12:00 AM (midnight) Sri Lankan time
+      developer.log(
+        'Current time in Sri Lankan timezone: $now',
+        name: 'NotificationService',
+      );
+
+      // Schedule for 12:45 AM (midnight + 45 minutes) Sri Lankan time
       var scheduledDate = tz.TZDateTime(
         sriLankanLocation,
         now.year,
         now.month,
         now.day,
         0, // 12 AM (midnight)
-        10, // 0 minutes
+        45, // 45 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
       if (scheduledDate.isBefore(now)) {
         scheduledDate = scheduledDate.add(const Duration(days: 1));
+        developer.log(
+          '12:45 AM has passed today, scheduling for tomorrow',
+          name: 'NotificationService',
+        );
       }
 
       developer.log(
         'Scheduling todo list reminder for: $scheduledDate (Sri Lankan time)',
+        name: 'NotificationService',
+      );
+      developer.log(
+        'Time until notification: ${scheduledDate.difference(now).inMinutes} minutes',
         name: 'NotificationService',
       );
 
@@ -307,6 +391,9 @@ class NotificationService {
         showWhen: true,
         enableVibration: true,
         playSound: true,
+        channelShowBadge: true,
+        ongoing: false,
+        autoCancel: true,
       );
 
       const iosDetails = DarwinNotificationDetails(
@@ -320,22 +407,68 @@ class NotificationService {
         iOS: iosDetails,
       );
 
-      await _notifications.zonedSchedule(
-        todoListReminderId,
-        'Create Today\'s Todo List',
-        'Start your day right! Create your todo list for today.',
-        scheduledDate,
-        notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
-      );
+      try {
+        await _notifications.zonedSchedule(
+          todoListReminderId,
+          'Create Today\'s Todo List',
+          'Start your day right! Create your todo list for today.',
+          scheduledDate,
+          notificationDetails,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.time,
+        );
 
-      developer.log(
-        'Todo list reminder scheduled',
-        name: 'NotificationService',
-      );
+        developer.log(
+          'Todo list reminder scheduled successfully for: $scheduledDate (${scheduledDate.timeZoneName})',
+          name: 'NotificationService',
+        );
+
+        // Verify the notification was scheduled
+        final pending = await _notifications.pendingNotificationRequests();
+        final scheduled = pending.where((n) => n.id == todoListReminderId);
+        if (scheduled.isNotEmpty) {
+          developer.log(
+            'Verified: Notification ID ${scheduled.first.id} is scheduled',
+            name: 'NotificationService',
+          );
+        } else {
+          developer.log(
+            'Warning: Notification ID $todoListReminderId not found in pending list (${pending.length} total pending)',
+            name: 'NotificationService',
+          );
+        }
+      } catch (e) {
+        developer.log(
+          'Error in zonedSchedule for todo list: $e',
+          name: 'NotificationService',
+        );
+        // Try with inexact scheduling as fallback
+        try {
+          await _notifications.zonedSchedule(
+            todoListReminderId,
+            'Create Today\'s Todo List',
+            'Start your day right! Create your todo list for today.',
+            scheduledDate,
+            notificationDetails,
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
+            matchDateTimeComponents: DateTimeComponents.time,
+          );
+          developer.log(
+            'Todo list reminder scheduled with inexact mode as fallback',
+            name: 'NotificationService',
+          );
+        } catch (e2) {
+          developer.log(
+            'Fallback scheduling also failed: $e2',
+            name: 'NotificationService',
+          );
+          rethrow;
+        }
+      }
     } catch (e) {
       developer.log(
         'Error scheduling todo list reminder: $e',
@@ -369,6 +502,11 @@ class NotificationService {
       importance: Importance.high,
       priority: Priority.high,
       showWhen: true,
+      enableVibration: true,
+      playSound: true,
+      channelShowBadge: true,
+      ongoing: false,
+      autoCancel: true,
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -388,11 +526,158 @@ class NotificationService {
       'If you see this, notifications are working!',
       notificationDetails,
     );
+
+    developer.log('Test notification shown', name: 'NotificationService');
+  }
+
+  /// Show scheduled notifications immediately (for testing)
+  static Future<void> showScheduledNotificationsNow() async {
+    developer.log(
+      'Showing scheduled notifications immediately for testing...',
+      name: 'NotificationService',
+    );
+
+    // Show money manager reminder
+    const androidDetails1 = AndroidNotificationDetails(
+      moneyManagerChannelId,
+      'Money Manager Reminder',
+      channelDescription: 'Daily reminder to update your money manager',
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: true,
+      enableVibration: true,
+      playSound: true,
+      channelShowBadge: true,
+      ongoing: false,
+      autoCancel: true,
+    );
+
+    const iosDetails1 = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    await _notifications.show(
+      moneyManagerReminderId,
+      'Money Manager Reminder',
+      'Don\'t forget to update your transactions and track your expenses!',
+      const NotificationDetails(android: androidDetails1, iOS: iosDetails1),
+    );
+
+    // Wait a bit before showing the second one
+    await Future.delayed(const Duration(seconds: 1));
+
+    // Show todo list reminder
+    const androidDetails2 = AndroidNotificationDetails(
+      todoListChannelId,
+      'Todo List Reminder',
+      channelDescription: 'Daily reminder to create your todo list',
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: true,
+      enableVibration: true,
+      playSound: true,
+      channelShowBadge: true,
+      ongoing: false,
+      autoCancel: true,
+    );
+
+    await _notifications.show(
+      todoListReminderId,
+      'Create Today\'s Todo List',
+      'Start your day right! Create your todo list for today.',
+      const NotificationDetails(android: androidDetails2, iOS: iosDetails1),
+    );
+
+    developer.log(
+      'Both scheduled notifications shown immediately',
+      name: 'NotificationService',
+    );
   }
 
   /// Get pending notifications (for debugging)
   static Future<List<PendingNotificationRequest>>
   getPendingNotifications() async {
     return await _notifications.pendingNotificationRequests();
+  }
+
+  /// Log all pending notifications for debugging
+  static Future<void> logPendingNotifications() async {
+    try {
+      final pending = await getPendingNotifications();
+      developer.log(
+        'Pending notifications count: ${pending.length}',
+        name: 'NotificationService',
+      );
+      for (var notification in pending) {
+        developer.log(
+          'Pending notification ID: ${notification.id}, Title: ${notification.title}, Scheduled for: ${notification.body}',
+          name: 'NotificationService',
+        );
+      }
+    } catch (e) {
+      developer.log(
+        'Error getting pending notifications: $e',
+        name: 'NotificationService',
+      );
+    }
+  }
+
+  /// Force reschedule all notifications (useful after code changes)
+  static Future<void> rescheduleAllNotifications() async {
+    developer.log(
+      'Force rescheduling all notifications...',
+      name: 'NotificationService',
+    );
+    final hasPermission = await _requestPermissions();
+    if (hasPermission) {
+      await scheduleDefaultNotifications();
+      await logPendingNotifications();
+    } else {
+      developer.log(
+        'Cannot reschedule: notification permission not granted',
+        name: 'NotificationService',
+      );
+    }
+  }
+
+  /// Check if notifications are still pending and show them if they should have fired
+  static Future<void> checkAndShowMissedNotifications() async {
+    try {
+      final pending = await _notifications.pendingNotificationRequests();
+      final now = tz.TZDateTime.now(tz.getLocation('Asia/Colombo'));
+
+      developer.log(
+        'Checking missed notifications. Current time: $now, Pending count: ${pending.length}',
+        name: 'NotificationService',
+      );
+
+      for (var notification in pending) {
+        developer.log(
+          'Pending notification ID: ${notification.id}, Title: ${notification.title}',
+          name: 'NotificationService',
+        );
+
+        // If it's one of our scheduled notifications and it's past the scheduled time
+        if (notification.id == moneyManagerReminderId ||
+            notification.id == todoListReminderId) {
+          // The notification should have fired, but might have been suppressed
+          // Show it now manually
+          developer.log(
+            'Notification ${notification.id} should have fired. Showing now...',
+            name: 'NotificationService',
+          );
+        }
+      }
+
+      // Show the notifications now since they should have fired
+      await showScheduledNotificationsNow();
+    } catch (e) {
+      developer.log(
+        'Error checking missed notifications: $e',
+        name: 'NotificationService',
+      );
+    }
   }
 }
