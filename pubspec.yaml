@@ -61,6 +61,10 @@ dependencies:
   
   # Google Fonts for beautiful typography
   google_fonts: ^6.2.1
+  
+  # Local notifications for scheduled reminders
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
 
 dev_dependencies:
   flutter_test:

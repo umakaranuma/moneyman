@@ -5,6 +5,7 @@ import 'services/category_service.dart';
 import 'services/budget_service.dart';
 import 'services/account_service.dart';
 import 'services/sms_service.dart';
+import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 import 'core/router/app_router.dart';
 
@@ -32,6 +33,7 @@ void main() async {
   await BudgetService.init();
   await AccountService.init();
   await SmsService.init();
+  await NotificationService.init();
 
   runApp(const MyApp());
 }
