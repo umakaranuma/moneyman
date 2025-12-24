@@ -269,8 +269,8 @@ class NotificationService {
   }
 
   /// Schedule default notifications:
-  /// - 01:10 AM daily (Sri Lankan time): Money manager reminder
-  /// - 01:10 AM daily (Sri Lankan time): Todo list creation reminder
+  /// - 05:30 AM daily (Sri Lankan time): Morning todo list reminder
+  /// - 09:00 PM daily (Sri Lankan time): Evening expenses and todo completion reminder
   static Future<void> scheduleDefaultNotifications() async {
     try {
       developer.log(
@@ -294,11 +294,11 @@ class NotificationService {
         name: 'NotificationService',
       );
 
-      // Schedule 01:10 AM money manager reminder
-      await scheduleMoneyManagerReminder();
+      // Schedule 05:30 AM morning todo list reminder
+      await scheduleMorningTodoReminder();
 
-      // Schedule 01:10 AM todo list reminder
-      await scheduleTodoListReminder();
+      // Schedule 09:00 PM evening expenses and completion reminder
+      await scheduleEveningExpensesReminder();
 
       developer.log(
         '✅ Default notifications scheduled successfully',
@@ -316,15 +316,15 @@ class NotificationService {
     }
   }
 
-  /// Schedule daily notification at 01:10 AM (1 hour 10 minutes, Sri Lankan time) for money manager reminder
-  static Future<void> scheduleMoneyManagerReminder() async {
+  /// Schedule daily notification at 05:30 AM (morning, Sri Lankan time) for todo list planning
+  static Future<void> scheduleMorningTodoReminder() async {
     try {
       // Get current time in Sri Lankan timezone
       final sriLankanLocation = tz.getLocation('Asia/Colombo');
       final now = tz.TZDateTime.now(sriLankanLocation);
 
       developer.log(
-        '=== Scheduling Money Manager Reminder ===',
+        '=== Scheduling Morning Todo List Reminder ===',
         name: 'NotificationService',
       );
       developer.log(
@@ -404,7 +404,7 @@ class NotificationService {
       // Try inexactAllowWhileIdle first (most reliable)
       try {
         developer.log(
-          '⏰ Attempting to schedule money manager notification...',
+          '⏰ Attempting to schedule morning todo list notification...',
           name: 'NotificationService',
         );
         developer.log(
@@ -422,9 +422,9 @@ class NotificationService {
         );
 
         await _notifications.zonedSchedule(
-          moneyManagerReminderId,
-          '💰 Update Your Finances',
-          'Time to record your daily transactions and track your spending!',
+          todoListReminderId,
+          '🌅 Good Morning! Plan Your Day',
+          'Start your day right! Create your todo list and set your goals for today. ✨',
           scheduledDate,
           notificationDetails,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -472,9 +472,9 @@ class NotificationService {
           // Last resort: try without allowWhileIdle
           try {
             await _notifications.zonedSchedule(
-              moneyManagerReminderId,
-              '💰 Update Your Finances',
-              'Time to record your daily transactions and track your spending!',
+              todoListReminderId,
+              '🌅 Good Morning! Plan Your Day',
+              'Start your day right! Create your todo list and set your goals for today. ✨',
               scheduledDate,
               notificationDetails,
               androidScheduleMode: AndroidScheduleMode.inexact,
@@ -532,15 +532,15 @@ class NotificationService {
     }
   }
 
-  /// Schedule daily notification at 01:10 AM (1 hour 10 minutes, Sri Lankan time) for todo list creation reminder
-  static Future<void> scheduleTodoListReminder() async {
+  /// Schedule daily notification at 09:00 PM (evening, Sri Lankan time) for expenses and todo completion
+  static Future<void> scheduleEveningExpensesReminder() async {
     try {
       // Get current time in Sri Lankan timezone
       final sriLankanLocation = tz.getLocation('Asia/Colombo');
       final now = tz.TZDateTime.now(sriLankanLocation);
 
       developer.log(
-        '=== Scheduling Todo List Reminder ===',
+        '=== Scheduling Evening Expenses Reminder ===',
         name: 'NotificationService',
       );
       developer.log(
@@ -552,21 +552,21 @@ class NotificationService {
         name: 'NotificationService',
       );
 
-      // Schedule for 01:10 AM (1 hour 10 minutes) Sri Lankan time
+      // Schedule for 05:30 AM (morning) Sri Lankan time
       var scheduledDate = tz.TZDateTime(
         sriLankanLocation,
         now.year,
         now.month,
         now.day,
-        1, // 1 AM
-        15, // 10 minutes
+        5, // 5 AM
+        30, // 30 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
       if (scheduledDate.isBefore(now)) {
         scheduledDate = scheduledDate.add(const Duration(days: 1));
         developer.log(
-          '01:10 AM has passed today, scheduling for tomorrow',
+          '05:30 AM has passed today, scheduling for tomorrow',
           name: 'NotificationService',
         );
       }
@@ -620,7 +620,7 @@ class NotificationService {
       // Try inexactAllowWhileIdle first (most reliable)
       try {
         developer.log(
-          '⏰ Attempting to schedule todo list notification...',
+          '⏰ Attempting to schedule evening expenses notification...',
           name: 'NotificationService',
         );
         developer.log(
@@ -638,9 +638,9 @@ class NotificationService {
         );
 
         await _notifications.zonedSchedule(
-          todoListReminderId,
-          '📝 Plan Your Day',
-          'Create your todo list for today and stay organized!',
+          moneyManagerReminderId,
+          '🌙 Evening Review Time',
+          'Mark your expenses, update transactions, and check off completed todos! 📊✅',
           scheduledDate,
           notificationDetails,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -670,9 +670,9 @@ class NotificationService {
             name: 'NotificationService',
           );
           await _notifications.zonedSchedule(
-            todoListReminderId,
-            '📝 Plan Your Day',
-            'Create your todo list for today and stay organized!',
+            moneyManagerReminderId,
+            '🌙 Evening Review Time',
+            'Mark your expenses, update transactions, and check off completed todos! 📊✅',
             scheduledDate,
             notificationDetails,
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -697,9 +697,9 @@ class NotificationService {
           // Last resort: try without allowWhileIdle
           try {
             await _notifications.zonedSchedule(
-              todoListReminderId,
-              '📝 Plan Your Day',
-              'Create your todo list for today and stay organized!',
+              moneyManagerReminderId,
+              '🌙 Evening Review Time',
+              'Mark your expenses, update transactions, and check off completed todos! 📊✅',
               scheduledDate,
               notificationDetails,
               androidScheduleMode: AndroidScheduleMode.inexact,
@@ -938,7 +938,7 @@ class NotificationService {
         if (notification.id == moneyManagerReminderId ||
             notification.id == todoListReminderId) {
           developer.log(
-            'This is a scheduled daily reminder (should fire at 01:10 AM Sri Lankan time)',
+            'This is a scheduled daily reminder',
             name: 'NotificationService',
           );
         }
@@ -965,22 +965,43 @@ class NotificationService {
 
       developer.log('Current time: $now', name: 'NotificationService');
 
-      // Check if it's past 01:10 AM today
-      final targetTime = tz.TZDateTime(
+      // Check if it's past 05:30 AM today (morning notification)
+      final morningTargetTime = tz.TZDateTime(
         sriLankanLocation,
         now.year,
         now.month,
         now.day,
-        1, // 1 AM
-        15, // 10 minutes
+        5, // 5 AM
+        30, // 30 minutes
       );
 
-      // If current time is between 01:10 and 01:15, and notification hasn't fired
-      // This gives a 5-minute window to catch missed notifications
-      if (now.isAfter(targetTime) &&
-          now.isBefore(targetTime.add(const Duration(minutes: 5)))) {
+      // Check if it's past 09:00 PM today (evening notification)
+      final eveningTargetTime = tz.TZDateTime(
+        sriLankanLocation,
+        now.year,
+        now.month,
+        now.day,
+        21, // 9 PM
+        0, // 0 minutes
+      );
+
+      // If current time is within 5 minutes of morning notification time
+      bool isMorningWindow =
+          now.isAfter(morningTargetTime) &&
+          now.isBefore(morningTargetTime.add(const Duration(minutes: 5)));
+
+      // If current time is within 5 minutes of evening notification time
+      bool isEveningWindow =
+          now.isAfter(eveningTargetTime) &&
+          now.isBefore(eveningTargetTime.add(const Duration(minutes: 5)));
+
+      if (isMorningWindow || isEveningWindow) {
+        final notificationType = isMorningWindow
+            ? '05:30 AM (morning)'
+            : '09:00 PM (evening)';
+
         developer.log(
-          '⏰ It\'s past 01:10 AM, checking if notifications fired...',
+          '⏰ It\'s past $notificationType, checking if notifications fired...',
           name: 'NotificationService',
         );
 
@@ -991,7 +1012,11 @@ class NotificationService {
         );
         final hasTodoList = pending.any((n) => n.id == todoListReminderId);
 
-        if (hasMoneyManager || hasTodoList) {
+        // Check which notification should have fired
+        bool shouldTriggerMorning = isMorningWindow && hasTodoList;
+        bool shouldTriggerEvening = isEveningWindow && hasMoneyManager;
+
+        if (shouldTriggerMorning || shouldTriggerEvening) {
           developer.log(
             '⚠️ Notifications are still pending - they may not have fired!',
             name: 'NotificationService',
@@ -1007,11 +1032,35 @@ class NotificationService {
             name: 'NotificationService',
           );
 
-          if (hasMoneyManager) {
+          if (shouldTriggerMorning && hasTodoList) {
+            await _notifications.show(
+              todoListReminderId,
+              '🌅 Good Morning! Plan Your Day',
+              'Start your day right! Create your todo list and set your goals for today. ✨',
+              const NotificationDetails(
+                android: AndroidNotificationDetails(
+                  todoListChannelId,
+                  'Todo List Reminder',
+                  channelDescription: 'Daily reminder to create your todo list',
+                  importance: Importance.max,
+                  priority: Priority.max,
+                  showWhen: true,
+                  enableVibration: true,
+                  playSound: true,
+                ),
+              ),
+            );
+            developer.log(
+              '✅ Morning Todo List notification manually triggered',
+              name: 'NotificationService',
+            );
+          }
+
+          if (shouldTriggerEvening && hasMoneyManager) {
             await _notifications.show(
               moneyManagerReminderId,
-              '💰 Update Your Finances',
-              'Time to record your daily transactions and track your spending!',
+              '🌙 Evening Review Time',
+              'Mark your expenses, update transactions, and check off completed todos! 📊✅',
               const NotificationDetails(
                 android: AndroidNotificationDetails(
                   moneyManagerChannelId,
@@ -1027,31 +1076,7 @@ class NotificationService {
               ),
             );
             developer.log(
-              '✅ Money Manager notification manually triggered',
-              name: 'NotificationService',
-            );
-          }
-
-          if (hasTodoList) {
-            await _notifications.show(
-              todoListReminderId,
-              '📝 Plan Your Day',
-              'Create your todo list for today and stay organized!',
-              const NotificationDetails(
-                android: AndroidNotificationDetails(
-                  todoListChannelId,
-                  'Todo List Reminder',
-                  channelDescription: 'Daily reminder to create your todo list',
-                  importance: Importance.max,
-                  priority: Priority.max,
-                  showWhen: true,
-                  enableVibration: true,
-                  playSound: true,
-                ),
-              ),
-            );
-            developer.log(
-              '✅ Todo List notification manually triggered',
+              '✅ Evening Expenses notification manually triggered',
               name: 'NotificationService',
             );
           }
