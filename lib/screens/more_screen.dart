@@ -33,6 +33,16 @@ class MoreScreen extends StatelessWidget {
                 delegate: SliverChildListDelegate([
                   _buildSettingsItem(
                     context,
+                    icon: Icons.checklist_rounded,
+                    label: 'Todos',
+                    gradient: [
+                      AppColors.primary,
+                      AppColors.primaryLight,
+                    ],
+                    onTap: () => context.goToTodos(),
+                  ),
+                  _buildSettingsItem(
+                    context,
                     icon: Icons.sms_rounded,
                     label: 'SMS Import',
                     gradient: [

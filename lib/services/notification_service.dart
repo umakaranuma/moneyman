@@ -18,8 +18,30 @@ class NotificationService {
 
   static Future<void> init() async {
     try {
-      // Initialize timezone
+      // Initialize timezone with all timezone data
       tz.initializeTimeZones();
+
+      // Verify Sri Lankan timezone is available
+      try {
+        final sriLankanLocation = tz.getLocation('Asia/Colombo');
+        developer.log(
+          'Sri Lankan timezone (Asia/Colombo) loaded successfully',
+          name: 'NotificationService',
+        );
+        developer.log(
+          'Current time in Asia/Colombo: ${tz.TZDateTime.now(sriLankanLocation)}',
+          name: 'NotificationService',
+        );
+        developer.log(
+          'Timezone offset: ${sriLankanLocation.currentTimeZone.offset}',
+          name: 'NotificationService',
+        );
+      } catch (e) {
+        developer.log(
+          'Error loading Asia/Colombo timezone: $e',
+          name: 'NotificationService',
+        );
+      }
 
       try {
         // Set timezone to Sri Lanka (Asia/Colombo)
@@ -33,6 +55,10 @@ class NotificationService {
         // Fallback to UTC if Colombo timezone not available
         try {
           tz.setLocalLocation(tz.getLocation('UTC'));
+          developer.log(
+            'Fell back to UTC timezone',
+            name: 'NotificationService',
+          );
         } catch (e2) {
           developer.log(
             'UTC fallback also failed: $e2',
@@ -215,7 +241,15 @@ class NotificationService {
       final now = tz.TZDateTime.now(sriLankanLocation);
 
       developer.log(
-        'Current time in Sri Lankan timezone: $now',
+        '=== Scheduling Money Manager Reminder ===',
+        name: 'NotificationService',
+      );
+      developer.log(
+        'Current time in Sri Lankan timezone (Asia/Colombo): $now',
+        name: 'NotificationService',
+      );
+      developer.log(
+        'Current timezone offset: ${sriLankanLocation.currentTimeZone.offset}',
         name: 'NotificationService',
       );
 
@@ -238,12 +272,18 @@ class NotificationService {
         );
       }
 
+      // Convert to UTC for verification
+      final scheduledUtc = scheduledDate.toUtc();
       developer.log(
-        'Scheduling money manager reminder for: $scheduledDate (Sri Lankan time)',
+        'Scheduled time in Sri Lankan timezone: $scheduledDate',
         name: 'NotificationService',
       );
       developer.log(
-        'Time until notification: ${scheduledDate.difference(now).inMinutes} minutes',
+        'Scheduled time in UTC: $scheduledUtc',
+        name: 'NotificationService',
+      );
+      developer.log(
+        'Time until notification: ${scheduledDate.difference(now).inMinutes} minutes (${(scheduledDate.difference(now).inHours)} hours)',
         name: 'NotificationService',
       );
 
@@ -289,6 +329,10 @@ class NotificationService {
           'Money manager reminder scheduled successfully for: $scheduledDate (${scheduledDate.timeZoneName})',
           name: 'NotificationService',
         );
+        developer.log(
+          'This corresponds to: ${scheduledDate.hour}:${scheduledDate.minute.toString().padLeft(2, '0')} ${scheduledDate.hour >= 12 ? 'PM' : 'AM'} Sri Lankan time',
+          name: 'NotificationService',
+        );
 
         // Verify the notification was scheduled
         final pending = await _notifications.pendingNotificationRequests();
@@ -296,6 +340,10 @@ class NotificationService {
         if (scheduled.isNotEmpty) {
           developer.log(
             'Verified: Notification ID ${scheduled.first.id} is scheduled',
+            name: 'NotificationService',
+          );
+          developer.log(
+            'Notification title: ${scheduled.first.title}',
             name: 'NotificationService',
           );
         } else {
@@ -350,7 +398,15 @@ class NotificationService {
       final now = tz.TZDateTime.now(sriLankanLocation);
 
       developer.log(
-        'Current time in Sri Lankan timezone: $now',
+        '=== Scheduling Todo List Reminder ===',
+        name: 'NotificationService',
+      );
+      developer.log(
+        'Current time in Sri Lankan timezone (Asia/Colombo): $now',
+        name: 'NotificationService',
+      );
+      developer.log(
+        'Current timezone offset: ${sriLankanLocation.currentTimeZone.offset}',
         name: 'NotificationService',
       );
 
@@ -373,12 +429,18 @@ class NotificationService {
         );
       }
 
+      // Convert to UTC for verification
+      final scheduledUtc = scheduledDate.toUtc();
       developer.log(
-        'Scheduling todo list reminder for: $scheduledDate (Sri Lankan time)',
+        'Scheduled time in Sri Lankan timezone: $scheduledDate',
         name: 'NotificationService',
       );
       developer.log(
-        'Time until notification: ${scheduledDate.difference(now).inMinutes} minutes',
+        'Scheduled time in UTC: $scheduledUtc',
+        name: 'NotificationService',
+      );
+      developer.log(
+        'Time until notification: ${scheduledDate.difference(now).inMinutes} minutes (${(scheduledDate.difference(now).inHours)} hours)',
         name: 'NotificationService',
       );
 
@@ -424,6 +486,10 @@ class NotificationService {
           'Todo list reminder scheduled successfully for: $scheduledDate (${scheduledDate.timeZoneName})',
           name: 'NotificationService',
         );
+        developer.log(
+          'This corresponds to: ${scheduledDate.hour}:${scheduledDate.minute.toString().padLeft(2, '0')} ${scheduledDate.hour >= 12 ? 'PM' : 'AM'} Sri Lankan time',
+          name: 'NotificationService',
+        );
 
         // Verify the notification was scheduled
         final pending = await _notifications.pendingNotificationRequests();
@@ -431,6 +497,10 @@ class NotificationService {
         if (scheduled.isNotEmpty) {
           developer.log(
             'Verified: Notification ID ${scheduled.first.id} is scheduled',
+            name: 'NotificationService',
+          );
+          developer.log(
+            'Notification title: ${scheduled.first.title}',
             name: 'NotificationService',
           );
         } else {
@@ -607,20 +677,125 @@ class NotificationService {
     try {
       final pending = await getPendingNotifications();
       developer.log(
+        '=== Pending Notifications Debug ===',
+        name: 'NotificationService',
+      );
+      developer.log(
         'Pending notifications count: ${pending.length}',
         name: 'NotificationService',
       );
+
+      // Get current time in Sri Lankan timezone for comparison
+      final sriLankanLocation = tz.getLocation('Asia/Colombo');
+      final now = tz.TZDateTime.now(sriLankanLocation);
+      developer.log(
+        'Current time in Sri Lankan timezone: $now',
+        name: 'NotificationService',
+      );
+
       for (var notification in pending) {
         developer.log(
-          'Pending notification ID: ${notification.id}, Title: ${notification.title}, Scheduled for: ${notification.body}',
+          '--- Notification ID: ${notification.id} ---',
           name: 'NotificationService',
         );
+        developer.log(
+          'Title: ${notification.title}',
+          name: 'NotificationService',
+        );
+        developer.log(
+          'Body: ${notification.body}',
+          name: 'NotificationService',
+        );
+
+        // Check if it's one of our scheduled notifications
+        if (notification.id == moneyManagerReminderId ||
+            notification.id == todoListReminderId) {
+          developer.log(
+            'This is a scheduled daily reminder (should fire at 12:45 AM Sri Lankan time)',
+            name: 'NotificationService',
+          );
+        }
       }
     } catch (e) {
       developer.log(
         'Error getting pending notifications: $e',
         name: 'NotificationService',
       );
+    }
+  }
+
+  /// Diagnostic method to check timezone and scheduled notification times
+  static Future<void> diagnoseNotificationTiming() async {
+    try {
+      developer.log(
+        '=== Notification Timing Diagnostic ===',
+        name: 'NotificationService',
+      );
+
+      final sriLankanLocation = tz.getLocation('Asia/Colombo');
+      final now = tz.TZDateTime.now(sriLankanLocation);
+      final nowUtc = now.toUtc();
+
+      developer.log(
+        'Current time in Asia/Colombo: $now',
+        name: 'NotificationService',
+      );
+      developer.log(
+        'Current time in UTC: $nowUtc',
+        name: 'NotificationService',
+      );
+      developer.log(
+        'Timezone offset: ${sriLankanLocation.currentTimeZone.offset}',
+        name: 'NotificationService',
+      );
+
+      // Calculate next 12:45 AM
+      var next1245 = tz.TZDateTime(
+        sriLankanLocation,
+        now.year,
+        now.month,
+        now.day,
+        0,
+        45,
+      );
+
+      if (next1245.isBefore(now)) {
+        next1245 = next1245.add(const Duration(days: 1));
+      }
+
+      final next1245Utc = next1245.toUtc();
+
+      developer.log(
+        'Next 12:45 AM in Asia/Colombo: $next1245',
+        name: 'NotificationService',
+      );
+      developer.log(
+        'Next 12:45 AM in UTC: $next1245Utc',
+        name: 'NotificationService',
+      );
+      developer.log(
+        'Time until next 12:45 AM: ${next1245.difference(now).inHours} hours ${next1245.difference(now).inMinutes % 60} minutes',
+        name: 'NotificationService',
+      );
+
+      // Check pending notifications
+      final pending = await getPendingNotifications();
+      developer.log(
+        'Pending notifications: ${pending.length}',
+        name: 'NotificationService',
+      );
+
+      for (var notif in pending) {
+        if (notif.id == moneyManagerReminderId ||
+            notif.id == todoListReminderId) {
+          developer.log(
+            'Found scheduled notification ID: ${notif.id}',
+            name: 'NotificationService',
+          );
+        }
+      }
+    } catch (e) {
+      developer.log('Error in diagnostic: $e', name: 'NotificationService');
     }
   }
 

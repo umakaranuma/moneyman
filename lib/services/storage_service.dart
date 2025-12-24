@@ -1,10 +1,12 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/transaction.dart';
 import '../models/note.dart';
+import '../models/todo.dart';
 
 class StorageService {
   static const String _transactionBoxName = 'transactions';
   static const String _noteBoxName = 'notes';
+  static const String _todoBoxName = 'todos';
 
   static Future<void> init() async {
     await Hive.initFlutter();
@@ -12,6 +14,7 @@ class StorageService {
     // Open boxes (using dynamic type to store JSON maps)
     await Hive.openBox(_transactionBoxName);
     await Hive.openBox(_noteBoxName);
+    await Hive.openBox(_todoBoxName);
   }
 
   // Transaction methods
@@ -95,8 +98,50 @@ class StorageService {
     return Note.fromJson(Map<String, dynamic>.from(json));
   }
 
+  // Todo methods
+  static Box get _todoBox => Hive.box(_todoBoxName);
+
+  static Future<void> addTodo(Todo todo) async {
+    await _todoBox.put(todo.id, todo.toJson());
+  }
+
+  static Future<void> updateTodo(Todo todo) async {
+    todo.updatedAt = DateTime.now();
+    await _todoBox.put(todo.id, todo.toJson());
+  }
+
+  static Future<void> deleteTodo(String id) async {
+    await _todoBox.delete(id);
+  }
+
+  static List<Todo> getAllTodos() {
+    final todos = _todoBox.values
+        .map((json) => Todo.fromJson(Map<String, dynamic>.from(json)))
+        .toList();
+    todos.sort((a, b) => a.scheduledDate.compareTo(b.scheduledDate));
+    return todos;
+  }
+
+  static List<Todo> getTodosByDate(DateTime date) {
+    final allTodos = getAllTodos();
+    final targetDate = DateTime(date.year, date.month, date.day);
+    return allTodos.where((todo) {
+      final todoDate = DateTime(todo.scheduledDate.year, todo.scheduledDate.month, todo.scheduledDate.day);
+      return todoDate.year == targetDate.year &&
+          todoDate.month == targetDate.month &&
+          todoDate.day == targetDate.day;
+    }).toList();
+  }
+
+  static Todo? getTodo(String id) {
+    final json = _todoBox.get(id);
+    if (json == null) return null;
+    return Todo.fromJson(Map<String, dynamic>.from(json));
+  }
+
   static Future<void> clearAllData() async {
     await _transactionBox.clear();
     await _noteBox.clear();
+    await _todoBox.clear();
   }
 }
