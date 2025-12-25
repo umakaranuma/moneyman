@@ -143,12 +143,49 @@ class NotificationService {
   }
 
   static Future<bool> _requestPermissions() async {
-    if (await Permission.notification.isGranted) {
-      return true;
+    // Request notification permission
+    if (!await Permission.notification.isGranted) {
+      final status = await Permission.notification.request();
+      if (!status.isGranted) {
+        developer.log(
+          'Notification permission denied',
+          name: 'NotificationService',
+        );
+        return false;
+      }
     }
 
-    final status = await Permission.notification.request();
-    return status.isGranted;
+    // For Android 12+ (API 31+), check if notifications are enabled in system settings
+    // Note: SCHEDULE_EXACT_ALARM is automatically granted but can be revoked by user
+    // USE_EXACT_ALARM is for system apps only
+    try {
+      final androidInfo = _notifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+
+      if (androidInfo != null) {
+        // Check if notifications are enabled (Android 12+)
+        final areNotificationsEnabled = await androidInfo
+            .areNotificationsEnabled();
+        if (areNotificationsEnabled == false) {
+          developer.log(
+            'Notifications are disabled in system settings',
+            name: 'NotificationService',
+          );
+          // Still return true - we can schedule, user just needs to enable in settings
+          // The notifications will work once enabled
+        }
+      }
+    } catch (e) {
+      developer.log(
+        'Error checking notification settings: $e',
+        name: 'NotificationService',
+      );
+      // Continue anyway - the permission might still work
+    }
+
+    return true;
   }
 
   static void _onNotificationTapped(NotificationResponse response) {
@@ -187,8 +224,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        5, // 1 AM
-        30, // 32 minutes
+        21, // 1 AM
+        52, // 32 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -196,7 +233,7 @@ class NotificationService {
         scheduledDate = scheduledDate.add(const Duration(days: 1));
       }
 
-      const androidDetails = AndroidNotificationDetails(
+      final androidDetails = AndroidNotificationDetails(
         todoListChannelId,
         'Todo List Reminder',
         channelDescription: 'Daily reminder to create your todo list',
@@ -210,6 +247,7 @@ class NotificationService {
         autoCancel: true,
         fullScreenIntent: false,
         category: AndroidNotificationCategory.reminder,
+        largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
       );
 
       const iosDetails = DarwinNotificationDetails(
@@ -218,7 +256,7 @@ class NotificationService {
         presentSound: true,
       );
 
-      const notificationDetails = NotificationDetails(
+      final notificationDetails = NotificationDetails(
         android: androidDetails,
         iOS: iosDetails,
       );
@@ -294,7 +332,7 @@ class NotificationService {
         now.month,
         now.day,
         21, // 9 PM (21:00)
-        0, // 0 minutes
+        52, // 0 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -302,7 +340,7 @@ class NotificationService {
         scheduledDate = scheduledDate.add(const Duration(days: 1));
       }
 
-      const androidDetails = AndroidNotificationDetails(
+      final androidDetails = AndroidNotificationDetails(
         moneyManagerChannelId,
         'Money Manager Reminder',
         channelDescription: 'Daily reminder to update your money manager',
@@ -316,6 +354,7 @@ class NotificationService {
         autoCancel: true,
         fullScreenIntent: false,
         category: AndroidNotificationCategory.reminder,
+        largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
       );
 
       const iosDetails = DarwinNotificationDetails(
@@ -324,7 +363,7 @@ class NotificationService {
         presentSound: true,
       );
 
-      const notificationDetails = NotificationDetails(
+      final notificationDetails = NotificationDetails(
         android: androidDetails,
         iOS: iosDetails,
       );
@@ -405,7 +444,7 @@ class NotificationService {
 
   /// Show a test notification immediately (for testing)
   static Future<void> showTestNotification() async {
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       moneyManagerChannelId,
       'Money Manager Reminder',
       channelDescription: 'Daily reminder to update your money manager',
@@ -417,6 +456,7 @@ class NotificationService {
       channelShowBadge: true,
       ongoing: false,
       autoCancel: true,
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -425,7 +465,7 @@ class NotificationService {
       presentSound: true,
     );
 
-    const notificationDetails = NotificationDetails(
+    final notificationDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
@@ -456,8 +496,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        5, // 1 AM
-        30, // 32 minutes
+        21, // 1 AM
+        52, // 32 minutes
       );
 
       // Check if it's past 09:00 PM today (evening notification)
@@ -467,7 +507,7 @@ class NotificationService {
         now.month,
         now.day,
         21, // 9 PM
-        0, // 0 minutes
+        52, // 0 minutes
       );
 
       // If current time is within 5 minutes of notification time
@@ -496,7 +536,7 @@ class NotificationService {
             todoListReminderId,
             '🌅 Good Morning! Plan Your Day',
             'Start your day right! Create your todo list and set your goals for today. ✨',
-            const NotificationDetails(
+            NotificationDetails(
               android: AndroidNotificationDetails(
                 todoListChannelId,
                 'Todo List Reminder',
@@ -506,6 +546,9 @@ class NotificationService {
                 showWhen: true,
                 enableVibration: true,
                 playSound: true,
+                largeIcon: const DrawableResourceAndroidBitmap(
+                  '@mipmap/ic_launcher',
+                ),
               ),
             ),
           );
@@ -516,7 +559,7 @@ class NotificationService {
             moneyManagerReminderId,
             '🌙 Evening Review Time',
             'Mark your expenses, update transactions, and check off completed todos! 📊✅',
-            const NotificationDetails(
+            NotificationDetails(
               android: AndroidNotificationDetails(
                 moneyManagerChannelId,
                 'Money Manager Reminder',
@@ -527,6 +570,9 @@ class NotificationService {
                 showWhen: true,
                 enableVibration: true,
                 playSound: true,
+                largeIcon: const DrawableResourceAndroidBitmap(
+                  '@mipmap/ic_launcher',
+                ),
               ),
             ),
           );
