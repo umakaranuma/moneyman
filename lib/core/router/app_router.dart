@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../screens/splash_screen.dart';
 import '../../screens/main_navigation.dart';
 import '../../screens/add_edit_transaction_screen.dart';
 import '../../screens/notes_screen.dart';
@@ -17,15 +18,22 @@ class AppRouter {
 
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/',
+    initialLocation: '/splash',
     routes: [
+      // Splash screen
+      GoRoute(
+        path: '/splash',
+        name: 'splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+
       // Main navigation shell
       GoRoute(
         path: '/',
         name: 'home',
         builder: (context, state) => const MainNavigation(),
       ),
-      
+
       // Transaction routes
       GoRoute(
         path: '/transaction/add',
@@ -35,18 +43,22 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: AddEditTransactionScreen(initialType: type),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                )),
-                child: child,
-              );
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0, 1),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
           );
         },
       ),
@@ -58,22 +70,26 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: AddEditTransactionScreen(transaction: transaction),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(1, 0),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                )),
-                child: child,
-              );
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
           );
         },
       ),
-      
+
       // Notes routes
       GoRoute(
         path: '/notes',
@@ -82,18 +98,22 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: const NotesScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(1, 0),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                )),
-                child: child,
-              );
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
           );
         },
       ),
@@ -104,18 +124,22 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: const AddEditNoteScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                )),
-                child: child,
-              );
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0, 1),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
           );
         },
       ),
@@ -127,22 +151,26 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: AddEditNoteScreen(note: note),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(1, 0),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                )),
-                child: child,
-              );
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
           );
         },
       ),
-      
+
       // Categories route
       GoRoute(
         path: '/categories',
@@ -152,22 +180,23 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: CategoriesScreen(isExpense: isExpense),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0.05, 0),
-                    end: Offset.zero,
-                  ).animate(animation),
-                  child: child,
-                ),
-              );
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.05, 0),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
           );
         },
       ),
-      
+
       // SMS Transactions route
       GoRoute(
         path: '/sms-transactions',
@@ -176,22 +205,23 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: const SmsTransactionsScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0.05, 0),
-                    end: Offset.zero,
-                  ).animate(animation),
-                  child: child,
-                ),
-              );
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.05, 0),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
           );
         },
       ),
-      
+
       // Todos routes
       GoRoute(
         path: '/todos',
@@ -200,18 +230,22 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: const TodosScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(1, 0),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                )),
-                child: child,
-              );
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
           );
         },
       ),
@@ -223,18 +257,22 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: AddEditTodoScreen(scheduledDate: scheduledDate),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                )),
-                child: child,
-              );
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0, 1),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
           );
         },
       ),
@@ -246,18 +284,22 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: AddEditTodoScreen(todo: todo),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(1, 0),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                )),
-                child: child,
-              );
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
           );
         },
       ),
@@ -268,46 +310,51 @@ class AppRouter {
 // Extension for easy navigation
 extension GoRouterExtension on BuildContext {
   Future<T?> goToAddTransaction<T>({TransactionType? type}) async {
-    final result = await GoRouter.of(this).pushNamed('addTransaction', extra: type);
+    final result = await GoRouter.of(
+      this,
+    ).pushNamed('addTransaction', extra: type);
     return result as T?;
   }
-  
+
   Future<T?> goToEditTransaction<T>(Transaction transaction) async {
-    final result = await GoRouter.of(this).pushNamed('editTransaction', extra: transaction);
+    final result = await GoRouter.of(
+      this,
+    ).pushNamed('editTransaction', extra: transaction);
     return result as T?;
   }
-  
+
   void goToNotes() {
     GoRouter.of(this).pushNamed('notes');
   }
-  
+
   void goToAddNote() {
     GoRouter.of(this).pushNamed('addNote');
   }
-  
+
   void goToEditNote(Note note) {
     GoRouter.of(this).pushNamed('editNote', extra: note);
   }
-  
+
   void goToCategories({bool isExpense = true}) {
     GoRouter.of(this).pushNamed('categories', extra: isExpense);
   }
-  
+
   void goToSmsTransactions() {
     GoRouter.of(this).pushNamed('smsTransactions');
   }
-  
+
   Future<T?> goToAddTodo<T>({DateTime? scheduledDate}) async {
-    final result = await GoRouter.of(this).pushNamed('addTodo', extra: scheduledDate);
+    final result = await GoRouter.of(
+      this,
+    ).pushNamed('addTodo', extra: scheduledDate);
     return result as T?;
   }
-  
+
   void goToEditTodo(Todo todo) {
     GoRouter.of(this).pushNamed('editTodo', extra: todo);
   }
-  
+
   void goToTodos() {
     GoRouter.of(this).pushNamed('todos');
   }
 }
-

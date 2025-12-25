@@ -478,22 +478,6 @@ class _HomeScreenState extends State<HomeScreen>
           key: ValueKey(_refreshKey), // Force refresh when key changes
           future: _getFilteredTransactions(),
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Column(
-                children: [
-                  _buildHeader(),
-                  _buildTabs(),
-                  Expanded(
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }
-
             final transactions = snapshot.data ?? [];
             final summary = _getSummaryFromTransactions(transactions);
             final groupedTransactions = _groupTransactionsByDate(transactions);
