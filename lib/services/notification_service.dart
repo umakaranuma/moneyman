@@ -224,8 +224,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        21, // 1 AM
-        52, // 32 minutes
+        22, // 1 AM
+        45, // 32 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -331,8 +331,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        21, // 9 PM (21:00)
-        52, // 0 minutes
+        22, // 9 PM (21:00)
+        45, // 0 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -496,8 +496,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        21, // 1 AM
-        52, // 32 minutes
+        22, // 1 AM
+        45, // 32 minutes
       );
 
       // Check if it's past 09:00 PM today (evening notification)
@@ -506,8 +506,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        21, // 9 PM
-        52, // 0 minutes
+        22, // 9 PM
+        45, // 0 minutes
       );
 
       // If current time is within 5 minutes of notification time

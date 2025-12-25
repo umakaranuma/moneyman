@@ -51,4 +51,6 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    // Add Play Core for split install features (if needed by Flutter)
+    implementation("com.google.android.play:core:1.10.3")
 }
