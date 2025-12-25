@@ -22,16 +22,16 @@ class AppConstants {
     'Other',
   ];
   
-  // Note Colors
+  // Note Colors - Vibrant full colors
   static const List<String> noteColors = [
-    '#FFE5E5', // Light Red
-    '#E5F3FF', // Light Blue
-    '#E5FFE5', // Light Green
-    '#FFF5E5', // Light Orange
-    '#F0E5FF', // Light Purple
-    '#FFE5F0', // Light Pink
-    '#E5FFFF', // Light Cyan
-    '#FFFFE5', // Light Yellow
+    '#F96A46', // Primary Orange-Red
+    '#2563EB', // Royal Blue
+    '#10B981', // Emerald Green
+    '#F97316', // Warm Orange
+    '#8B5CF6', // Purple/Violet
+    '#EC4899', // Pink/Magenta
+    '#06B6D4', // Cyan/Teal
+    '#F59E0B', // Amber/Gold
   ];
   
   // Date Formats

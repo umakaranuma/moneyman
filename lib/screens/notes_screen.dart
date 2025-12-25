@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../models/note.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
@@ -14,67 +15,198 @@ class NotesScreen extends StatefulWidget {
   State<NotesScreen> createState() => _NotesScreenState();
 }
 
-class _NotesScreenState extends State<NotesScreen> {
+class _NotesScreenState extends State<NotesScreen> with WidgetsBindingObserver {
+  DateTime _selectedMonth = DateTime.now();
+  int _refreshKey = 0; // Key to force refresh
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      setState(() {
+        _refreshKey++;
+      });
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh when screen becomes visible
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        setState(() {
+          _refreshKey++;
+        });
+      }
+    });
+  }
+
+  List<Note> _getFilteredNotes() {
+    final allNotes = StorageService.getAllNotes();
+    return allNotes.where((note) {
+      return note.createdAt.year == _selectedMonth.year &&
+          note.createdAt.month == _selectedMonth.month;
+    }).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
+
+  void _previousMonth() {
+    setState(() {
+      _selectedMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month - 1,
+      );
+    });
+  }
+
+  void _nextMonth() {
+    setState(() {
+      _selectedMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month + 1,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final notes = StorageService.getAllNotes();
+    final notes = _getFilteredNotes();
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        leading: GestureDetector(
-          onTap: () => context.pop(),
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
-          ),
-        ),
-        title: Row(
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          key: ValueKey(_refreshKey), // Force refresh when key changes
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.note_alt_rounded, color: Colors.white, size: 18),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'Notes',
-              style: GoogleFonts.inter(
-                color: AppColors.textPrimary,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+            // Header with Month Selector (matching home screen style)
+            _buildHeader(),
+            
+            // Notes List
+            Expanded(
+              child: notes.isEmpty
+                  ? _buildEmptyState()
+                  : ListView.builder(
+                      padding: const EdgeInsets.only(top: 8, bottom: 100),
+                      itemCount: notes.length,
+                      itemBuilder: (context, index) {
+                        final note = notes[index];
+                        return NoteCard(
+                          note: note,
+                          onTap: () async {
+                            final result = await context.goToEditNote(note);
+                            if (result == true) {
+                              setState(() {
+                                _refreshKey++;
+                              });
+                            }
+                          },
+                          onDelete: () {
+                            _showDeleteDialog(note);
+                          },
+                        );
+                      },
+                    ),
             ),
           ],
         ),
       ),
-      body: notes.isEmpty
-          ? _buildEmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.only(top: 8, bottom: 100),
-              itemCount: notes.length,
-              itemBuilder: (context, index) {
-                final note = notes[index];
-                return NoteCard(
-                  note: note,
-                  onTap: () async {
-                    context.goToEditNote(note);
-                  },
-                  onDelete: () {
-                    _showDeleteDialog(note);
-                  },
-                );
-              },
-            ),
       floatingActionButton: _buildFAB(),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => context.pop(),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.surfaceVariant, width: 1),
+              ),
+              child: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary, size: 20),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.primary, AppColors.primaryLight],
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.note_alt_rounded, color: Colors.white, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'Notes',
+            style: GoogleFonts.inter(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Spacer(),
+          // Date Filter (matching home screen style)
+          _buildCircleButton(
+            icon: Icons.chevron_left_rounded,
+            onTap: _previousMonth,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            DateFormat('MMMM yyyy').format(_selectedMonth),
+            style: GoogleFonts.inter(
+              color: AppColors.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 8),
+          _buildCircleButton(
+            icon: Icons.chevron_right_rounded,
+            onTap: _nextMonth,
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.surfaceVariant, width: 1),
+        ),
+        child: Icon(icon, color: AppColors.textPrimary, size: 20),
+      ),
     );
   }
 
@@ -86,8 +218,26 @@ class _NotesScreenState extends State<NotesScreen> {
           Container(
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.25),
+                  AppColors.primaryLight.withValues(alpha: 0.2),
+                ],
+              ),
               shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.6),
+                width: 2.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
             child: const Icon(
               Icons.note_alt_outlined,
@@ -97,7 +247,7 @@ class _NotesScreenState extends State<NotesScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'No notes yet',
+            'No notes for ${DateFormat('MMMM yyyy').format(_selectedMonth)}',
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -120,7 +270,12 @@ class _NotesScreenState extends State<NotesScreen> {
   Widget _buildFAB() {
     return GestureDetector(
       onTap: () async {
-        context.goToAddNote();
+        final result = await context.goToAddNote();
+        if (result == true) {
+          setState(() {
+            _refreshKey++;
+          });
+        }
       },
       child: Container(
         width: 60,
@@ -158,8 +313,12 @@ class _NotesScreenState extends State<NotesScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.expense.withValues(alpha: 0.1),
+                color: AppColors.expense.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.expense.withValues(alpha: 0.6),
+                  width: 1.5,
+                ),
               ),
               child: const Icon(Icons.delete_rounded, color: AppColors.expense, size: 20),
             ),
@@ -206,8 +365,12 @@ class _NotesScreenState extends State<NotesScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.expense.withValues(alpha: 0.1),
+                color: AppColors.expense.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.expense.withValues(alpha: 0.6),
+                  width: 1.5,
+                ),
               ),
               child: Text(
                 'Delete',

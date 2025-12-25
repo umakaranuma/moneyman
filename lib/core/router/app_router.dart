@@ -327,12 +327,14 @@ extension GoRouterExtension on BuildContext {
     GoRouter.of(this).pushNamed('notes');
   }
 
-  void goToAddNote() {
-    GoRouter.of(this).pushNamed('addNote');
+  Future<T?> goToAddNote<T>() async {
+    final result = await GoRouter.of(this).pushNamed('addNote');
+    return result as T?;
   }
 
-  void goToEditNote(Note note) {
-    GoRouter.of(this).pushNamed('editNote', extra: note);
+  Future<T?> goToEditNote<T>(Note note) async {
+    final result = await GoRouter.of(this).pushNamed('editNote', extra: note);
+    return result as T?;
   }
 
   void goToCategories({bool isExpense = true}) {

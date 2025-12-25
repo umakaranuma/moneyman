@@ -35,11 +35,18 @@ class MoreScreen extends StatelessWidget {
                     context,
                     icon: Icons.checklist_rounded,
                     label: 'Todos',
-                    gradient: [
-                      AppColors.primary,
-                      AppColors.primaryLight,
-                    ],
+                    gradient: [AppColors.primary, AppColors.primaryLight],
                     onTap: () => context.goToTodos(),
+                  ),
+                  _buildSettingsItem(
+                    context,
+                    icon: Icons.note_alt_rounded,
+                    label: 'Notes',
+                    gradient: [
+                      const Color(0xFFF59E0B),
+                      const Color(0xFFF97316),
+                    ],
+                    onTap: () => context.goToNotes(),
                   ),
                   _buildSettingsItem(
                     context,

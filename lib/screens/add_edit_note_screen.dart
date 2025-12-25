@@ -10,10 +10,7 @@ import '../utils/helpers.dart';
 class AddEditNoteScreen extends StatefulWidget {
   final Note? note;
 
-  const AddEditNoteScreen({
-    super.key,
-    this.note,
-  });
+  const AddEditNoteScreen({super.key, this.note});
 
   @override
   State<AddEditNoteScreen> createState() => _AddEditNoteScreenState();
@@ -75,14 +72,14 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
         StorageService.addNote(note);
       }
 
-      context.pop();
+      context.pop(true); // Return true to indicate note was saved
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final activeColor = _getColorFromHex(_selectedColor);
-    
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -95,7 +92,10 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+            child: const Icon(
+              Icons.arrow_back_rounded,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         title: Text(
@@ -168,7 +168,10 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [activeColor, activeColor.withValues(alpha: 0.5)],
+                        colors: [
+                          activeColor,
+                          activeColor.withValues(alpha: 0.5),
+                        ],
                       ),
                       borderRadius: BorderRadius.circular(2),
                     ),
@@ -190,7 +193,9 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 20),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 20,
+                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -211,10 +216,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: AppColors.surfaceVariant,
-                  width: 1,
-                ),
+                border: Border.all(color: AppColors.surfaceVariant, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,10 +294,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: AppColors.surfaceVariant,
-                  width: 1,
-                ),
+                border: Border.all(color: AppColors.surfaceVariant, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -306,7 +305,10 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [activeColor, activeColor.withValues(alpha: 0.7)],
+                            colors: [
+                              activeColor,
+                              activeColor.withValues(alpha: 0.7),
+                            ],
                           ),
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -405,7 +407,11 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.save_rounded, color: Colors.white, size: 20),
+                    const Icon(
+                      Icons.save_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                     const SizedBox(width: 10),
                     Text(
                       widget.note != null ? 'Update Note' : 'Save Note',

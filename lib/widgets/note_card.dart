@@ -39,14 +39,22 @@ class NoteCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             AppColors.surface,
-            AppColors.surfaceVariant.withValues(alpha: 0.5),
+            AppColors.surfaceVariant,
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: cardColor.withValues(alpha: 0.2),
-          width: 1,
+          color: cardColor.withValues(alpha: 0.8),
+          width: 2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: cardColor.withValues(alpha: 0.2),
+            blurRadius: 8,
+            spreadRadius: 0,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: InkWell(
         onTap: onTap,
@@ -59,15 +67,22 @@ class NoteCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    width: 4,
+                    width: 5,
                     height: 40,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [cardColor, cardColor.withValues(alpha: 0.5)],
+                        colors: [cardColor, cardColor],
                       ),
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(2.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: cardColor.withValues(alpha: 0.5),
+                          blurRadius: 4,
+                          spreadRadius: 0,
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -102,8 +117,12 @@ class NoteCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.expense.withValues(alpha: 0.1),
+                          color: AppColors.expense.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: AppColors.expense.withValues(alpha: 0.6),
+                            width: 1.5,
+                          ),
                         ),
                         child: const Icon(
                           Icons.delete_outline_rounded,
