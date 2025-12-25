@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../models/note.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
@@ -21,6 +22,8 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
   late TextEditingController _titleController;
   late TextEditingController _contentController;
   String? _selectedColor;
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
 
   @override
   void initState() {
@@ -29,6 +32,8 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
       _titleController = TextEditingController(text: widget.note!.title);
       _contentController = TextEditingController(text: widget.note!.content);
       _selectedColor = widget.note!.color;
+      _selectedDate = widget.note!.createdAt;
+      _selectedTime = TimeOfDay.fromDateTime(widget.note!.createdAt);
     } else {
       _titleController = TextEditingController();
       _contentController = TextEditingController();
@@ -54,22 +59,98 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     }
   }
 
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 3650)),
+      builder: (context, child) {
+        final activeColor = _getColorFromHex(_selectedColor);
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: activeColor,
+              onPrimary: Colors.white,
+              surface: AppColors.surface,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          _selectedTime.hour,
+          _selectedTime.minute,
+        );
+      });
+    }
+  }
+
+  Future<void> _selectTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+      builder: (context, child) {
+        final activeColor = _getColorFromHex(_selectedColor);
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: activeColor,
+              onPrimary: Colors.white,
+              surface: AppColors.surface,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedTime) {
+      setState(() {
+        _selectedTime = picked;
+        _selectedDate = DateTime(
+          _selectedDate.year,
+          _selectedDate.month,
+          _selectedDate.day,
+          picked.hour,
+          picked.minute,
+        );
+      });
+    }
+  }
+
   void _saveNote() {
     if (_formKey.currentState!.validate()) {
-      final now = DateTime.now();
       final note = Note(
         id: widget.note?.id ?? Helpers.generateId(),
         title: _titleController.text.trim(),
         content: _contentController.text.trim(),
-        createdAt: widget.note?.createdAt ?? now,
-        updatedAt: now,
+        createdAt: widget.note?.createdAt ?? _selectedDate,
+        updatedAt: DateTime.now(),
         color: _selectedColor,
       );
 
       if (widget.note != null) {
+        // When editing, keep original createdAt but update updatedAt
         StorageService.updateNote(note);
       } else {
-        StorageService.addNote(note);
+        // When creating new, use selected date
+        final newNote = Note(
+          id: note.id,
+          title: note.title,
+          content: note.content,
+          createdAt: _selectedDate,
+          updatedAt: DateTime.now(),
+          color: note.color,
+        );
+        StorageService.addNote(newNote);
       }
 
       context.pop(true); // Return true to indicate note was saved
@@ -281,6 +362,11 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
 
             const SizedBox(height: 24),
 
+            // Date & Time Card
+            _buildDateCard(),
+
+            const SizedBox(height: 24),
+
             // Color Selection
             Container(
               padding: const EdgeInsets.all(20),
@@ -426,6 +512,76 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateCard() {
+    final dateStr = DateFormat('MMM dd, yyyy').format(_selectedDate);
+    final timeStr = DateFormat('h:mm a').format(_selectedDate);
+    final activeColor = _getColorFromHex(_selectedColor);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.surfaceVariant, width: 1),
+      ),
+      child: GestureDetector(
+        onTap: () async {
+          await _selectDate();
+          await _selectTime();
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: activeColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.calendar_today_rounded,
+                  color: activeColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Date & Time',
+                      style: GoogleFonts.inter(
+                        color: AppColors.textMuted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$dateStr  •  $timeStr',
+                      style: GoogleFonts.inter(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textMuted,
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
     );
