@@ -66,7 +66,7 @@ class MoreScreen extends StatelessWidget {
                       AppColors.textMuted,
                       AppColors.textMuted.withValues(alpha: 0.7),
                     ],
-                    onTap: () {},
+                    onTap: () => context.goToSettings(),
                   ),
                   _buildSettingsItem(
                     context,
@@ -80,7 +80,7 @@ class MoreScreen extends StatelessWidget {
                     icon: Icons.lock_rounded,
                     label: 'Security',
                     gradient: [AppColors.secondary, AppColors.primary],
-                    onTap: () {},
+                    onTap: () => context.goToSecurity(),
                   ),
                   _buildSettingsItem(
                     context,
@@ -90,7 +90,7 @@ class MoreScreen extends StatelessWidget {
                       AppColors.transfer,
                       AppColors.transfer.withValues(alpha: 0.7),
                     ],
-                    onTap: () {},
+                    onTap: () => context.goToCalculator(),
                   ),
                   _buildSettingsItem(
                     context,
@@ -100,7 +100,7 @@ class MoreScreen extends StatelessWidget {
                       const Color(0xFFE879F9),
                       const Color(0xFFD946EF),
                     ],
-                    onTap: () {},
+                    onTap: () => context.goToSync(),
                   ),
                   _buildSettingsItem(
                     context,
@@ -110,7 +110,7 @@ class MoreScreen extends StatelessWidget {
                       const Color(0xFF48DBFB),
                       const Color(0xFF0ABDE3),
                     ],
-                    onTap: () {},
+                    onTap: () => context.goToBackup(),
                   ),
                   _buildSettingsItem(
                     context,
@@ -120,14 +120,14 @@ class MoreScreen extends StatelessWidget {
                       const Color(0xFFFECA57),
                       const Color(0xFFFF9F43),
                     ],
-                    onTap: () {},
+                    onTap: () => context.goToFeedback(),
                   ),
                   _buildSettingsItem(
                     context,
                     icon: Icons.help_rounded,
                     label: 'Help',
                     gradient: [AppColors.secondary, AppColors.secondaryLight],
-                    onTap: () {},
+                    onTap: () => context.goToHelp(),
                   ),
                 ]),
               ),

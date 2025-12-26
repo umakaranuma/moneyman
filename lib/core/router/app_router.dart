@@ -9,6 +9,13 @@ import '../../screens/categories_screen.dart';
 import '../../screens/sms_transactions_screen.dart';
 import '../../screens/todos_screen.dart';
 import '../../screens/add_edit_todo_screen.dart';
+import '../../screens/settings_screen.dart';
+import '../../screens/security_screen.dart';
+import '../../screens/calculator_screen.dart';
+import '../../screens/sync_screen.dart';
+import '../../screens/backup_screen.dart';
+import '../../screens/feedback_screen.dart';
+import '../../screens/help_screen.dart';
 import '../../models/transaction.dart';
 import '../../models/note.dart';
 import '../../models/todo.dart';
@@ -303,6 +310,202 @@ class AppRouter {
           );
         },
       ),
+
+      // Settings routes
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const SettingsScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
+          );
+        },
+      ),
+
+      // Security route
+      GoRoute(
+        path: '/security',
+        name: 'security',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const SecurityScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
+          );
+        },
+      ),
+
+      // Calculator route
+      GoRoute(
+        path: '/calculator',
+        name: 'calculator',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const CalculatorScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0, 1),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
+          );
+        },
+      ),
+
+      // Sync route
+      GoRoute(
+        path: '/sync',
+        name: 'sync',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const SyncScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
+          );
+        },
+      ),
+
+      // Backup route
+      GoRoute(
+        path: '/backup',
+        name: 'backup',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const BackupScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
+          );
+        },
+      ),
+
+      // Feedback route
+      GoRoute(
+        path: '/feedback',
+        name: 'feedback',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const FeedbackScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
+          );
+        },
+      ),
+
+      // Help route
+      GoRoute(
+        path: '/help',
+        name: 'help',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const HelpScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
+          );
+        },
+      ),
     ],
   );
 }
@@ -358,5 +561,33 @@ extension GoRouterExtension on BuildContext {
 
   void goToTodos() {
     GoRouter.of(this).pushNamed('todos');
+  }
+
+  void goToSettings() {
+    GoRouter.of(this).pushNamed('settings');
+  }
+
+  void goToSecurity() {
+    GoRouter.of(this).pushNamed('security');
+  }
+
+  void goToCalculator() {
+    GoRouter.of(this).pushNamed('calculator');
+  }
+
+  void goToSync() {
+    GoRouter.of(this).pushNamed('sync');
+  }
+
+  void goToBackup() {
+    GoRouter.of(this).pushNamed('backup');
+  }
+
+  void goToFeedback() {
+    GoRouter.of(this).pushNamed('feedback');
+  }
+
+  void goToHelp() {
+    GoRouter.of(this).pushNamed('help');
   }
 }
