@@ -892,6 +892,15 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         }
       }
 
+      // Category is required for income and expense transactions
+      if (_transactionType != TransactionType.transfer &&
+          (_selectedCategory == null || _selectedCategory!.trim().isEmpty)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a category')),
+        );
+        return;
+      }
+
       final transaction = Transaction(
         id: widget.transaction?.id ?? Helpers.generateId(),
         title: _titleController.text.trim(),
@@ -940,6 +949,15 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           );
           return;
         }
+      }
+
+      // Category is required for income and expense transactions
+      if (_transactionType != TransactionType.transfer &&
+          (_selectedCategory == null || _selectedCategory!.trim().isEmpty)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a category')),
+        );
+        return;
       }
 
       final transaction = Transaction(
@@ -1385,13 +1403,15 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
               if (_transactionType != TransactionType.transfer) ...[
                 _buildDetailRow(
                   icon: Icons.category_rounded,
-                  label: 'Category',
+                  label: 'Category *',
                   value: _selectedCategory != null
                       ? (_selectedSubcategory != null
                             ? '$_selectedCategory • $_selectedSubcategory'
                             : _selectedCategory!)
-                      : 'Select category',
-                  valueColor: _selectedCategory != null ? _activeColor : null,
+                      : 'Select category (Required)',
+                  valueColor: _selectedCategory != null
+                      ? _activeColor
+                      : AppColors.expense,
                   emoji: _selectedCategory != null
                       ? DefaultCategories.getCategoryEmoji(
                           _selectedCategory,
