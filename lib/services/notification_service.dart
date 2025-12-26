@@ -152,31 +152,81 @@ class NotificationService {
           >();
 
       if (androidImplementation != null) {
-        // Request notification permission (Android 13+)
-        final granted = await androidImplementation
-            .requestNotificationsPermission();
-        if (granted == false) {
+        // Always check current permission status first
+        final areNotificationsEnabled = await androidImplementation
+            .areNotificationsEnabled();
+
+        developer.log(
+          'Initial notification permission status: $areNotificationsEnabled',
+          name: 'NotificationService',
+        );
+
+        // If notifications are not enabled, request permission
+        if (areNotificationsEnabled != true) {
+          // Request notification permission (Android 13+)
+          // This method returns:
+          // - true if granted
+          // - false if denied
+          // - null if not applicable (Android < 13)
+          final granted = await androidImplementation
+              .requestNotificationsPermission();
+
           developer.log(
-            'Android notification permission denied',
+            'Permission request result: $granted',
+            name: 'NotificationService',
+          );
+
+          // Wait a moment for the system to update the permission state
+          await Future.delayed(const Duration(milliseconds: 500));
+
+          // Check again after request
+          final areNotificationsEnabledAfter = await androidImplementation
+              .areNotificationsEnabled();
+
+          developer.log(
+            'Notification permission after request: $areNotificationsEnabledAfter',
+            name: 'NotificationService',
+          );
+
+          // If still not enabled, permission was denied
+          if (areNotificationsEnabledAfter != true) {
+            developer.log(
+              'Android notification permission denied. granted: $granted, enabled: $areNotificationsEnabledAfter',
+              name: 'NotificationService',
+            );
+            return false;
+          }
+        }
+
+        // Final verification - ensure notifications are enabled
+        final finalCheck = await androidImplementation
+            .areNotificationsEnabled();
+        if (finalCheck != true) {
+          developer.log(
+            'Final check: Notifications are disabled in system settings',
             name: 'NotificationService',
           );
           return false;
         }
 
-        // Check if notifications are enabled in system settings
-        final areNotificationsEnabled = await androidImplementation
-            .areNotificationsEnabled();
-        if (areNotificationsEnabled == false) {
-          developer.log(
-            'Notifications are disabled in system settings',
-            name: 'NotificationService',
-          );
-          // Still return true - we can schedule, user just needs to enable in settings
-        }
+        developer.log(
+          'Notification permission granted and enabled',
+          name: 'NotificationService',
+        );
+        return true;
       } else {
         // Fallback for older Android versions or non-Android platforms
-        if (!await Permission.notification.isGranted) {
+        final isGranted = await Permission.notification.isGranted;
+        if (!isGranted) {
+          developer.log(
+            'Requesting notification permission (fallback method)',
+            name: 'NotificationService',
+          );
           final status = await Permission.notification.request();
+          developer.log(
+            'Permission request status: $status',
+            name: 'NotificationService',
+          );
           if (!status.isGranted) {
             developer.log(
               'Notification permission denied',
@@ -185,12 +235,11 @@ class NotificationService {
             return false;
           }
         }
+        return true;
       }
-
-      return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log(
-        'Error requesting notification permissions: $e',
+        'Error requesting notification permissions: $e\n$stackTrace',
         name: 'NotificationService',
       );
       return false;
@@ -600,6 +649,36 @@ class NotificationService {
     final hasPermission = await _requestPermissions();
     if (hasPermission) {
       await scheduleDefaultNotifications();
+    }
+  }
+
+  /// Public method to check and request notification permissions
+  /// Returns true if permission is granted, false otherwise
+  static Future<bool> requestNotificationPermission() async {
+    return await _requestPermissions();
+  }
+
+  /// Check if notification permission is granted
+  static Future<bool> hasNotificationPermission() async {
+    try {
+      final androidImplementation = _notifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+
+      if (androidImplementation != null) {
+        final areNotificationsEnabled = await androidImplementation
+            .areNotificationsEnabled();
+        return areNotificationsEnabled == true;
+      } else {
+        return await Permission.notification.isGranted;
+      }
+    } catch (e) {
+      developer.log(
+        'Error checking notification permission: $e',
+        name: 'NotificationService',
+      );
+      return false;
     }
   }
 }
