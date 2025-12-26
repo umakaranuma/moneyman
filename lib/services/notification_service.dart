@@ -143,30 +143,28 @@ class NotificationService {
   }
 
   static Future<bool> _requestPermissions() async {
-    // Request notification permission
-    if (!await Permission.notification.isGranted) {
-      final status = await Permission.notification.request();
-      if (!status.isGranted) {
-        developer.log(
-          'Notification permission denied',
-          name: 'NotificationService',
-        );
-        return false;
-      }
-    }
-
-    // For Android 12+ (API 31+), check if notifications are enabled in system settings
-    // Note: SCHEDULE_EXACT_ALARM is automatically granted but can be revoked by user
-    // USE_EXACT_ALARM is for system apps only
     try {
-      final androidInfo = _notifications
+      // For Android 13+ (API 33+), use platform-specific permission request
+      // This is REQUIRED for release builds
+      final androidImplementation = _notifications
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
           >();
 
-      if (androidInfo != null) {
-        // Check if notifications are enabled (Android 12+)
-        final areNotificationsEnabled = await androidInfo
+      if (androidImplementation != null) {
+        // Request notification permission (Android 13+)
+        final granted = await androidImplementation
+            .requestNotificationsPermission();
+        if (granted == false) {
+          developer.log(
+            'Android notification permission denied',
+            name: 'NotificationService',
+          );
+          return false;
+        }
+
+        // Check if notifications are enabled in system settings
+        final areNotificationsEnabled = await androidImplementation
             .areNotificationsEnabled();
         if (areNotificationsEnabled == false) {
           developer.log(
@@ -174,18 +172,29 @@ class NotificationService {
             name: 'NotificationService',
           );
           // Still return true - we can schedule, user just needs to enable in settings
-          // The notifications will work once enabled
+        }
+      } else {
+        // Fallback for older Android versions or non-Android platforms
+        if (!await Permission.notification.isGranted) {
+          final status = await Permission.notification.request();
+          if (!status.isGranted) {
+            developer.log(
+              'Notification permission denied',
+              name: 'NotificationService',
+            );
+            return false;
+          }
         }
       }
+
+      return true;
     } catch (e) {
       developer.log(
-        'Error checking notification settings: $e',
+        'Error requesting notification permissions: $e',
         name: 'NotificationService',
       );
-      // Continue anyway - the permission might still work
+      return false;
     }
-
-    return true;
   }
 
   static void _onNotificationTapped(NotificationResponse response) {
@@ -224,8 +233,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        22, // 1 AM
-        45, // 32 minutes
+        10, // 1 AM
+        5, // 32 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -331,8 +340,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        22, // 9 PM (21:00)
-        45, // 0 minutes
+        10, // 9 PM (21:00)
+        5, // 0 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -496,8 +505,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        22, // 1 AM
-        45, // 32 minutes
+        10, // 1 AM
+        5, // 32 minutes
       );
 
       // Check if it's past 09:00 PM today (evening notification)
@@ -506,8 +515,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        22, // 9 PM
-        45, // 0 minutes
+        10, // 9 PM
+        5, // 0 minutes
       );
 
       // If current time is within 5 minutes of notification time
