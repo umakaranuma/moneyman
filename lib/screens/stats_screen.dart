@@ -9,7 +9,9 @@ import '../models/category.dart';
 import '../theme/app_theme.dart';
 
 class StatsScreen extends StatefulWidget {
-  const StatsScreen({super.key});
+  final bool showGraphsView;
+
+  const StatsScreen({super.key, this.showGraphsView = false});
 
   @override
   State<StatsScreen> createState() => _StatsScreenState();
@@ -47,7 +49,7 @@ class _StatsScreenState extends State<StatsScreen>
     });
   }
 
-  Future<List<Transaction>> _getFilteredTransactions() async {
+  Future<List<Transaction>> _getAllTransactions() async {
     // Get manually added transactions
     final manualTransactions = StorageService.getAllTransactions();
 
@@ -71,13 +73,58 @@ class _StatsScreenState extends State<StatsScreen>
       }
     }
 
-    final combinedTransactions = uniqueTransactions.values.toList();
+    return uniqueTransactions.values.toList();
+  }
+
+  Future<List<Transaction>> _getFilteredTransactions() async {
+    final allTransactions = await _getAllTransactions();
 
     // Filter by selected month
-    return combinedTransactions.where((t) {
+    return allTransactions.where((t) {
       return t.date.year == _selectedMonth.year &&
           t.date.month == _selectedMonth.month;
     }).toList();
+  }
+
+  Future<Map<String, Map<String, double>>> _getMonthlyData() async {
+    final allTransactions = await _getAllTransactions();
+
+    // Get last 6 months of data
+    final now = DateTime.now();
+    final monthlyData = <String, Map<String, double>>{};
+    double cumulativeBalance = 0.0;
+
+    // Process months in chronological order (oldest first)
+    for (int i = 5; i >= 0; i--) {
+      final monthDate = DateTime(now.year, now.month - i, 1);
+      final monthKey = DateFormat('MMM yyyy').format(monthDate);
+
+      final monthTransactions = allTransactions.where((t) {
+        return t.date.year == monthDate.year && t.date.month == monthDate.month;
+      }).toList();
+
+      double income = 0;
+      double expense = 0;
+
+      // Calculate income and expenses for this month
+      for (var t in monthTransactions) {
+        if (t.type == TransactionType.income) {
+          income += t.amount;
+          cumulativeBalance += t.amount;
+        } else if (t.type == TransactionType.expense) {
+          expense += t.amount;
+          cumulativeBalance -= t.amount;
+        }
+      }
+
+      monthlyData[monthKey] = {
+        'income': income,
+        'expense': expense,
+        'balance': cumulativeBalance,
+      };
+    }
+
+    return monthlyData;
   }
 
   Future<List<Transaction>> _getSmsTransactionsAsTransactions() async {
@@ -320,6 +367,64 @@ class _StatsScreenState extends State<StatsScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Show graphs view if showGraphsView is true
+    if (widget.showGraphsView) {
+      return FutureBuilder<Map<String, Map<String, double>>>(
+        future: _getMonthlyData(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
+              backgroundColor: AppColors.background,
+              body: SafeArea(
+                bottom: false,
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              ),
+            );
+          }
+
+          final monthlyData = snapshot.data ?? {};
+
+          // Get current month data for balance display
+          final currentMonthKey = DateFormat('MMM yyyy').format(_selectedMonth);
+          final currentMonthData = monthlyData[currentMonthKey] ?? {};
+          final balance = currentMonthData['balance'] ?? 0.0;
+
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            body: SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
+                  // Header
+                  _buildTotalStatsHeader(balance),
+
+                  // Graphs Content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.only(bottom: 100),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 20),
+                          // Balance Line Graph
+                          _buildBalanceLineGraph(monthlyData),
+                          const SizedBox(height: 24),
+                          // Income vs Expenses Bar Chart
+                          _buildIncomeExpenseBarChart(monthlyData),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    // Show analytics view (pie chart) for bottom navigation
     return FutureBuilder<List<Transaction>>(
       future: _getFilteredTransactions(),
       builder: (context, snapshot) {
@@ -461,6 +566,67 @@ class _StatsScreenState extends State<StatsScreen>
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTotalStatsHeader(double balance) {
+    final monthYear = DateFormat('MMM yyyy').format(_selectedMonth);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.surfaceVariant, width: 1),
+              ),
+              child: const Icon(
+                Icons.arrow_back_rounded,
+                color: AppColors.textPrimary,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Total Stats',
+            style: GoogleFonts.inter(
+              color: AppColors.textPrimary,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const Spacer(),
+          Row(
+            children: [
+              _buildCircleButton(
+                icon: Icons.chevron_left_rounded,
+                onTap: _previousMonth,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                monthYear,
+                style: GoogleFonts.inter(
+                  color: AppColors.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              _buildCircleButton(
+                icon: Icons.chevron_right_rounded,
+                onTap: _nextMonth,
+              ),
+            ],
           ),
         ],
       ),
@@ -874,6 +1040,431 @@ class _StatsScreenState extends State<StatsScreen>
           Text(
             'Start tracking your ${isIncome ? 'income' : 'expenses'}',
             style: GoogleFonts.inter(fontSize: 14, color: AppColors.textMuted),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBalanceLineGraph(Map<String, Map<String, double>> monthlyData) {
+    final months = monthlyData.keys.toList();
+    if (months.isEmpty) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.all(40),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Center(
+          child: Text(
+            'No data available',
+            style: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 14),
+          ),
+        ),
+      );
+    }
+
+    final balances = months
+        .map((m) => monthlyData[m]!['balance'] ?? 0.0)
+        .toList();
+    final maxBalance = balances.isEmpty
+        ? 1000.0
+        : (balances.reduce((a, b) => a > b ? a : b) * 1.2).clamp(
+            100.0,
+            double.infinity,
+          );
+    final minBalance = balances.isEmpty
+        ? 0.0
+        : balances.reduce((a, b) => a < b ? a : b) * 0.8;
+
+    // Create spots for the line chart
+    final spots = balances.asMap().entries.map((entry) {
+      final index = entry.key;
+      final balance = entry.value;
+      return FlSpot(index.toDouble(), balance);
+    }).toList();
+
+    // Calculate horizontal interval, ensuring it's never zero
+    final horizontalInterval = (maxBalance / 4).clamp(1.0, double.infinity);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.surfaceVariant, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Balance',
+            style: GoogleFonts.inter(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 200,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: horizontalInterval,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: AppColors.surfaceVariant,
+                      strokeWidth: 1,
+                    );
+                  },
+                ),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 50,
+                      getTitlesWidget: (value, meta) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Text(
+                            _formatCurrency(value),
+                            style: GoogleFonts.inter(
+                              color: AppColors.textMuted,
+                              fontSize: 10,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      getTitlesWidget: (value, meta) {
+                        if (value.toInt() >= 0 &&
+                            value.toInt() < months.length) {
+                          final month = months[value.toInt()];
+                          return Text(
+                            month.split(' ')[0],
+                            style: GoogleFonts.inter(
+                              color: AppColors.textMuted,
+                              fontSize: 10,
+                            ),
+                          );
+                        }
+                        return const Text('');
+                      },
+                    ),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    color: AppColors.primary,
+                    barWidth: 3,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 4,
+                          color: AppColors.primary,
+                          strokeWidth: 2,
+                          strokeColor: AppColors.surface,
+                        );
+                      },
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                    ),
+                  ),
+                ],
+                minY: minBalance < 0 ? minBalance : 0,
+                maxY: maxBalance,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Balance values below graph
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: months.asMap().entries.map((entry) {
+              final index = entry.key;
+              final month = entry.value;
+              final balance = balances[index];
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${month.split(' ')[0]}: ',
+                    style: GoogleFonts.inter(
+                      color: AppColors.textMuted,
+                      fontSize: 11,
+                    ),
+                  ),
+                  Text(
+                    _formatCurrency(balance),
+                    style: GoogleFonts.inter(
+                      color: AppColors.textPrimary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIncomeExpenseBarChart(
+    Map<String, Map<String, double>> monthlyData,
+  ) {
+    final months = monthlyData.keys.toList();
+    if (months.isEmpty) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.all(40),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Center(
+          child: Text(
+            'No data available',
+            style: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 14),
+          ),
+        ),
+      );
+    }
+
+    final incomes = months
+        .map((m) => monthlyData[m]!['income'] ?? 0.0)
+        .toList();
+    final expenses = months
+        .map((m) => monthlyData[m]!['expense'] ?? 0.0)
+        .toList();
+    final allValues = [...incomes, ...expenses];
+    final maxValue = allValues.isEmpty
+        ? 1000.0
+        : (allValues.reduce((a, b) => a > b ? a : b) * 1.2).clamp(
+            100.0,
+            double.infinity,
+          );
+
+    // Calculate horizontal interval, ensuring it's never zero
+    final horizontalInterval = (maxValue / 7).clamp(1.0, double.infinity);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.surfaceVariant, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Income vs Expenses',
+            style: GoogleFonts.inter(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 200,
+            child: BarChart(
+              BarChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: horizontalInterval,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: AppColors.surfaceVariant,
+                      strokeWidth: 1,
+                    );
+                  },
+                ),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 50,
+                      getTitlesWidget: (value, meta) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Text(
+                            _formatCurrency(value),
+                            style: GoogleFonts.inter(
+                              color: AppColors.textMuted,
+                              fontSize: 10,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      getTitlesWidget: (value, meta) {
+                        if (value.toInt() >= 0 &&
+                            value.toInt() < months.length) {
+                          final month = months[value.toInt()];
+                          return Text(
+                            month.split(' ')[0],
+                            style: GoogleFonts.inter(
+                              color: AppColors.textMuted,
+                              fontSize: 10,
+                            ),
+                          );
+                        }
+                        return const Text('');
+                      },
+                    ),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                barGroups: months.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  return BarChartGroupData(
+                    x: index,
+                    barRods: [
+                      BarChartRodData(
+                        toY: incomes[index],
+                        color: AppColors.income,
+                        width: 12,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(4),
+                        ),
+                      ),
+                      BarChartRodData(
+                        toY: expenses[index],
+                        color: AppColors.expense,
+                        width: 12,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(4),
+                        ),
+                      ),
+                    ],
+                    barsSpace: 4,
+                  );
+                }).toList(),
+                maxY: maxValue,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Income and Expense values below graph
+          Column(
+            children: [
+              Wrap(
+                spacing: 16,
+                runSpacing: 8,
+                children: months.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final month = entry.value;
+                  final income = incomes[index];
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: AppColors.income,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${month.split(' ')[0]}: ',
+                        style: GoogleFonts.inter(
+                          color: AppColors.textMuted,
+                          fontSize: 11,
+                        ),
+                      ),
+                      Text(
+                        _formatCurrency(income),
+                        style: GoogleFonts.inter(
+                          color: AppColors.textPrimary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 16,
+                runSpacing: 8,
+                children: months.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final month = entry.value;
+                  final expense = expenses[index];
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: AppColors.expense,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${month.split(' ')[0]}: ',
+                        style: GoogleFonts.inter(
+                          color: AppColors.textMuted,
+                          fontSize: 11,
+                        ),
+                      ),
+                      Text(
+                        _formatCurrency(expense),
+                        style: GoogleFonts.inter(
+                          color: AppColors.textPrimary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ],
           ),
         ],
       ),

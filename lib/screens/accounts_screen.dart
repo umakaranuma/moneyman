@@ -141,7 +141,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const StatsScreen(),
+                  builder: (context) => const StatsScreen(showGraphsView: true),
                 ),
               );
             },
