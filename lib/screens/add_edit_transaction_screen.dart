@@ -39,6 +39,8 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   TimeOfDay _selectedTime = TimeOfDay.now();
   String? _fromAccount;
   String? _toAccount;
+  bool _categoryError = false;
+  bool _hasAttemptedSave = false;
 
   @override
   void initState() {
@@ -328,6 +330,8 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                           setState(() {
                             _selectedCategory = category.name;
                             _selectedSubcategory = null;
+                            _categoryError =
+                                false; // Clear error when category is selected
                           });
                           Navigator.pop(context);
                         }
@@ -580,6 +584,8 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                           setState(() {
                             _selectedCategory = category.name;
                             _selectedSubcategory = null;
+                            _categoryError =
+                                false; // Clear error when category is selected
                           });
                           Navigator.pop(context);
                           Navigator.pop(context);
@@ -666,6 +672,8 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                             setState(() {
                               _selectedCategory = category.name;
                               _selectedSubcategory = sub;
+                              _categoryError =
+                                  false; // Clear error when category is selected
                             });
                             Navigator.pop(context);
                             Navigator.pop(context);
@@ -875,6 +883,10 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   }
 
   Future<void> _saveTransaction() async {
+    setState(() {
+      _hasAttemptedSave = true;
+    });
+
     if (_formKey.currentState!.validate()) {
       if (_transactionType == TransactionType.transfer) {
         if (_fromAccount == null ||
@@ -887,6 +899,17 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 'Please enter both From and To accounts for transfer',
               ),
             ),
+          );
+          return;
+        }
+      } else {
+        // Validate category for Income and Expense transactions
+        if (_selectedCategory == null || _selectedCategory!.trim().isEmpty) {
+          setState(() {
+            _categoryError = true;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please select a category')),
           );
           return;
         }
@@ -925,6 +948,10 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   }
 
   void _saveAndContinue() {
+    setState(() {
+      _hasAttemptedSave = true;
+    });
+
     if (_formKey.currentState!.validate()) {
       if (_transactionType == TransactionType.transfer) {
         if (_fromAccount == null ||
@@ -937,6 +964,17 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 'Please enter both From and To accounts for transfer',
               ),
             ),
+          );
+          return;
+        }
+      } else {
+        // Validate category for Income and Expense transactions
+        if (_selectedCategory == null || _selectedCategory!.trim().isEmpty) {
+          setState(() {
+            _categoryError = true;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please select a category')),
           );
           return;
         }
@@ -1151,6 +1189,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         onTap: () {
           setState(() {
             _transactionType = type;
+            _categoryError = false; // Clear error when type changes
             // Reset category when type changes
             // Also validate if current category is valid for new type
             if (_selectedCategory != null && type != TransactionType.transfer) {
@@ -1383,22 +1422,50 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
 
               // Category (only show for Income and Expense, not for Transfer)
               if (_transactionType != TransactionType.transfer) ...[
-                _buildDetailRow(
-                  icon: Icons.category_rounded,
-                  label: 'Category',
-                  value: _selectedCategory != null
-                      ? (_selectedSubcategory != null
-                            ? '$_selectedCategory • $_selectedSubcategory'
-                            : _selectedCategory!)
-                      : 'Select category',
-                  valueColor: _selectedCategory != null ? _activeColor : null,
-                  emoji: _selectedCategory != null
-                      ? DefaultCategories.getCategoryEmoji(
-                          _selectedCategory,
-                          isIncome: _transactionType == TransactionType.income,
-                        )
-                      : null,
-                  onTap: _showCategoryPicker,
+                Builder(
+                  builder: (context) {
+                    final padding = _getResponsivePadding(context);
+                    final showError = _categoryError && _hasAttemptedSave;
+                    return Container(
+                      margin: EdgeInsets.symmetric(
+                        horizontal: showError ? padding * 0.3 : 0,
+                        vertical: showError ? padding * 0.3 : 0,
+                      ),
+                      decoration: BoxDecoration(
+                        color: showError
+                            ? AppColors.expense.withValues(alpha: 0.08)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(padding * 0.75),
+                        border: Border.all(
+                          color: showError
+                              ? AppColors.expense
+                              : Colors.transparent,
+                          width: showError ? 1.5 : 0,
+                        ),
+                      ),
+                      child: _buildDetailRow(
+                        icon: Icons.category_rounded,
+                        label: 'Category',
+                        value: _selectedCategory != null
+                            ? (_selectedSubcategory != null
+                                  ? '$_selectedCategory • $_selectedSubcategory'
+                                  : _selectedCategory!)
+                            : 'Select category',
+                        valueColor: _selectedCategory != null
+                            ? _activeColor
+                            : (showError ? AppColors.expense : null),
+                        emoji: _selectedCategory != null
+                            ? DefaultCategories.getCategoryEmoji(
+                                _selectedCategory,
+                                isIncome:
+                                    _transactionType == TransactionType.income,
+                              )
+                            : null,
+                        onTap: _showCategoryPicker,
+                        hasError: showError,
+                      ),
+                    );
+                  },
                 ),
                 Container(
                   height: 1,
@@ -1434,6 +1501,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
     Color? valueColor,
     String? emoji,
     required VoidCallback onTap,
+    bool hasError = false,
   }) {
     return Builder(
       builder: (context) {
@@ -1453,12 +1521,14 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                       child: Container(
                         padding: EdgeInsets.all(padding * 0.5),
                         decoration: BoxDecoration(
-                          color: _activeColor.withValues(alpha: 0.1),
+                          color: hasError
+                              ? AppColors.expense.withValues(alpha: 0.1)
+                              : _activeColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(padding * 0.5),
                         ),
                         child: Icon(
                           icon,
-                          color: _activeColor,
+                          color: hasError ? AppColors.expense : _activeColor,
                           size: _getResponsiveSize(context, 16),
                         ),
                       ),
@@ -1472,7 +1542,9 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                           Text(
                             label,
                             style: GoogleFonts.inter(
-                              color: AppColors.textMuted,
+                              color: hasError
+                                  ? AppColors.expense
+                                  : AppColors.textMuted,
                               fontSize: _getResponsiveFontSize(context, 11),
                             ),
                           ),
@@ -1495,7 +1567,9 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                                 child: Text(
                                   value,
                                   style: GoogleFonts.inter(
-                                    color: valueColor ?? AppColors.textPrimary,
+                                    color: hasError
+                                        ? AppColors.expense
+                                        : (valueColor ?? AppColors.textPrimary),
                                     fontSize: _getResponsiveFontSize(
                                       context,
                                       14,
@@ -1508,6 +1582,18 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                               ),
                             ],
                           ),
+                          if (hasError)
+                            Padding(
+                              padding: EdgeInsets.only(top: padding * 0.4),
+                              child: Text(
+                                'Category is required',
+                                style: GoogleFonts.inter(
+                                  color: AppColors.expense,
+                                  fontSize: _getResponsiveFontSize(context, 11),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
