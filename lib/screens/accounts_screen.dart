@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import '../services/storage_service.dart';
 import '../models/transaction.dart';
+import 'stats_screen.dart';
 
 class AccountsScreen extends StatefulWidget {
   const AccountsScreen({super.key});
@@ -134,7 +135,17 @@ class _AccountsScreenState extends State<AccountsScreen> {
             ),
           ),
           const Spacer(),
-          _buildHeaderButton(Icons.bar_chart_rounded),
+          _buildHeaderButton(
+            Icons.bar_chart_rounded,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const StatsScreen(),
+                ),
+              );
+            },
+          ),
           const SizedBox(width: 8),
           _buildHeaderButton(Icons.more_vert_rounded),
         ],
@@ -142,16 +153,19 @@ class _AccountsScreenState extends State<AccountsScreen> {
     );
   }
 
-  Widget _buildHeaderButton(IconData icon) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.surfaceVariant, width: 1),
+  Widget _buildHeaderButton(IconData icon, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.surfaceVariant, width: 1),
+        ),
+        child: Icon(icon, color: AppColors.textSecondary, size: 20),
       ),
-      child: Icon(icon, color: AppColors.textSecondary, size: 20),
     );
   }
 
