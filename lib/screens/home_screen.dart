@@ -7,6 +7,7 @@ import '../models/transaction.dart';
 import '../models/category.dart';
 import '../theme/app_theme.dart';
 import '../core/router/app_router.dart';
+import 'transaction_filter_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,6 +22,9 @@ class _HomeScreenState extends State<HomeScreen>
   DateTime _selectedMonth = DateTime.now();
   DateTime _selectedDay = DateTime.now();
   int _refreshKey = 0; // Key to force FutureBuilder refresh
+  String _searchQuery = '';
+  TransactionFilter? _activeFilter;
+  final TextEditingController _searchController = TextEditingController();
 
   final List<String> _tabs = ['Daily', 'Calendar', 'Monthly', 'Total', 'Note'];
 
@@ -37,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen>
     WidgetsBinding.instance.removeObserver(this);
     _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -111,25 +116,51 @@ class _HomeScreenState extends State<HomeScreen>
       }
     }
 
-    final combinedTransactions = uniqueTransactions.values.toList();
+    var combinedTransactions = uniqueTransactions.values.toList();
 
-    // Count by type
-
+    // Apply date filter based on tab
     switch (_tabController.index) {
       case 0: // Daily - show all transactions for current month grouped by date
       case 2: // Monthly - same as daily but for selected month
-        return combinedTransactions.where((t) {
+        combinedTransactions = combinedTransactions.where((t) {
           return t.date.year == _selectedMonth.year &&
               t.date.month == _selectedMonth.month;
         }).toList();
+        break;
       case 3: // Total
-        return combinedTransactions;
+        // No date filter for total
+        break;
       default:
-        return combinedTransactions.where((t) {
+        combinedTransactions = combinedTransactions.where((t) {
           return t.date.year == _selectedMonth.year &&
               t.date.month == _selectedMonth.month;
         }).toList();
     }
+
+    // Apply active filter if any
+    if (_activeFilter != null) {
+      print(
+        'Applying filter: Income categories: ${_activeFilter!.selectedIncomeCategories}, Expense categories: ${_activeFilter!.selectedExpenseCategories}, Account types: ${_activeFilter!.selectedAccountTypes}',
+      );
+      print('Has active filters: ${_activeFilter!.hasActiveFilters}');
+      print('Transactions before filter: ${combinedTransactions.length}');
+      if (_activeFilter!.hasActiveFilters) {
+        combinedTransactions = _activeFilter!.apply(combinedTransactions);
+        print('Transactions after filter: ${combinedTransactions.length}');
+      }
+    }
+
+    // Apply search query if any
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      combinedTransactions = combinedTransactions.where((t) {
+        return t.title.toLowerCase().contains(query) ||
+            (t.category?.toLowerCase().contains(query) ?? false) ||
+            (t.note?.toLowerCase().contains(query) ?? false);
+      }).toList();
+    }
+
+    return combinedTransactions;
   }
 
   Future<List<Transaction>> _getSmsTransactionsAsTransactions() async {
@@ -614,15 +645,53 @@ class _HomeScreenState extends State<HomeScreen>
           const SizedBox(width: 8),
           _buildGlassButton(
             icon: Icons.search_rounded,
-            color: AppColors.textSecondary,
-            onTap: () {},
+            color: _searchQuery.isNotEmpty
+                ? AppColors.primary
+                : AppColors.textSecondary,
+            onTap: () => _showSearchDialog(),
           ),
           const SizedBox(width: 8),
-          _buildGlassButton(
-            icon: Icons.tune_rounded,
-            color: AppColors.textSecondary,
-            onTap: () {},
+          Stack(
+            children: [
+              _buildGlassButton(
+                icon: Icons.tune_rounded,
+                color: _activeFilter?.hasActiveFilters == true
+                    ? AppColors.primary
+                    : AppColors.textSecondary,
+                onTap: () => _showFilterDialog(),
+              ),
+              if (_activeFilter?.hasActiveFilters == true)
+                Positioned(
+                  right: 4,
+                  top: 4,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
           ),
+          if (_searchQuery.isNotEmpty ||
+              _activeFilter?.hasActiveFilters == true)
+            const SizedBox(width: 8),
+          if (_searchQuery.isNotEmpty ||
+              _activeFilter?.hasActiveFilters == true)
+            _buildGlassButton(
+              icon: Icons.clear_all_rounded,
+              color: AppColors.error,
+              onTap: () {
+                setState(() {
+                  _searchQuery = '';
+                  _activeFilter = null;
+                  _searchController.clear();
+                  _refreshKey++;
+                });
+              },
+            ),
         ],
       ),
     );
@@ -665,6 +734,125 @@ class _HomeScreenState extends State<HomeScreen>
         child: Icon(icon, color: color, size: 20),
       ),
     );
+  }
+
+  void _showSearchDialog() {
+    _searchController.text = _searchQuery;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Search Transactions',
+          style: GoogleFonts.inter(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: TextField(
+          controller: _searchController,
+          autofocus: true,
+          style: GoogleFonts.inter(color: AppColors.textPrimary),
+          decoration: InputDecoration(
+            hintText: 'Search by title, category, or note...',
+            hintStyle: GoogleFonts.inter(color: AppColors.textMuted),
+            prefixIcon: Icon(Icons.search_rounded, color: AppColors.textMuted),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: Icon(Icons.clear_rounded, color: AppColors.textMuted),
+                    onPressed: () {
+                      _searchController.clear();
+                    },
+                  )
+                : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.surfaceVariant),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.surfaceVariant),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.primary, width: 2),
+            ),
+            filled: true,
+            fillColor: AppColors.background,
+          ),
+          onChanged: (value) {
+            setState(() {});
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _searchQuery = '';
+                _searchController.clear();
+              });
+              Navigator.pop(context);
+              setState(() {
+                _refreshKey++;
+              });
+            },
+            child: Text(
+              'Clear',
+              style: GoogleFonts.inter(color: AppColors.textMuted),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _searchQuery = _searchController.text.trim();
+              });
+              Navigator.pop(context);
+              setState(() {
+                _refreshKey++;
+              });
+            },
+            child: Text(
+              'Search',
+              style: GoogleFonts.inter(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFilterDialog() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TransactionFilterScreen(
+          selectedMonth: _selectedMonth,
+          initialFilter: _activeFilter,
+        ),
+      ),
+    );
+
+    if (result != null) {
+      final filter = result['filter'] as TransactionFilter?;
+      print('Filter received from dialog: $filter');
+      if (filter != null) {
+        print(
+          'Filter details: Income: ${filter.selectedIncomeCategories}, Expense: ${filter.selectedExpenseCategories}, Accounts: ${filter.selectedAccountTypes}',
+        );
+        print('Has active filters: ${filter.hasActiveFilters}');
+      }
+      setState(() {
+        _activeFilter = filter;
+        if (result['month'] != null) {
+          _selectedMonth = result['month'] as DateTime;
+        }
+        _refreshKey++; // Force refresh to apply filters
+      });
+    }
   }
 
   Widget _buildTabs() {
