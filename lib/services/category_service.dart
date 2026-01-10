@@ -27,22 +27,32 @@ class CategoryService {
       
       // Initialize expense categories only if not already saved
       if (!expenseBox.containsKey(_categoriesListKey)) {
+        print('Initializing default expense categories (first time)');
         final expenseCategories = DefaultCategories.expenseCategories
             .map((cat) => cat.toJson())
             .toList();
         await expenseBox.put(_categoriesListKey, expenseCategories);
+        print('Default expense categories initialized: ${expenseCategories.length} categories');
+      } else {
+        final saved = expenseBox.get(_categoriesListKey) as List<dynamic>?;
+        print('Expense categories already exist in storage: ${saved?.length ?? 0} categories');
       }
       
       // Initialize income categories only if not already saved
       if (!incomeBox.containsKey(_categoriesListKey)) {
+        print('Initializing default income categories (first time)');
         final incomeCategories = DefaultCategories.incomeCategories
             .map((cat) => cat.toJson())
             .toList();
         await incomeBox.put(_categoriesListKey, incomeCategories);
+        print('Default income categories initialized: ${incomeCategories.length} categories');
+      } else {
+        final saved = incomeBox.get(_categoriesListKey) as List<dynamic>?;
+        print('Income categories already exist in storage: ${saved?.length ?? 0} categories');
       }
     } catch (e) {
-      // Handle error silently
       print('Error initializing default categories: $e');
+      print('Stack trace: ${StackTrace.current}');
     }
   }
 
@@ -64,21 +74,51 @@ class CategoryService {
   static List<Category> getCategories({required bool isIncome}) {
     try {
       final box = isIncome ? _incomeBox : _expenseBox;
+      
+      // Check if categories exist in storage
+      if (!box.containsKey(_categoriesListKey)) {
+        print('No categories found in storage, returning defaults');
+        // Return mutable copy of defaults
+        final defaults = isIncome 
+            ? DefaultCategories.incomeCategories
+            : DefaultCategories.expenseCategories;
+        return defaults.map((cat) => Category(
+          id: cat.id,
+          name: cat.name,
+          emoji: cat.emoji,
+          subcategories: List<String>.from(cat.subcategories),
+          isIncome: cat.isIncome,
+        )).toList();
+      }
+      
       final categoriesJson = box.get(_categoriesListKey) as List<dynamic>?;
       
       if (categoriesJson == null || categoriesJson.isEmpty) {
-        // Return defaults if not found
-        return isIncome 
+        print('Categories JSON is null or empty, returning defaults');
+        // Return mutable copy of defaults
+        final defaults = isIncome 
             ? DefaultCategories.incomeCategories
             : DefaultCategories.expenseCategories;
+        return defaults.map((cat) => Category(
+          id: cat.id,
+          name: cat.name,
+          emoji: cat.emoji,
+          subcategories: List<String>.from(cat.subcategories),
+          isIncome: cat.isIncome,
+        )).toList();
       }
+      
+      print('Loading ${categoriesJson.length} categories from storage');
       
       final categories = categoriesJson
           .map((json) {
             try {
-              return Category.fromJson(json as Map<String, dynamic>);
+              // Convert Map<dynamic, dynamic> to Map<String, dynamic>
+              final categoryMap = Map<String, dynamic>.from(json as Map);
+              return Category.fromJson(categoryMap);
             } catch (e) {
               print('Error parsing category: $e');
+              print('Category JSON: $json');
               return null;
             }
           })
@@ -88,6 +128,7 @@ class CategoryService {
       // Return saved categories, or defaults if parsing failed
       // Always return a mutable copy
       if (categories.isNotEmpty) {
+        print('Successfully loaded ${categories.length} categories from storage');
         return categories.map((cat) => Category(
           id: cat.id,
           name: cat.name,
@@ -96,6 +137,7 @@ class CategoryService {
           isIncome: cat.isIncome,
         )).toList();
       } else {
+        print('Parsed categories list is empty, returning defaults');
         // Return mutable copy of defaults
         final defaults = isIncome 
             ? DefaultCategories.incomeCategories
@@ -110,10 +152,17 @@ class CategoryService {
       }
     } catch (e) {
       print('Error getting categories: $e');
-      // Return defaults on error
-      return isIncome 
+      // Return mutable copy of defaults on error
+      final defaults = isIncome 
           ? DefaultCategories.incomeCategories
           : DefaultCategories.expenseCategories;
+      return defaults.map((cat) => Category(
+        id: cat.id,
+        name: cat.name,
+        emoji: cat.emoji,
+        subcategories: List<String>.from(cat.subcategories),
+        isIncome: cat.isIncome,
+      )).toList();
     }
   }
 
@@ -122,10 +171,43 @@ class CategoryService {
     try {
       final box = isIncome ? _incomeBox : _expenseBox;
       final categoriesJson = categories.map((cat) => cat.toJson()).toList();
+      
+      print('Saving ${categories.length} categories to storage (isIncome: $isIncome)');
+      print('Categories to save: ${categories.map((c) => '${c.name}(${c.id})').join(", ")}');
+      
+      // Save to Hive
       await box.put(_categoriesListKey, categoriesJson);
-      print('Categories saved successfully: ${categories.length} categories');
+      
+      // Force Hive to flush to disk
+      await box.flush();
+      
+      // Verify the save worked by reading back
+      final saved = box.get(_categoriesListKey) as List<dynamic>?;
+      if (saved != null && saved.length == categories.length) {
+        print('✓ Categories saved and verified successfully: ${saved.length} categories');
+        // Double-check by parsing back
+        final parsed = saved.map((json) {
+          try {
+            // Convert Map<dynamic, dynamic> to Map<String, dynamic>
+            final categoryMap = Map<String, dynamic>.from(json as Map);
+            return Category.fromJson(categoryMap);
+          } catch (e) {
+            print('Error parsing saved category: $e');
+            return null;
+          }
+        }).whereType<Category>().toList();
+        if (parsed.length == categories.length) {
+          print('✓ Categories parsed successfully after save');
+        } else {
+          print('WARNING: Parsed count mismatch. Expected ${categories.length}, got ${parsed.length}');
+        }
+      } else {
+        print('ERROR: Save verification failed. Expected ${categories.length}, got ${saved?.length ?? 0}');
+        throw Exception('Failed to verify saved categories');
+      }
     } catch (e) {
       print('Error saving categories: $e');
+      print('Stack trace: ${StackTrace.current}');
       // Re-throw to let caller know save failed
       rethrow;
     }
