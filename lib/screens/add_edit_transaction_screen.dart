@@ -11,6 +11,7 @@ import '../services/storage_service.dart';
 import '../services/category_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/helpers.dart';
+import 'categories_screen.dart';
 
 class AddEditTransactionScreen extends StatefulWidget {
   final Transaction? transaction;
@@ -274,16 +275,37 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     ),
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceVariant,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.edit_rounded,
-                            color: AppColors.textMuted,
-                            size: 18,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context); // Close category picker
+                            // Navigate to categories screen
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CategoriesScreen(
+                                  isExpense:
+                                      _transactionType ==
+                                      TransactionType.expense,
+                                ),
+                              ),
+                            ).then((_) {
+                              // Reload categories when returning from categories screen
+                              setState(() {
+                                // Categories will be reloaded when picker is opened again
+                              });
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceVariant,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.edit_rounded,
+                              color: AppColors.textMuted,
+                              size: 18,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
