@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import '../services/storage_service.dart';
+import '../services/sms_service.dart';
 import '../models/transaction.dart';
 import 'stats_screen.dart';
 
@@ -13,87 +14,137 @@ class AccountsScreen extends StatefulWidget {
   State<AccountsScreen> createState() => _AccountsScreenState();
 }
 
-class _AccountsScreenState extends State<AccountsScreen> {
+class _AccountsScreenState extends State<AccountsScreen>
+    with WidgetsBindingObserver {
+  int _refreshKey = 0; // Key to force rebuild
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // App came back to foreground, refresh to get new transactions
+      setState(() {
+        _refreshKey++;
+      });
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh when screen becomes visible (e.g., returning from other screens)
+    // Use a small delay to avoid unnecessary refreshes during initial build
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        setState(() {
+          _refreshKey++;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final balances = _calculateBalances();
+    // Use refreshKey to force recalculation when transactions change
+    // This ensures balances update when SMS transactions are imported
+    final _ = _refreshKey; // Reference to trigger rebuild when key changes
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
-        child: CustomScrollView(
-          slivers: [
-            // App Bar
-            SliverToBoxAdapter(child: _buildHeader()),
+        child: FutureBuilder<List<Transaction>>(
+          key: ValueKey(_refreshKey), // Force refresh when key changes
+          future: _getAllTransactions(),
+          builder: (context, snapshot) {
+            final transactions = snapshot.data ?? [];
+            final balances = _calculateBalancesFromTransactions(transactions);
 
-            // Summary Cards
-            SliverToBoxAdapter(child: _buildSummaryCards(balances)),
+            return CustomScrollView(
+              slivers: [
+                // App Bar
+                SliverToBoxAdapter(child: _buildHeader()),
 
-            // Account Sections
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    // Cash Section
-                    _buildAccountCard(
-                      title: 'Cash',
-                      icon: Icons.payments_rounded,
-                      gradient: [
-                        AppColors.income,
-                        AppColors.income.withValues(alpha: 0.7),
-                      ],
-                      accounts: [
-                        _AccountItem(
-                          name: 'Cash',
-                          currency: 'Rs.',
-                          balance: balances['cash_inr'] ?? 0.0,
-                          icon: Icons.monetization_on_rounded,
+                // Summary Cards
+                SliverToBoxAdapter(child: _buildSummaryCards(balances)),
+
+                // Account Sections
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        // Cash Section
+                        _buildAccountCard(
+                          title: 'Cash',
+                          icon: Icons.payments_rounded,
+                          gradient: [
+                            AppColors.income,
+                            AppColors.income.withValues(alpha: 0.7),
+                          ],
+                          accounts: [
+                            _AccountItem(
+                              name: 'Cash',
+                              currency: 'Rs.',
+                              balance: balances['cash_inr'] ?? 0.0,
+                              icon: Icons.monetization_on_rounded,
+                            ),
+                            _AccountItem(
+                              name: 'Cash USD',
+                              currency: '\$',
+                              balance: balances['cash_usd'] ?? 0.0,
+                              icon: Icons.attach_money_rounded,
+                            ),
+                          ],
                         ),
-                        _AccountItem(
-                          name: 'Cash USD',
-                          currency: '\$',
-                          balance: balances['cash_usd'] ?? 0.0,
-                          icon: Icons.attach_money_rounded,
+
+                        const SizedBox(height: 16),
+
+                        // Bank Section
+                        _buildAccountCard(
+                          title: 'Bank Accounts',
+                          icon: Icons.account_balance_rounded,
+                          gradient: [AppColors.primary, AppColors.primaryLight],
+                          accounts: [
+                            _AccountItem(
+                              name: 'Accounts',
+                              currency: 'Rs.',
+                              balance: balances['bank_inr'] ?? 0.0,
+                              icon: Icons.savings_rounded,
+                            ),
+                            _AccountItem(
+                              name: 'Accounts USD',
+                              currency: '\$',
+                              balance: balances['bank_usd'] ?? 0.0,
+                              icon: Icons.account_balance_wallet_rounded,
+                            ),
+                          ],
                         ),
+
+                        const SizedBox(height: 16),
+
+                        // Card Section
+                        _buildCardSection(balances),
+
+                        const SizedBox(height: 100),
                       ],
                     ),
-
-                    const SizedBox(height: 16),
-
-                    // Bank Section
-                    _buildAccountCard(
-                      title: 'Bank Accounts',
-                      icon: Icons.account_balance_rounded,
-                      gradient: [AppColors.primary, AppColors.primaryLight],
-                      accounts: [
-                        _AccountItem(
-                          name: 'Accounts',
-                          currency: 'Rs.',
-                          balance: balances['bank_inr'] ?? 0.0,
-                          icon: Icons.savings_rounded,
-                        ),
-                        _AccountItem(
-                          name: 'Accounts USD',
-                          currency: '\$',
-                          balance: balances['bank_usd'] ?? 0.0,
-                          icon: Icons.account_balance_wallet_rounded,
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Card Section
-                    _buildCardSection(balances),
-
-                    const SizedBox(height: 100),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
       ),
     );
@@ -169,8 +220,180 @@ class _AccountsScreenState extends State<AccountsScreen> {
     );
   }
 
-  Map<String, double> _calculateBalances() {
-    final transactions = StorageService.getAllTransactions();
+  Future<List<Transaction>> _getAllTransactions() async {
+    // Get manually added/imported transactions
+    final manualTransactions = StorageService.getAllTransactions();
+
+    // Get SMS transactions and convert them to Transaction objects
+    final smsTransactions = await _getSmsTransactionsAsTransactions();
+
+    // Combine both lists using the same logic as home screen
+    // Use transaction ID as the key to ensure edited transactions replace old ones
+    final uniqueTransactions = <String, Transaction>{};
+
+    // First, add all manual transactions (these are edited/imported, so they take precedence)
+    for (var t in manualTransactions) {
+      uniqueTransactions[t.id] = t;
+    }
+
+    // Then, add SMS transactions only if they don't already exist in manual storage
+    // This ensures that imported transactions replace the original SMS versions
+    for (var t in smsTransactions) {
+      if (!uniqueTransactions.containsKey(t.id)) {
+        uniqueTransactions[t.id] = t;
+      }
+    }
+
+    return uniqueTransactions.values.toList();
+  }
+
+  Future<List<Transaction>> _getSmsTransactionsAsTransactions() async {
+    try {
+      final hasPermission = await SmsService.hasSmsPermission();
+      if (!hasPermission) {
+        return [];
+      }
+
+      // Fetch SMS transactions
+      final smsTransactions = await SmsService.fetchAndParseSmsMessages(
+        fetchAll: false,
+      );
+
+      // Filter out already imported transactions to avoid double-counting
+      final unimportedSmsTransactions = smsTransactions.where((smsT) {
+        return !SmsService.isAlreadyImported(smsT.id);
+      }).toList();
+
+      // Convert ParsedSmsTransaction to Transaction
+      return unimportedSmsTransactions.map((smsT) {
+        // Detect if this is a transfer (ATM withdrawal, cash deposit, bank-to-bank transfer) vs actual expense/income
+        final isTransfer = _isSmsTransactionTransfer(smsT);
+
+        // Extract account information for transfers
+        String? fromAccount;
+        String? toAccount;
+
+        if (isTransfer) {
+          if (smsT.isCredit) {
+            // Money coming in (cash deposit to bank, or transfer received)
+            toAccount = smsT.accountNumber ?? 'Bank Account';
+            fromAccount = 'Cash'; // Default for cash deposits
+          } else {
+            // Money going out (ATM withdrawal, or transfer to another account)
+            fromAccount = smsT.accountNumber ?? 'Bank Account';
+            // Check if it's a bank-to-bank transfer (has "TO ACCOUNT" or similar)
+            final upperMessage = smsT.rawMessage.toUpperCase();
+            if (upperMessage.contains('TO ACCOUNT') ||
+                upperMessage.contains('TRANSFERRED TO') ||
+                upperMessage.contains('NEFT') ||
+                upperMessage.contains('RTGS') ||
+                upperMessage.contains('IMPS') ||
+                upperMessage.contains('UPI')) {
+              // Bank-to-bank transfer - try to extract recipient account
+              toAccount =
+                  _extractRecipientAccount(smsT.rawMessage) ?? 'Other Account';
+            } else {
+              // ATM withdrawal
+              toAccount = 'Cash';
+            }
+          }
+        }
+
+        return Transaction(
+          id: 'sms_${smsT.id}',
+          title: isTransfer
+              ? (smsT.isCredit
+                    ? '${smsT.bankName} Deposit'
+                    : (smsT.rawMessage.toUpperCase().contains('TO ACCOUNT') ||
+                              smsT.rawMessage.toUpperCase().contains(
+                                'TRANSFERRED TO',
+                              ) ||
+                              smsT.rawMessage.toUpperCase().contains('NEFT') ||
+                              smsT.rawMessage.toUpperCase().contains('RTGS') ||
+                              smsT.rawMessage.toUpperCase().contains('IMPS')
+                          ? '${smsT.bankName} Transfer'
+                          : '${smsT.bankName} Withdrawal'))
+              : '${smsT.bankName} ${smsT.isCredit ? "Credit" : "Debit"}',
+          amount: smsT.amount,
+          type: isTransfer
+              ? TransactionType.transfer
+              : (smsT.isCredit
+                    ? TransactionType.income
+                    : TransactionType.expense),
+          date: smsT.date,
+          category: isTransfer
+              ? 'Transfer'
+              : (smsT.isCredit ? 'Bank Transfer' : 'Bank Transaction'),
+          note:
+              'From SMS: ${smsT.rawMessage.substring(0, smsT.rawMessage.length > 50 ? 50 : smsT.rawMessage.length)}${smsT.rawMessage.length > 50 ? "..." : ""}',
+          accountType: AccountType.bank,
+          fromAccount: fromAccount,
+          toAccount: toAccount,
+        );
+      }).toList();
+    } catch (e) {
+      // If there's an error, just return empty list
+      return [];
+    }
+  }
+
+  /// Detect if SMS transaction is a transfer (ATM withdrawal/cash deposit) vs actual expense/income
+  bool _isSmsTransactionTransfer(ParsedSmsTransaction smsT) {
+    final upperMessage = smsT.rawMessage.toUpperCase();
+
+    if (smsT.isCredit) {
+      final cashDepositKeywords = [
+        'CASH DEPOSIT',
+        'CASH DEPOSITED',
+        'DEPOSITED CASH',
+        'CASH CREDITED',
+      ];
+      return cashDepositKeywords.any(
+        (keyword) => upperMessage.contains(keyword),
+      );
+    } else {
+      final atmKeywords = [
+        'ATM',
+        'WITHDRAWAL',
+        'WITHDRAWN',
+        'CASH WITHDRAWAL',
+        'CASH WITHDRAWN',
+      ];
+      return atmKeywords.any((keyword) => upperMessage.contains(keyword));
+    }
+  }
+
+  /// Extract recipient account number from SMS message
+  String? _extractRecipientAccount(String message) {
+    final upperMessage = message.toUpperCase();
+    final patterns = [
+      RegExp(
+        r'TO\s+(?:ACCOUNT|A/C|ACCT)[:\s]*[X*]*([0-9]{4,})',
+        caseSensitive: false,
+      ),
+      RegExp(r'TRANSFERRED\s+TO[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
+      RegExp(r'BEN(?:EFICIARY)?[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
+      RegExp(r'TO\s+([A-Z0-9]+@[A-Z]+)', caseSensitive: false),
+      RegExp(r'TO[:\s]+[A-Z\s]*([0-9]{4,})', caseSensitive: false),
+    ];
+
+    for (final pattern in patterns) {
+      final match = pattern.firstMatch(upperMessage);
+      if (match != null && match.group(1) != null) {
+        final account = match.group(1)!;
+        if (account.contains('@')) {
+          return account;
+        } else {
+          return '****${account.length > 4 ? account.substring(account.length - 4) : account}';
+        }
+      }
+    }
+    return null;
+  }
+
+  Map<String, double> _calculateBalancesFromTransactions(
+    List<Transaction> transactions,
+  ) {
     final balances = <String, double>{
       'cash_inr': 0.0,
       'cash_usd': 0.0,
@@ -183,12 +406,19 @@ class _AccountsScreenState extends State<AccountsScreen> {
     };
 
     for (var t in transactions) {
+      // Skip transfers - they don't affect net balance (money just moves between accounts)
+      if (t.type == TransactionType.transfer) {
+        continue;
+      }
+
       double amount = t.amount;
+
+      // For income: add to balance (positive)
+      // For expense: subtract from balance (negative)
       if (t.type == TransactionType.expense) {
         amount = -amount;
-      } else if (t.type == TransactionType.transfer) {
-        continue; // Skip transfers for balance calculation
       }
+      // Income transactions keep positive amount
 
       switch (t.accountType) {
         case AccountType.cash:
@@ -202,13 +432,24 @@ class _AccountsScreenState extends State<AccountsScreen> {
           balances['card_inr'] = balances['card_inr']! + amount;
           break;
       }
+    }
 
-      if (amount > 0) {
-        balances['total_assets'] = balances['total_assets']! + amount;
-      } else {
-        balances['total_liabilities'] =
-            balances['total_liabilities']! + amount.abs();
-      }
+    // Calculate Assets and Liabilities based on final account balances
+    // Assets = Cash + Bank (positive balances only)
+    balances['total_assets'] =
+        (balances['cash_inr']! > 0 ? balances['cash_inr']! : 0.0) +
+        (balances['bank_inr']! > 0 ? balances['bank_inr']! : 0.0);
+
+    // Liabilities = Credit Card debt (negative card balance shown as positive liability)
+    // If card balance is negative, it's a debt (liability)
+    // If card balance is positive, it's actually an asset (overpayment/credit)
+    if (balances['card_inr']! < 0) {
+      balances['total_liabilities'] = balances['card_inr']!.abs();
+    } else {
+      // Positive card balance means you have credit/overpayment (rare but possible)
+      balances['total_assets'] =
+          balances['total_assets']! + balances['card_inr']!;
+      balances['total_liabilities'] = 0.0;
     }
 
     return balances;
@@ -220,8 +461,8 @@ class _AccountsScreenState extends State<AccountsScreen> {
   }
 
   Widget _buildSummaryCards(Map<String, double> balances) {
-    final totalAssets =
-        (balances['cash_inr'] ?? 0.0) + (balances['bank_inr'] ?? 0.0);
+    // Use the calculated assets and liabilities from balances
+    final totalAssets = balances['total_assets'] ?? 0.0;
     final totalLiabilities = balances['total_liabilities'] ?? 0.0;
     final total = totalAssets - totalLiabilities;
 

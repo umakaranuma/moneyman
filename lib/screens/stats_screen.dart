@@ -18,10 +18,11 @@ class StatsScreen extends StatefulWidget {
 }
 
 class _StatsScreenState extends State<StatsScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
   DateTime _selectedMonth = DateTime.now();
   String _periodType = 'Monthly'; // Monthly, Weekly, Daily
+  int _refreshKey = 0; // Key to force FutureBuilder refresh
 
   @override
   void initState() {
@@ -29,12 +30,37 @@ class _StatsScreenState extends State<StatsScreen>
     _tabController = TabController(length: 2, vsync: this);
     _tabController.index = 1; // Start on Expenses tab
     _tabController.addListener(() => setState(() {}));
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tabController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // App came back to foreground, refresh to get new transactions
+      setState(() {
+        _refreshKey++;
+      });
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh when screen becomes visible (e.g., returning from other screens)
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        setState(() {
+          _refreshKey++;
+        });
+      }
+    });
   }
 
   void _previousMonth() {
@@ -370,6 +396,7 @@ class _StatsScreenState extends State<StatsScreen>
     // Show graphs view if showGraphsView is true
     if (widget.showGraphsView) {
       return FutureBuilder<Map<String, Map<String, double>>>(
+        key: ValueKey(_refreshKey), // Force refresh when key changes
         future: _getMonthlyData(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -426,6 +453,7 @@ class _StatsScreenState extends State<StatsScreen>
 
     // Show analytics view (pie chart) for bottom navigation
     return FutureBuilder<List<Transaction>>(
+      key: ValueKey(_refreshKey), // Force refresh when key changes
       future: _getFilteredTransactions(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
