@@ -17,6 +17,7 @@ import '../../screens/sync_screen.dart';
 import '../../screens/backup_screen.dart';
 import '../../screens/feedback_screen.dart';
 import '../../screens/help_screen.dart';
+import '../../screens/upgrade_screen.dart';
 import '../../models/transaction.dart';
 import '../../models/note.dart';
 import '../../models/todo.dart';
@@ -538,6 +539,34 @@ class AppRouter {
           );
         },
       ),
+
+      // Upgrade route
+      GoRoute(
+        path: '/upgrade',
+        name: 'upgrade',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const UpgradeScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0, 1),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
+          );
+        },
+      ),
     ],
   );
 }
@@ -631,5 +660,9 @@ extension GoRouterExtension on BuildContext {
 
   void goToHelp() {
     GoRouter.of(this).pushNamed('help');
+  }
+
+  void goToUpgrade() {
+    GoRouter.of(this).pushNamed('upgrade');
   }
 }

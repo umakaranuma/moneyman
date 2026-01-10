@@ -141,6 +141,87 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 const SizedBox(height: 24),
 
+                // Pro Features
+                _buildSectionHeader('Pro Features'),
+                const SizedBox(height: 12),
+                _buildSettingsCard(
+                  children: [
+                    _buildProFeatureTile(
+                      icon: Icons.workspace_premium_rounded,
+                      title: 'Remove All Ads',
+                      description: 'Enjoy an ad-free experience',
+                    ),
+                    _buildDivider(),
+                    _buildProFeatureTile(
+                      icon: Icons.cloud_sync_rounded,
+                      title: 'Cloud Sync',
+                      description: 'Sync your data across all devices',
+                    ),
+                    _buildDivider(),
+                    _buildProFeatureTile(
+                      icon: Icons.backup_rounded,
+                      title: 'Auto Backup',
+                      description: 'Automatic daily backups to cloud',
+                    ),
+                    _buildDivider(),
+                    _buildProFeatureTile(
+                      icon: Icons.analytics_rounded,
+                      title: 'Advanced Analytics',
+                      description: 'Detailed reports and insights',
+                    ),
+                    _buildDivider(),
+                    _buildProFeatureTile(
+                      icon: Icons.category_rounded,
+                      title: 'Unlimited Categories',
+                      description: 'Create unlimited custom categories',
+                    ),
+                    _buildDivider(),
+                    _buildProFeatureTile(
+                      icon: Icons.receipt_long_rounded,
+                      title: 'Receipt Scanner',
+                      description: 'Scan and attach receipts to transactions',
+                    ),
+                    _buildDivider(),
+                    _buildProFeatureTile(
+                      icon: Icons.account_tree_rounded,
+                      title: 'Multiple Accounts',
+                      description: 'Manage unlimited bank accounts',
+                    ),
+                    _buildDivider(),
+                    _buildProFeatureTile(
+                      icon: Icons.pie_chart_rounded,
+                      title: 'Budget Planning',
+                      description: 'Advanced budget tracking and planning',
+                    ),
+                    _buildDivider(),
+                    _buildProFeatureTile(
+                      icon: Icons.file_download_rounded,
+                      title: 'Export Reports',
+                      description: 'Export data to PDF, Excel, CSV',
+                    ),
+                    _buildDivider(),
+                    _buildProFeatureTile(
+                      icon: Icons.security_rounded,
+                      title: 'Biometric Lock',
+                      description: 'Secure your app with fingerprint/Face ID',
+                    ),
+                    _buildDivider(),
+                    _buildProFeatureTile(
+                      icon: Icons.palette_rounded,
+                      title: 'Custom Themes',
+                      description: 'Choose from multiple beautiful themes',
+                    ),
+                    _buildDivider(),
+                    _buildProFeatureTile(
+                      icon: Icons.support_agent_rounded,
+                      title: 'Priority Support',
+                      description: 'Get priority customer support',
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
                 // About
                 _buildSectionHeader('About'),
                 const SizedBox(height: 12),
@@ -199,10 +280,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.surfaceVariant,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.surfaceVariant, width: 1),
       ),
       child: Column(children: children),
     );
@@ -280,6 +358,91 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildProFeatureTile({
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
+    return InkWell(
+      onTap: () {
+        // Navigate to upgrade screen
+        Navigator.pushNamed(context, '/upgrade');
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.primary, AppColors.primaryLight],
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.inter(
+                          color: AppColors.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [AppColors.secondary, AppColors.primary],
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'PRO',
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: GoogleFonts.inter(
+                      color: AppColors.textMuted,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textMuted,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showLanguageDialog() {
     showDialog(
       context: context,
@@ -292,20 +455,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: ['English', 'Spanish', 'French', 'German']
-              .map((lang) => RadioListTile<String>(
-                    title: Text(
-                      lang,
-                      style: GoogleFonts.inter(color: AppColors.textPrimary),
-                    ),
-                    value: lang,
-                    groupValue: _language,
-                    onChanged: (value) {
-                      setState(() {
-                        _language = value!;
-                      });
-                      Navigator.pop(context);
-                    },
-                  ))
+              .map(
+                (lang) => RadioListTile<String>(
+                  title: Text(
+                    lang,
+                    style: GoogleFonts.inter(color: AppColors.textPrimary),
+                  ),
+                  value: lang,
+                  groupValue: _language,
+                  onChanged: (value) {
+                    setState(() {
+                      _language = value!;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+              )
               .toList(),
         ),
       ),
@@ -324,24 +489,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: ['USD', 'EUR', 'GBP', 'INR', 'JPY']
-              .map((curr) => RadioListTile<String>(
-                    title: Text(
-                      curr,
-                      style: GoogleFonts.inter(color: AppColors.textPrimary),
-                    ),
-                    value: curr,
-                    groupValue: _currency,
-                    onChanged: (value) {
-                      setState(() {
-                        _currency = value!;
-                      });
-                      Navigator.pop(context);
-                    },
-                  ))
+              .map(
+                (curr) => RadioListTile<String>(
+                  title: Text(
+                    curr,
+                    style: GoogleFonts.inter(color: AppColors.textPrimary),
+                  ),
+                  value: curr,
+                  groupValue: _currency,
+                  onChanged: (value) {
+                    setState(() {
+                      _currency = value!;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+              )
               .toList(),
         ),
       ),
     );
   }
 }
-
