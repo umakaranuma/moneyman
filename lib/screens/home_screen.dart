@@ -638,12 +638,12 @@ class _HomeScreenState extends State<HomeScreen>
             onTap: _nextMonth,
           ),
           const Spacer(),
-          _buildGlassButton(
-            icon: Icons.sms_outlined,
-            color: AppColors.income,
-            onTap: () => context.goToSmsTransactions(),
-          ),
-          const SizedBox(width: 8),
+          // _buildGlassButton(
+          //   icon: Icons.sms_outlined,
+          //   color: AppColors.income,
+          //   onTap: () => context.goToSmsTransactions(),
+          // ),
+          // const SizedBox(width: 8),
           _buildGlassButton(
             icon: Icons.bookmark_rounded,
             color: AppColors.income,
