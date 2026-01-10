@@ -666,10 +666,7 @@ extension GoRouterExtension on BuildContext {
   void goToSubcategories(Category category, int categoryIndex) {
     GoRouter.of(this).pushNamed(
       'subcategories',
-      extra: {
-        'category': category,
-        'categoryIndex': categoryIndex,
-      },
+      extra: {'category': category, 'categoryIndex': categoryIndex},
     );
   }
 

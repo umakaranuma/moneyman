@@ -47,29 +47,28 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 _buildSection(
                   'Information We Collect',
-                  'We collect information that you provide directly to us, including:\n\n'
-                  '• Transaction data (amounts, categories, dates)\n'
-                  '• Account information\n'
-                  '• Notes and todos\n'
-                  '• Category preferences\n'
-                  '• App settings and preferences\n\n'
-                  'All data is stored locally on your device. We do not collect personal information unless you explicitly provide it through features like feedback forms.',
+                  'We do not collect or gather any user data. All information you enter in the application, including:\n\n'
+                      '• Transaction data (amounts, categories, dates)\n'
+                      '• Account information\n'
+                      '• Notes and todos\n'
+                      '• Category preferences\n'
+                      '• App settings and preferences\n\n'
+                      'is stored exclusively on your device using local storage. We do not have any backend servers, and no data is transmitted to external servers. Your data remains completely private and under your control.',
                 ),
                 const SizedBox(height: 24),
                 _buildSection(
                   'How We Use Your Information',
-                  'We use the information we collect to:\n\n'
-                  '• Provide and maintain our service\n'
-                  '• Improve and personalize your experience\n'
-                  '• Process transactions and manage your financial data\n'
-                  '• Send you notifications (if enabled)\n'
-                  '• Respond to your feedback and support requests',
+                  'Since all data is stored locally on your device, we do not have access to your information. The application uses your locally stored data to:\n\n'
+                      '• Provide and maintain the service on your device\n'
+                      '• Display your transactions and financial data\n'
+                      '• Send you local notifications (if enabled)\n\n'
+                      'No data is transmitted to external servers or third parties.',
                 ),
                 const SizedBox(height: 24),
                 _buildSection(
                   'Data Storage',
-                  'All your financial data is stored locally on your device using secure local storage. We do not transmit your financial data to external servers unless you explicitly use cloud backup features (Pro feature).\n\n'
-                  'You have full control over your data and can delete it at any time through the app settings.',
+                  'All your financial data is stored exclusively on your device using local storage. We do not have any backend infrastructure, cloud services, or external servers. Your data never leaves your device and is not transmitted anywhere.\n\n'
+                      'You have complete control over your data and can delete it at any time through the app settings. Since all data is local, if you uninstall the app, all data will be removed from your device.',
                 ),
                 const SizedBox(height: 24),
                 _buildSection(
@@ -95,8 +94,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 _buildSection(
                   'Contact Us',
                   'If you have any questions about this Privacy Policy, please contact us at:\n\n'
-                  'Email: support@finzo.app\n'
-                  'Or through the Feedback section in the app.',
+                      'Email: support@finzo.app\n'
+                      'Or through the Feedback section in the app.',
                 ),
                 const SizedBox(height: 24),
                 Container(
@@ -140,10 +139,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.surfaceVariant,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.surfaceVariant, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,4 +166,3 @@ class PrivacyPolicyScreen extends StatelessWidget {
     );
   }
 }
-

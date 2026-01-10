@@ -48,29 +48,29 @@ class TermsOfServiceScreen extends StatelessWidget {
                 _buildSection(
                   'Use License',
                   'Permission is granted to temporarily download one copy of Finzo for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:\n\n'
-                  '• Modify or copy the materials\n'
-                  '• Use the materials for any commercial purpose\n'
-                  '• Attempt to reverse engineer any software contained in Finzo\n'
-                  '• Remove any copyright or other proprietary notations from the materials',
+                      '• Modify or copy the materials\n'
+                      '• Use the materials for any commercial purpose\n'
+                      '• Attempt to reverse engineer any software contained in Finzo\n'
+                      '• Remove any copyright or other proprietary notations from the materials',
                 ),
                 const SizedBox(height: 24),
                 _buildSection(
                   'User Accounts',
-                  'When you create an account with us, you must provide information that is accurate, complete, and current at all times. You are responsible for safeguarding the password and for all activities that occur under your account.',
+                  'This application does not require user accounts or registration. All data is stored locally on your device, and you have full control over your information.',
                 ),
                 const SizedBox(height: 24),
                 _buildSection(
                   'Prohibited Uses',
                   'You may not use Finzo:\n\n'
-                  '• In any way that violates any applicable law or regulation\n'
-                  '• To transmit any malicious code or viruses\n'
-                  '• To attempt to gain unauthorized access to any portion of the service\n'
-                  '• To interfere with or disrupt the service or servers',
+                      '• In any way that violates any applicable law or regulation\n'
+                      '• To transmit any malicious code or viruses\n'
+                      '• To attempt to gain unauthorized access to any portion of the service\n'
+                      '• To interfere with or disrupt the service or servers',
                 ),
                 const SizedBox(height: 24),
                 _buildSection(
                   'In-App Purchases',
-                  'Finzo offers in-app purchases for Pro features. All purchases are processed through the respective app store (Google Play Store or Apple App Store). Refunds are subject to the policies of the app store.',
+                  'Finzo does not currently offer any Pro features or in-app purchases. No payment methods are implemented in this application. All features are available to all users at no cost.',
                 ),
                 const SizedBox(height: 24),
                 _buildSection(
@@ -101,8 +101,8 @@ class TermsOfServiceScreen extends StatelessWidget {
                 _buildSection(
                   'Contact Information',
                   'If you have any questions about these Terms of Service, please contact us at:\n\n'
-                  'Email: support@finzo.app\n'
-                  'Or through the Feedback section in the app.',
+                      'Email: support@finzo.app\n'
+                      'Or through the Feedback section in the app.',
                 ),
                 const SizedBox(height: 24),
                 Container(
@@ -146,10 +146,7 @@ class TermsOfServiceScreen extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.surfaceVariant,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.surfaceVariant, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,4 +173,3 @@ class TermsOfServiceScreen extends StatelessWidget {
     );
   }
 }
-

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 import '../theme/app_theme.dart';
+import '../services/feedback_service.dart';
 
 class FeedbackScreen extends StatefulWidget {
   const FeedbackScreen({super.key});
@@ -15,6 +17,25 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   final TextEditingController _emailController = TextEditingController();
   String _feedbackType = 'Suggestion';
   int _rating = 5;
+  bool _isSubmitting = false;
+
+  // Configuration for direct email sending
+  // Option 1: Use EmailJS (Recommended - Free, no backend needed)
+  // Sign up at https://www.emailjs.com/ and get your credentials
+  static const bool _useEmailJS = false; // Set to true to enable
+  static const String _emailJSServiceId = 'YOUR_SERVICE_ID';
+  static const String _emailJSTemplateId = 'YOUR_TEMPLATE_ID';
+  static const String _emailJSPublicKey = 'YOUR_PUBLIC_KEY';
+
+  // Option 2: Use Formspree (Free service, no backend needed)
+  // Sign up at https://formspree.io/ and get your form endpoint
+  static const bool _useFormspree = false; // Set to true to enable
+  static const String _formspreeEndpoint =
+      'https://formspree.io/f/YOUR_FORM_ID';
+
+  // Option 3: Use your own backend API
+  static const bool _useBackendAPI = false; // Set to true to enable
+  // Update FeedbackService._apiEndpoint when enabling this
 
   @override
   void dispose() {
@@ -295,7 +316,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     ],
                   ),
                   child: ElevatedButton(
-                    onPressed: _submitFeedback,
+                    onPressed: _isSubmitting ? null : _submitFeedback,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
@@ -303,14 +324,25 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: Text(
-                      'Submit Feedback',
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    child: _isSubmitting
+                        ? SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            'Submit Feedback',
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                   ),
                 ),
 
@@ -392,7 +424,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     );
   }
 
-  void _submitFeedback() {
+  void _submitFeedback() async {
     if (_feedbackController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -406,89 +438,219 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       return;
     }
 
-    // Prepare feedback email
-    final email = _emailController.text.trim().isNotEmpty
+    if (_isSubmitting) return; // Prevent multiple submissions
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    // Prepare feedback data
+    final userEmail = _emailController.text.trim().isNotEmpty
         ? _emailController.text.trim()
-        : 'No email provided';
+        : null;
     final feedbackText = _feedbackController.text.trim();
+
+    // Try direct email sending via API first (if configured)
+    Map<String, dynamic>? result;
+
+    if (_useEmailJS) {
+      result = await FeedbackService.sendFeedbackViaEmailJS(
+        feedbackType: _feedbackType,
+        rating: _rating,
+        feedbackText: feedbackText,
+        userEmail: userEmail,
+        serviceId: _emailJSServiceId,
+        templateId: _emailJSTemplateId,
+        publicKey: _emailJSPublicKey,
+      );
+    } else if (_useFormspree) {
+      result = await FeedbackService.sendFeedbackViaFormspree(
+        feedbackType: _feedbackType,
+        rating: _rating,
+        feedbackText: feedbackText,
+        userEmail: userEmail,
+        formEndpoint: _formspreeEndpoint,
+      );
+    } else if (_useBackendAPI) {
+      result = await FeedbackService.sendFeedback(
+        feedbackType: _feedbackType,
+        rating: _rating,
+        feedbackText: feedbackText,
+        userEmail: userEmail,
+      );
+    }
+
+    // If direct sending was successful
+    if (result != null && result['success'] == true) {
+      setState(() {
+        _isSubmitting = false;
+      });
+
+      if (mounted) {
+        // Clear form
+        _feedbackController.clear();
+        _emailController.clear();
+        setState(() {
+          _rating = 5;
+          _feedbackType = 'Suggestion';
+        });
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result['message'] ?? 'Feedback sent successfully!',
+              style: GoogleFonts.inter(),
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+
+        // Close screen after a delay
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            Navigator.pop(context);
+          }
+        });
+      }
+      return;
+    }
+
+    // If direct sending failed or not configured, fall back to email client
+    setState(() {
+      _isSubmitting = false;
+    });
+
     final subject = 'Finzo Feedback - $_feedbackType (Rating: $_rating/5)';
     final body =
         'Feedback Type: $_feedbackType\n'
         'Rating: $_rating/5\n'
-        'Email: $email\n\n'
+        'Email: ${userEmail ?? 'No email provided'}\n\n'
         'Feedback:\n$feedbackText';
 
-    // Open email client with pre-filled feedback
+    // Try to open email client with pre-filled feedback
     final emailUri = Uri.parse(
-      'mailto:support@finzo.app?subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
+      'mailto:fynux.bussiness@gmail.com?subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
     );
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Submit Feedback',
-          style: GoogleFonts.inter(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: Text(
-          'Your feedback will open in your email app. Please send the email to submit your feedback.',
-          style: GoogleFonts.inter(color: AppColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.inter(color: AppColors.textMuted),
+    try {
+      // Try to launch email directly
+      if (await canLaunchUrl(emailUri)) {
+        final launched = await launchUrl(
+          emailUri,
+          mode: LaunchMode.externalApplication,
+        );
+
+        if (launched) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Email app opened. Please send the email to submit your feedback.',
+                  style: GoogleFonts.inter(),
+                ),
+                backgroundColor: AppColors.surface,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+          return;
+        }
+      }
+    } catch (e) {
+      print('Error launching email: $e');
+    }
+
+    // Fallback: Use share functionality to copy email content
+    final shareText =
+        'To: fynux.bussiness@gmail.com\n'
+        'Subject: $subject\n\n'
+        '$body';
+
+    try {
+      await Share.share(shareText, subject: subject);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Feedback shared. Please send it to fynux.bussiness@gmail.com',
+              style: GoogleFonts.inter(),
             ),
+            backgroundColor: AppColors.surface,
+            duration: const Duration(seconds: 4),
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                if (await canLaunchUrl(emailUri)) {
-                  await launchUrl(emailUri);
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Thank you for your feedback!',
-                        style: GoogleFonts.inter(),
-                      ),
-                      backgroundColor: AppColors.surface,
-                    ),
-                  );
-                } else {
-                  throw 'Could not launch email';
-                }
-              } catch (e) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Could not open email. Please contact support@finzo.app',
-                      style: GoogleFonts.inter(),
-                    ),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
-              }
-            },
-            child: Text(
-              'Open Email',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        // Last resort: Show email content in a dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Text(
+              'Email Content',
               style: GoogleFonts.inter(
-                color: AppColors.primary,
+                color: AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'To: fynux.bussiness@gmail.com',
+                    style: GoogleFonts.inter(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Subject: $subject',
+                    style: GoogleFonts.inter(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    body,
+                    style: GoogleFonts.inter(color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Please copy this content and send it via your email app.',
+                    style: GoogleFonts.inter(
+                      color: AppColors.textMuted,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Close',
+                  style: GoogleFonts.inter(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
+      }
+    }
   }
 }

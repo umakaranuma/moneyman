@@ -74,6 +74,9 @@ dependencies:
   
   # Share functionality
   share_plus: ^10.1.2
+  
+  # HTTP client for API calls
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:
