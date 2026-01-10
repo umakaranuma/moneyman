@@ -65,6 +65,9 @@ dependencies:
   # Local notifications for scheduled reminders
   flutter_local_notifications: ^17.2.2
   timezone: ^0.9.4
+  
+  # Package info for version number
+  package_info_plus: ^8.0.0
 
 dev_dependencies:
   flutter_test:

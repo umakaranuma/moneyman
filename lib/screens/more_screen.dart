@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../core/router/app_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -192,24 +193,32 @@ class MoreScreen extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.2),
-                width: 1,
-              ),
-            ),
-            child: Text(
-              'v1.0.0',
-              style: GoogleFonts.inter(
-                color: AppColors.primary,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snapshot) {
+              final version = snapshot.hasData 
+                  ? 'v${snapshot.data!.version}' 
+                  : 'v1.0.0';
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  version,
+                  style: GoogleFonts.inter(
+                    color: AppColors.primary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
