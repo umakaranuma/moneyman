@@ -86,11 +86,28 @@ class CategoryService {
           .toList();
       
       // Return saved categories, or defaults if parsing failed
-      return categories.isNotEmpty 
-          ? categories
-          : (isIncome 
-              ? DefaultCategories.incomeCategories
-              : DefaultCategories.expenseCategories);
+      // Always return a mutable copy
+      if (categories.isNotEmpty) {
+        return categories.map((cat) => Category(
+          id: cat.id,
+          name: cat.name,
+          emoji: cat.emoji,
+          subcategories: List<String>.from(cat.subcategories),
+          isIncome: cat.isIncome,
+        )).toList();
+      } else {
+        // Return mutable copy of defaults
+        final defaults = isIncome 
+            ? DefaultCategories.incomeCategories
+            : DefaultCategories.expenseCategories;
+        return defaults.map((cat) => Category(
+          id: cat.id,
+          name: cat.name,
+          emoji: cat.emoji,
+          subcategories: List<String>.from(cat.subcategories),
+          isIncome: cat.isIncome,
+        )).toList();
+      }
     } catch (e) {
       print('Error getting categories: $e');
       // Return defaults on error

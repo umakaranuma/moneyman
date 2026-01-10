@@ -6,6 +6,7 @@ import '../../screens/add_edit_transaction_screen.dart';
 import '../../screens/notes_screen.dart';
 import '../../screens/add_edit_note_screen.dart';
 import '../../screens/categories_screen.dart';
+import '../../screens/subcategories_screen.dart';
 import '../../screens/sms_transactions_screen.dart';
 import '../../screens/todos_screen.dart';
 import '../../screens/add_edit_todo_screen.dart';
@@ -19,6 +20,7 @@ import '../../screens/help_screen.dart';
 import '../../models/transaction.dart';
 import '../../models/note.dart';
 import '../../models/todo.dart';
+import '../../models/category.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -187,6 +189,36 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: CategoriesScreen(isExpense: isExpense),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.05, 0),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
+          );
+        },
+      ),
+      // Subcategories route
+      GoRoute(
+        path: '/subcategories',
+        name: 'subcategories',
+        pageBuilder: (context, state) {
+          final args = state.extra as Map<String, dynamic>;
+          final category = args['category'] as Category;
+          final categoryIndex = args['categoryIndex'] as int;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: SubcategoriesScreen(
+              category: category,
+              categoryIndex: categoryIndex,
+            ),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
                   return FadeTransition(
@@ -542,6 +574,16 @@ extension GoRouterExtension on BuildContext {
 
   void goToCategories({bool isExpense = true}) {
     GoRouter.of(this).pushNamed('categories', extra: isExpense);
+  }
+
+  void goToSubcategories(Category category, int categoryIndex) {
+    GoRouter.of(this).pushNamed(
+      'subcategories',
+      extra: {
+        'category': category,
+        'categoryIndex': categoryIndex,
+      },
+    );
   }
 
   void goToSmsTransactions() {

@@ -85,7 +85,13 @@ class DefaultCategories {
       id: 'household',
       name: 'Household',
       emoji: '🪑',
-      subcategories: ['Appliances', 'Furniture', 'Kitchen', 'Toiletries', 'Chandlery'],
+      subcategories: [
+        'Appliances',
+        'Furniture',
+        'Kitchen',
+        'Toiletries',
+        'Chandlery',
+      ],
     ),
     Category(
       id: 'apparel',
@@ -109,7 +115,13 @@ class DefaultCategories {
       id: 'education',
       name: 'Education',
       emoji: '📒',
-      subcategories: ['Schooling', 'Textbooks', 'School supplies', 'Academy', 'notebook'],
+      subcategories: [
+        'Schooling',
+        'Textbooks',
+        'School supplies',
+        'Academy',
+        'notebook',
+      ],
     ),
     Category(
       id: 'gift',
@@ -133,23 +145,13 @@ class DefaultCategories {
       id: 'other_expense',
       name: 'Other',
       emoji: '📋',
-      subcategories: [
-        'Miscellaneous',
-        'Uncategorized',
-        'Other Expense',
-      ],
+      subcategories: ['Miscellaneous', 'Uncategorized', 'Other Expense'],
     ),
     Category(
       id: 'bike',
       name: 'Bike',
       emoji: '🏍️',
       subcategories: ['potrol', 'service', 'oil', 'other'],
-    ),
-    Category(
-      id: 'cricket',
-      name: 'Cricket',
-      emoji: '🏏',
-      subcategories: ['Enter fee', 'beverages'],
     ),
   ];
 
@@ -213,12 +215,7 @@ class DefaultCategories {
       id: 'other_income',
       name: 'Other',
       emoji: '💵',
-      subcategories: [
-        'Refund',
-        'Reward',
-        'Cashback',
-        'Miscellaneous',
-      ],
+      subcategories: ['Refund', 'Reward', 'Cashback', 'Miscellaneous'],
       isIncome: true,
     ),
   ];
@@ -234,10 +231,12 @@ class DefaultCategories {
     }
   }
 
-  static String getCategoryEmoji(String? categoryName, {bool isIncome = false}) {
+  static String getCategoryEmoji(
+    String? categoryName, {
+    bool isIncome = false,
+  }) {
     if (categoryName == null) return '';
     final category = getCategoryByName(categoryName, isIncome: isIncome);
     return category?.emoji ?? '';
   }
 }
-
