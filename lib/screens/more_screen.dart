@@ -229,30 +229,31 @@ class MoreScreen extends StatelessWidget {
   }
 
   Widget _buildProBanner(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.goToUpgrade(),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF2D1B69), Color(0xFF1A1040)],
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF2D1B69), Color(0xFF1A1040)],
         ),
-        child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: InkWell(
+          onTap: () => context.goToUpgrade(),
           borderRadius: BorderRadius.circular(24),
           child: Stack(
             children: [
@@ -362,38 +363,35 @@ class MoreScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          GestureDetector(
-                            onTap: () => context.goToUpgrade(),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 10,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    AppColors.secondary,
-                                    AppColors.primary,
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.secondary.withValues(
-                                      alpha: 0.4,
-                                    ),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  AppColors.secondary,
+                                  AppColors.primary,
                                 ],
                               ),
-                              child: Text(
-                                'GET PRO',
-                                style: GoogleFonts.inter(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.secondary.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
                                 ),
+                              ],
+                            ),
+                            child: Text(
+                              'GET PRO',
+                              style: GoogleFonts.inter(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
