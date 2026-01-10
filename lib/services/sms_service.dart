@@ -178,6 +178,11 @@ class SmsService {
   }) {
     final upperBody = body.toUpperCase();
     
+    // First, check if this is a promotional/offer message and skip it
+    if (_isPromotionalMessage(upperBody)) {
+      return null;
+    }
+    
     // Determine if credit or debit
     final isCredit = _isCredit(upperBody);
     final isDebit = _isDebit(upperBody);
@@ -210,35 +215,159 @@ class SmsService {
     );
   }
 
+  static bool _isPromotionalMessage(String body) {
+    // Promotional message indicators
+    final promotionalKeywords = [
+      'ENJOY',
+      'OFFER',
+      'PROMOTION',
+      'INSTALLMENT',
+      'INSTALLMENTS',
+      'UPTO',
+      'UP TO',
+      'TILL',
+      'UNTIL',
+      'VALID',
+      'VALID UNTIL',
+      'VALID TILL',
+      'DISCOUNT',
+      'SPECIAL OFFER',
+      'CASHBACK OFFER',
+      'PERCENTAGE',
+      '% OFF',
+      'MONTHS',
+      'YEARS',
+      'CREDIT CARD',
+      'DEBIT CARD',
+      'APPLY NOW',
+      'CALL NOW',
+      'VISIT',
+      'AVAILABLE',
+      'LIMITED TIME',
+      'EXCLUSIVE',
+      'DEAL',
+      'SALE',
+    ];
+    
+    // Check for promotional keywords
+    final hasPromotionalKeyword = promotionalKeywords.any(
+      (keyword) => body.contains(keyword),
+    );
+    
+    // Check for percentage patterns (like "0%", "10% off")
+    final hasPercentage = RegExp(r'\d+%\s*(?:OFF|DISCOUNT|INSTALLMENT)?', caseSensitive: false).hasMatch(body);
+    
+    // Check for time-based validity patterns (like "till Feb 2026", "until 2026")
+    final hasValidityPeriod = RegExp(r'(?:TILL|UNTIL|VALID|TILL|UPTO)\s+\w+\s+\d{4}', caseSensitive: false).hasMatch(body);
+    
+    // Check if "credit" appears in "credit card" context (not as a transaction)
+    final hasCreditCardContext = RegExp(r'CREDIT\s+CARD|CARD\s+CREDIT', caseSensitive: false).hasMatch(body);
+    
+    // Check if message lacks actual transaction indicators
+    final hasTransactionIndicators = body.contains('CREDITED TO') ||
+        body.contains('DEBITED FROM') ||
+        body.contains('BALANCE') ||
+        body.contains('ACCOUNT') ||
+        body.contains('A/C') ||
+        body.contains('TRANSACTION') ||
+        body.contains('REF NO') ||
+        body.contains('TXN');
+    
+    // If it has promotional keywords but lacks transaction indicators, it's promotional
+    if ((hasPromotionalKeyword || hasPercentage || hasValidityPeriod || hasCreditCardContext) && 
+        !hasTransactionIndicators) {
+      return true;
+    }
+    
+    // Additional check: if "credit" appears but only in "credit card" context without transaction keywords
+    if (hasCreditCardContext && !hasTransactionIndicators) {
+      return true;
+    }
+    
+    return false;
+  }
+
   static bool _isCredit(String body) {
+    // More specific credit keywords that indicate actual transactions
     final creditKeywords = [
+      'CREDITED TO',
       'CREDITED',
-      'CREDIT',
-      'RECEIVED',
-      'DEPOSITED',
-      'ADDED',
-      'CR',
+      'CREDIT OF',
+      'CREDIT FOR',
+      'RECEIVED IN',
+      'RECEIVED TO',
+      'DEPOSITED TO',
+      'DEPOSITED IN',
+      'ADDED TO',
+      'CR.',
       'REFUND',
-      'CASHBACK',
       'REVERSED',
     ];
-    return creditKeywords.any((keyword) => body.contains(keyword));
+    
+    // Check for credit keywords
+    final hasCreditKeyword = creditKeywords.any((keyword) => body.contains(keyword));
+    
+    // Also check for standalone "CREDIT" but only if it's part of a transaction pattern
+    if (!hasCreditKeyword && body.contains('CREDIT')) {
+      // Check if it's in a transaction context (not "credit card")
+      if (body.contains('CREDIT CARD') || body.contains('CARD CREDIT')) {
+        return false; // It's about credit card, not a credit transaction
+      }
+      // Check if it's followed by transaction-related words
+      if (body.contains('CREDIT') && 
+          (body.contains('BALANCE') || 
+           body.contains('ACCOUNT') || 
+           body.contains('A/C') ||
+           body.contains('AMOUNT'))) {
+        return true;
+      }
+    }
+    
+    return hasCreditKeyword;
   }
 
   static bool _isDebit(String body) {
+    // More specific debit keywords that indicate actual transactions
     final debitKeywords = [
+      'DEBITED FROM',
       'DEBITED',
-      'DEBIT',
+      'DEBIT OF',
+      'DEBIT FOR',
+      'WITHDRAWN FROM',
       'WITHDRAWN',
       'PURCHASE',
-      'PAID',
-      'PAYMENT',
-      'TRANSFERRED',
-      'DR',
+      'PAID TO',
+      'PAID FOR',
+      'PAYMENT TO',
+      'PAYMENT FOR',
+      'TRANSFERRED TO',
+      'TRANSFERRED FROM',
+      'DR.',
       'SPENT',
+      'DEDUCTED FROM',
       'DEDUCTED',
     ];
-    return debitKeywords.any((keyword) => body.contains(keyword));
+    
+    // Check for debit keywords
+    final hasDebitKeyword = debitKeywords.any((keyword) => body.contains(keyword));
+    
+    // Also check for standalone "DEBIT" but only if it's part of a transaction pattern
+    if (!hasDebitKeyword && body.contains('DEBIT')) {
+      // Check if it's in a transaction context (not "debit card")
+      if (body.contains('DEBIT CARD') || body.contains('CARD DEBIT')) {
+        return false; // It's about debit card, not a debit transaction
+      }
+      // Check if it's followed by transaction-related words
+      if (body.contains('DEBIT') && 
+          (body.contains('BALANCE') || 
+           body.contains('ACCOUNT') || 
+           body.contains('A/C') ||
+           body.contains('AMOUNT'))) {
+        return true;
+      }
+    }
+    
+    return hasDebitKeyword;
   }
 
   static double? _extractAmount(String body) {
