@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../core/router/app_router.dart';
+import '../utils/app_utils.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -129,94 +132,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         },
                       ),
                     ),
-                    _buildDivider(),
-                    _buildSettingTile(
-                      icon: Icons.storage_rounded,
-                      title: 'Storage Usage',
-                      subtitle: '12.5 MB used',
-                      onTap: () {},
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // Pro Features
-                _buildSectionHeader('Pro Features'),
-                const SizedBox(height: 12),
-                _buildSettingsCard(
-                  children: [
-                    _buildProFeatureTile(
-                      icon: Icons.workspace_premium_rounded,
-                      title: 'Remove All Ads',
-                      description: 'Enjoy an ad-free experience',
-                    ),
-                    _buildDivider(),
-                    _buildProFeatureTile(
-                      icon: Icons.cloud_sync_rounded,
-                      title: 'Cloud Sync',
-                      description: 'Sync your data across all devices',
-                    ),
-                    _buildDivider(),
-                    _buildProFeatureTile(
-                      icon: Icons.backup_rounded,
-                      title: 'Auto Backup',
-                      description: 'Automatic daily backups to cloud',
-                    ),
-                    _buildDivider(),
-                    _buildProFeatureTile(
-                      icon: Icons.analytics_rounded,
-                      title: 'Advanced Analytics',
-                      description: 'Detailed reports and insights',
-                    ),
-                    _buildDivider(),
-                    _buildProFeatureTile(
-                      icon: Icons.category_rounded,
-                      title: 'Unlimited Categories',
-                      description: 'Create unlimited custom categories',
-                    ),
-                    _buildDivider(),
-                    _buildProFeatureTile(
-                      icon: Icons.receipt_long_rounded,
-                      title: 'Receipt Scanner',
-                      description: 'Scan and attach receipts to transactions',
-                    ),
-                    _buildDivider(),
-                    _buildProFeatureTile(
-                      icon: Icons.account_tree_rounded,
-                      title: 'Multiple Accounts',
-                      description: 'Manage unlimited bank accounts',
-                    ),
-                    _buildDivider(),
-                    _buildProFeatureTile(
-                      icon: Icons.pie_chart_rounded,
-                      title: 'Budget Planning',
-                      description: 'Advanced budget tracking and planning',
-                    ),
-                    _buildDivider(),
-                    _buildProFeatureTile(
-                      icon: Icons.file_download_rounded,
-                      title: 'Export Reports',
-                      description: 'Export data to PDF, Excel, CSV',
-                    ),
-                    _buildDivider(),
-                    _buildProFeatureTile(
-                      icon: Icons.security_rounded,
-                      title: 'Biometric Lock',
-                      description: 'Secure your app with fingerprint/Face ID',
-                    ),
-                    _buildDivider(),
-                    _buildProFeatureTile(
-                      icon: Icons.palette_rounded,
-                      title: 'Custom Themes',
-                      description: 'Choose from multiple beautiful themes',
-                    ),
-                    _buildDivider(),
-                    _buildProFeatureTile(
-                      icon: Icons.support_agent_rounded,
-                      title: 'Priority Support',
-                      description: 'Get priority customer support',
-                    ),
                   ],
                 ),
 
@@ -227,22 +142,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 12),
                 _buildSettingsCard(
                   children: [
-                    _buildSettingTile(
-                      icon: Icons.info_rounded,
-                      title: 'App Version',
-                      subtitle: '1.0.0',
+                    FutureBuilder<PackageInfo>(
+                      future: PackageInfo.fromPlatform(),
+                      builder: (context, snapshot) {
+                        final version = snapshot.hasData
+                            ? 'v${snapshot.data!.version}'
+                            : 'v1.0.0';
+                        return _buildSettingTile(
+                          icon: Icons.info_rounded,
+                          title: 'App Version',
+                          subtitle: version,
+                        );
+                      },
                     ),
                     _buildDivider(),
                     _buildSettingTile(
                       icon: Icons.description_rounded,
                       title: 'Terms of Service',
-                      onTap: () {},
+                      onTap: () => context.goToTermsOfService(),
                     ),
                     _buildDivider(),
                     _buildSettingTile(
                       icon: Icons.privacy_tip_rounded,
                       title: 'Privacy Policy',
-                      onTap: () {},
+                      onTap: () => context.goToPrivacyPolicy(),
+                    ),
+                    _buildDivider(),
+                    _buildSettingTile(
+                      icon: Icons.star_rounded,
+                      title: 'Rate Us',
+                      subtitle: 'Love the app? Rate us 5 stars!',
+                      onTap: () => AppUtils.rateApp(),
+                    ),
+                    _buildDivider(),
+                    _buildSettingTile(
+                      icon: Icons.share_rounded,
+                      title: 'Share App',
+                      subtitle: 'Share with friends and family',
+                      onTap: () => AppUtils.shareApp(),
+                    ),
+                    _buildDivider(),
+                    _buildSettingTile(
+                      icon: Icons.chat_bubble_rounded,
+                      title: 'Feedback',
+                      subtitle: 'Help us improve the app',
+                      onTap: () => context.goToFeedback(),
                     ),
                   ],
                 ),
@@ -355,91 +299,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       thickness: 1,
       color: AppColors.surfaceVariant,
       indent: 60,
-    );
-  }
-
-  Widget _buildProFeatureTile({
-    required IconData icon,
-    required String title,
-    required String description,
-  }) {
-    return InkWell(
-      onTap: () {
-        // Navigate to upgrade screen
-        Navigator.pushNamed(context, '/upgrade');
-      },
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.primary, AppColors.primaryLight],
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        title,
-                        style: GoogleFonts.inter(
-                          color: AppColors.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [AppColors.secondary, AppColors.primary],
-                          ),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'PRO',
-                          style: GoogleFonts.inter(
-                            color: Colors.white,
-                            fontSize: 8,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: GoogleFonts.inter(
-                      color: AppColors.textMuted,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.textMuted,
-              size: 20,
-            ),
-          ],
-        ),
-      ),
     );
   }
 

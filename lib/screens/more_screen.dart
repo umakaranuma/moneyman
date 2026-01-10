@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../core/router/app_router.dart';
+import '../utils/app_utils.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class MoreScreen extends StatelessWidget {
@@ -490,7 +491,7 @@ class MoreScreen extends StatelessWidget {
             title: 'Rate Us',
             subtitle: 'Love the app? Rate us 5 stars!',
             gradient: [AppColors.primary, AppColors.secondary],
-            onTap: () {},
+            onTap: () => AppUtils.rateApp(),
           ),
           const SizedBox(height: 12),
           _buildAboutItem(
@@ -501,7 +502,7 @@ class MoreScreen extends StatelessWidget {
               AppColors.transfer,
               AppColors.transfer.withValues(alpha: 0.7),
             ],
-            onTap: () {},
+            onTap: () => AppUtils.shareApp(),
           ),
           const SizedBox(height: 12),
           _buildAboutItem(
@@ -509,7 +510,15 @@ class MoreScreen extends StatelessWidget {
             title: 'Privacy Policy',
             subtitle: 'Learn how we protect your data',
             gradient: [AppColors.primary, AppColors.primaryLight],
-            onTap: () {},
+            onTap: () => context.goToPrivacyPolicy(),
+          ),
+          const SizedBox(height: 12),
+          _buildAboutItem(
+            icon: Icons.description_rounded,
+            title: 'Terms of Service',
+            subtitle: 'Read our terms and conditions',
+            gradient: [AppColors.secondary, AppColors.secondaryLight],
+            onTap: () => context.goToTermsOfService(),
           ),
         ],
       ),

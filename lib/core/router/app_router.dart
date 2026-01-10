@@ -18,6 +18,8 @@ import '../../screens/backup_screen.dart';
 import '../../screens/feedback_screen.dart';
 import '../../screens/help_screen.dart';
 import '../../screens/upgrade_screen.dart';
+import '../../screens/privacy_policy_screen.dart';
+import '../../screens/terms_of_service_screen.dart';
 import '../../models/transaction.dart';
 import '../../models/note.dart';
 import '../../models/todo.dart';
@@ -567,6 +569,62 @@ class AppRouter {
           );
         },
       ),
+
+      // Privacy Policy route
+      GoRoute(
+        path: '/privacy-policy',
+        name: 'privacyPolicy',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const PrivacyPolicyScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
+          );
+        },
+      ),
+
+      // Terms of Service route
+      GoRoute(
+        path: '/terms-of-service',
+        name: 'termsOfService',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const TermsOfServiceScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
+          );
+        },
+      ),
     ],
   );
 }
@@ -664,5 +722,13 @@ extension GoRouterExtension on BuildContext {
 
   void goToUpgrade() {
     GoRouter.of(this).pushNamed('upgrade');
+  }
+
+  void goToPrivacyPolicy() {
+    GoRouter.of(this).pushNamed('privacyPolicy');
+  }
+
+  void goToTermsOfService() {
+    GoRouter.of(this).pushNamed('termsOfService');
   }
 }

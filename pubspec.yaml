@@ -68,6 +68,12 @@ dependencies:
   
   # Package info for version number
   package_info_plus: ^8.0.0
+  
+  # URL launcher for opening links
+  url_launcher: ^6.3.1
+  
+  # Share functionality
+  share_plus: ^10.1.2
 
 dev_dependencies:
   flutter_test:
