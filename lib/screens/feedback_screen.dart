@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 
 class FeedbackScreen extends StatefulWidget {
@@ -186,7 +187,10 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                       _buildDivider(),
                       _buildTypeOption('Bug Report', Icons.bug_report_rounded),
                       _buildDivider(),
-                      _buildTypeOption('Feature Request', Icons.add_circle_rounded),
+                      _buildTypeOption(
+                        'Feature Request',
+                        Icons.add_circle_rounded,
+                      ),
                       _buildDivider(),
                       _buildTypeOption('Other', Icons.more_horiz_rounded),
                     ],
@@ -354,11 +358,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 color: isSelected ? null : AppColors.surfaceVariant,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 20,
-              ),
+              child: Icon(icon, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -406,37 +406,89 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       return;
     }
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(
-              'Submitting...',
-              style: GoogleFonts.inter(color: AppColors.textPrimary),
-            ),
-          ],
-        ),
-      ),
+    // Prepare feedback email
+    final email = _emailController.text.trim().isNotEmpty
+        ? _emailController.text.trim()
+        : 'No email provided';
+    final feedbackText = _feedbackController.text.trim();
+    final subject = 'Finzo Feedback - $_feedbackType (Rating: $_rating/5)';
+    final body =
+        'Feedback Type: $_feedbackType\n'
+        'Rating: $_rating/5\n'
+        'Email: $email\n\n'
+        'Feedback:\n$feedbackText';
+
+    // Open email client with pre-filled feedback
+    final emailUri = Uri.parse(
+      'mailto:support@finzo.app?subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
     );
 
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pop(context);
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Thank you for your feedback!',
-            style: GoogleFonts.inter(),
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Submit Feedback',
+          style: GoogleFonts.inter(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
           ),
         ),
-      );
-    });
+        content: Text(
+          'Your feedback will open in your email app. Please send the email to submit your feedback.',
+          style: GoogleFonts.inter(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: AppColors.textMuted),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                if (await canLaunchUrl(emailUri)) {
+                  await launchUrl(emailUri);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Thank you for your feedback!',
+                        style: GoogleFonts.inter(),
+                      ),
+                      backgroundColor: AppColors.surface,
+                    ),
+                  );
+                } else {
+                  throw 'Could not launch email';
+                }
+              } catch (e) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Could not open email. Please contact support@finzo.app',
+                      style: GoogleFonts.inter(),
+                    ),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
+            },
+            child: Text(
+              'Open Email',
+              style: GoogleFonts.inter(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
-

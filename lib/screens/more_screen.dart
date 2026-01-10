@@ -19,8 +19,8 @@ class MoreScreen extends StatelessWidget {
             // Header
             SliverToBoxAdapter(child: _buildHeader()),
 
-            // Pro Banner
-            SliverToBoxAdapter(child: _buildProBanner(context)),
+            // Pro Banner - Commented out as Pro features are not implemented yet
+            // SliverToBoxAdapter(child: _buildProBanner(context)),
 
             // Settings Grid
             SliverPadding(
@@ -77,13 +77,14 @@ class MoreScreen extends StatelessWidget {
                     gradient: [AppColors.primary, AppColors.primaryLight],
                     onTap: () => context.goToCategories(),
                   ),
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.lock_rounded,
-                    label: 'Security',
-                    gradient: [AppColors.secondary, AppColors.primary],
-                    onTap: () => context.goToSecurity(),
-                  ),
+                  // Security - Commented out as not implemented yet
+                  // _buildSettingsItem(
+                  //   context,
+                  //   icon: Icons.lock_rounded,
+                  //   label: 'Security',
+                  //   gradient: [AppColors.secondary, AppColors.primary],
+                  //   onTap: () => context.goToSecurity(),
+                  // ),
                   _buildSettingsItem(
                     context,
                     icon: Icons.calculate_rounded,
@@ -94,26 +95,28 @@ class MoreScreen extends StatelessWidget {
                     ],
                     onTap: () => context.goToCalculator(),
                   ),
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.devices_rounded,
-                    label: 'Sync',
-                    gradient: [
-                      const Color(0xFFE879F9),
-                      const Color(0xFFD946EF),
-                    ],
-                    onTap: () => context.goToSync(),
-                  ),
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.cloud_upload_rounded,
-                    label: 'Backup',
-                    gradient: [
-                      const Color(0xFF48DBFB),
-                      const Color(0xFF0ABDE3),
-                    ],
-                    onTap: () => context.goToBackup(),
-                  ),
+                  // Sync - Commented out as not implemented yet
+                  // _buildSettingsItem(
+                  //   context,
+                  //   icon: Icons.devices_rounded,
+                  //   label: 'Sync',
+                  //   gradient: [
+                  //     const Color(0xFFE879F9),
+                  //     const Color(0xFFD946EF),
+                  //   ],
+                  //   onTap: () => context.goToSync(),
+                  // ),
+                  // Backup - Commented out as not implemented yet
+                  // _buildSettingsItem(
+                  //   context,
+                  //   icon: Icons.cloud_upload_rounded,
+                  //   label: 'Backup',
+                  //   gradient: [
+                  //     const Color(0xFF48DBFB),
+                  //     const Color(0xFF0ABDE3),
+                  //   ],
+                  //   onTap: () => context.goToBackup(),
+                  // ),
                   _buildSettingsItem(
                     context,
                     icon: Icons.chat_bubble_rounded,
@@ -229,6 +232,8 @@ class MoreScreen extends StatelessWidget {
     );
   }
 
+  // Pro Banner - Commented out as Pro features are not implemented yet
+  /*
   Widget _buildProBanner(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -408,6 +413,7 @@ class MoreScreen extends StatelessWidget {
       ),
     );
   }
+  */
 
   Widget _buildSettingsItem(
     BuildContext context, {

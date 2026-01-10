@@ -15,7 +15,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = true;
-  bool _autoBackupEnabled = false;
+  // bool _autoBackupEnabled = false; // Commented out as Auto Backup is not implemented yet
   String _currency = 'USD';
   String _language = 'English';
 
@@ -114,28 +114,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 const SizedBox(height: 24),
 
-                // Data & Storage
-                _buildSectionHeader('Data & Storage'),
-                const SizedBox(height: 12),
-                _buildSettingsCard(
-                  children: [
-                    _buildSettingTile(
-                      icon: Icons.backup_rounded,
-                      title: 'Auto Backup',
-                      subtitle: 'Automatically backup your data',
-                      trailing: Switch(
-                        value: _autoBackupEnabled,
-                        onChanged: (value) {
-                          setState(() {
-                            _autoBackupEnabled = value;
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+                // Data & Storage - Commented out as Auto Backup is not implemented yet
+                // _buildSectionHeader('Data & Storage'),
+                // const SizedBox(height: 12),
+                // _buildSettingsCard(
+                //   children: [
+                //     _buildSettingTile(
+                //       icon: Icons.backup_rounded,
+                //       title: 'Auto Backup',
+                //       subtitle: 'Automatically backup your data',
+                //       trailing: Switch(
+                //         value: _autoBackupEnabled,
+                //         onChanged: (value) {
+                //           setState(() {
+                //             _autoBackupEnabled = value;
+                //           });
+                //         },
+                //       ),
+                //     ),
+                //   ],
+                // ),
 
-                const SizedBox(height: 24),
+                // const SizedBox(height: 24),
 
                 // About
                 _buildSectionHeader('About'),
