@@ -95,6 +95,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     }
   }
 
+  void _toggleCategoryType() {
+    setState(() {
+      _isExpense = !_isExpense;
+    });
+    _loadCategories();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,12 +131,40 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             ),
           ),
         ),
-        title: Text(
-          _isExpense ? 'Expenses Category' : 'Income Category',
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
+        title: GestureDetector(
+          onTap: _toggleCategoryType,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.surfaceVariant, width: 1),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _isExpense ? Icons.trending_down : Icons.trending_up,
+                  color: _isExpense ? AppColors.expense : AppColors.income,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _isExpense ? 'Expenses' : 'Income',
+                  style: TextStyle(
+                    color: _isExpense ? AppColors.expense : AppColors.income,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.swap_horiz_rounded,
+                  color: AppColors.textMuted,
+                  size: 16,
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
