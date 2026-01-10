@@ -1,9 +1,11 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/transaction.dart';
+import '../models/category.dart';
 
 class CategoryService {
-  static const String _incomeCategoriesBoxName = 'income_categories';
-  static const String _expenseCategoriesBoxName = 'expense_categories';
+  static const String _incomeCategoriesBoxName = 'income_categories_full';
+  static const String _expenseCategoriesBoxName = 'expense_categories_full';
+  static const String _categoriesListKey = 'categories_list';
   static bool _initialized = false;
 
   static Future<void> init() async {
@@ -15,32 +17,32 @@ class CategoryService {
     _initialized = true;
     
     // Initialize with default categories if empty
-    if (getIncomeCategories().isEmpty) {
-      _initializeDefaultCategories();
-    }
+    await _initializeDefaultCategories();
   }
 
-  static void _initializeDefaultCategories() {
+  static Future<void> _initializeDefaultCategories() async {
     try {
       final incomeBox = Hive.box(_incomeCategoriesBoxName);
       final expenseBox = Hive.box(_expenseCategoriesBoxName);
       
-      final defaultIncome = ['Salary', 'Business', 'Investment', 'Gift', 'Other'];
-      final defaultExpense = ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Health', 'Education', 'Other'];
-      
-      for (var category in defaultIncome) {
-        if (!incomeBox.containsKey(category)) {
-          incomeBox.put(category, true);
-        }
+      // Initialize expense categories only if not already saved
+      if (!expenseBox.containsKey(_categoriesListKey)) {
+        final expenseCategories = DefaultCategories.expenseCategories
+            .map((cat) => cat.toJson())
+            .toList();
+        await expenseBox.put(_categoriesListKey, expenseCategories);
       }
       
-      for (var category in defaultExpense) {
-        if (!expenseBox.containsKey(category)) {
-          expenseBox.put(category, true);
-        }
+      // Initialize income categories only if not already saved
+      if (!incomeBox.containsKey(_categoriesListKey)) {
+        final incomeCategories = DefaultCategories.incomeCategories
+            .map((cat) => cat.toJson())
+            .toList();
+        await incomeBox.put(_categoriesListKey, incomeCategories);
       }
     } catch (e) {
       // Handle error silently
+      print('Error initializing default categories: $e');
     }
   }
 
@@ -58,9 +60,65 @@ class CategoryService {
     return Hive.box(_expenseCategoriesBoxName);
   }
 
+  // Get all categories with subcategories
+  static List<Category> getCategories({required bool isIncome}) {
+    try {
+      final box = isIncome ? _incomeBox : _expenseBox;
+      final categoriesJson = box.get(_categoriesListKey) as List<dynamic>?;
+      
+      if (categoriesJson == null || categoriesJson.isEmpty) {
+        // Return defaults if not found
+        return isIncome 
+            ? DefaultCategories.incomeCategories
+            : DefaultCategories.expenseCategories;
+      }
+      
+      final categories = categoriesJson
+          .map((json) {
+            try {
+              return Category.fromJson(json as Map<String, dynamic>);
+            } catch (e) {
+              print('Error parsing category: $e');
+              return null;
+            }
+          })
+          .whereType<Category>()
+          .toList();
+      
+      // Return saved categories, or defaults if parsing failed
+      return categories.isNotEmpty 
+          ? categories
+          : (isIncome 
+              ? DefaultCategories.incomeCategories
+              : DefaultCategories.expenseCategories);
+    } catch (e) {
+      print('Error getting categories: $e');
+      // Return defaults on error
+      return isIncome 
+          ? DefaultCategories.incomeCategories
+          : DefaultCategories.expenseCategories;
+    }
+  }
+
+  // Save all categories
+  static Future<void> saveCategories(List<Category> categories, {required bool isIncome}) async {
+    try {
+      final box = isIncome ? _incomeBox : _expenseBox;
+      final categoriesJson = categories.map((cat) => cat.toJson()).toList();
+      await box.put(_categoriesListKey, categoriesJson);
+      print('Categories saved successfully: ${categories.length} categories');
+    } catch (e) {
+      print('Error saving categories: $e');
+      // Re-throw to let caller know save failed
+      rethrow;
+    }
+  }
+
+  // Legacy methods for backward compatibility
   static List<String> getIncomeCategories() {
     try {
-      return _incomeBox.keys.cast<String>().toList()..sort();
+      final categories = getCategories(isIncome: true);
+      return categories.map((c) => c.name).toList()..sort();
     } catch (e) {
       return [];
     }
@@ -68,30 +126,27 @@ class CategoryService {
 
   static List<String> getExpenseCategories() {
     try {
-      return _expenseBox.keys.cast<String>().toList()..sort();
+      final categories = getCategories(isIncome: false);
+      return categories.map((c) => c.name).toList()..sort();
     } catch (e) {
       return [];
     }
   }
 
   static Future<void> addIncomeCategory(String category) async {
-    if (category.trim().isNotEmpty) {
-      await _incomeBox.put(category.trim(), true);
-    }
+    // Legacy method - not used for full category management
   }
 
   static Future<void> addExpenseCategory(String category) async {
-    if (category.trim().isNotEmpty) {
-      await _expenseBox.put(category.trim(), true);
-    }
+    // Legacy method - not used for full category management
   }
 
   static Future<void> deleteIncomeCategory(String category) async {
-    await _incomeBox.delete(category);
+    // Legacy method - not used for full category management
   }
 
   static Future<void> deleteExpenseCategory(String category) async {
-    await _expenseBox.delete(category);
+    // Legacy method - not used for full category management
   }
 
   static List<String> getCategoriesForType(TransactionType type) {
@@ -106,6 +161,36 @@ class CategoryService {
       }
     } catch (e) {
       return [];
+    }
+  }
+
+  // Get category by name from saved categories
+  static Category? getCategoryByName(String name, {bool isIncome = false}) {
+    try {
+      final categories = getCategories(isIncome: isIncome);
+      try {
+        return categories.firstWhere(
+          (c) => c.name.toLowerCase() == name.toLowerCase(),
+        );
+      } catch (e) {
+        // Category not found in saved categories, try defaults
+        return DefaultCategories.getCategoryByName(name, isIncome: isIncome);
+      }
+    } catch (e) {
+      // Fallback to default categories on error
+      return DefaultCategories.getCategoryByName(name, isIncome: isIncome);
+    }
+  }
+
+  // Get category emoji from saved categories
+  static String getCategoryEmoji(String? categoryName, {bool isIncome = false}) {
+    if (categoryName == null) return '';
+    try {
+      final category = getCategoryByName(categoryName, isIncome: isIncome);
+      return category?.emoji ?? '';
+    } catch (e) {
+      // Fallback to default categories
+      return DefaultCategories.getCategoryEmoji(categoryName, isIncome: isIncome);
     }
   }
 }

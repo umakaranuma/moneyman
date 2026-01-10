@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../models/transaction.dart';
 import '../models/category.dart';
 import '../services/storage_service.dart';
+import '../services/category_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/helpers.dart';
 
@@ -61,12 +62,12 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       _fromAccount = widget.transaction!.fromAccount;
       _toAccount = widget.transaction!.toAccount;
 
-      // Validate category - if it's not in default categories, reset it
+      // Validate category - if it's not in saved categories, reset it
       // This handles SMS transactions with categories like "Bank Transaction" or "Transfer"
       if (_selectedCategory != null &&
           _transactionType != TransactionType.transfer) {
         final isValidCategory =
-            DefaultCategories.getCategoryByName(
+            CategoryService.getCategoryByName(
               _selectedCategory!,
               isIncome: _transactionType == TransactionType.income,
             ) !=
@@ -205,9 +206,10 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   }
 
   void _showCategoryPicker() {
-    final categories = _transactionType == TransactionType.income
-        ? DefaultCategories.incomeCategories
-        : DefaultCategories.expenseCategories;
+    // Load categories from storage (includes custom categories)
+    final categories = CategoryService.getCategories(
+      isIncome: _transactionType == TransactionType.income,
+    );
 
     showModalBottomSheet(
       context: context,
@@ -470,9 +472,9 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
 
   void _showSubcategoryPicker(Category category) {
     // Find parent category index for color
-    final categories = _transactionType == TransactionType.income
-        ? DefaultCategories.incomeCategories
-        : DefaultCategories.expenseCategories;
+    final categories = CategoryService.getCategories(
+      isIncome: _transactionType == TransactionType.income,
+    );
     final categoryIndex = categories.indexWhere((c) => c.id == category.id);
     final categoryColor = AppColors
         .categoryColors[categoryIndex % AppColors.categoryColors.length];
@@ -1194,7 +1196,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
             // Also validate if current category is valid for new type
             if (_selectedCategory != null && type != TransactionType.transfer) {
               final isValidCategory =
-                  DefaultCategories.getCategoryByName(
+                  CategoryService.getCategoryByName(
                     _selectedCategory!,
                     isIncome: type == TransactionType.income,
                   ) !=
@@ -1455,7 +1457,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                             ? _activeColor
                             : (showError ? AppColors.expense : null),
                         emoji: _selectedCategory != null
-                            ? DefaultCategories.getCategoryEmoji(
+                            ? CategoryService.getCategoryEmoji(
                                 _selectedCategory,
                                 isIncome:
                                     _transactionType == TransactionType.income,
