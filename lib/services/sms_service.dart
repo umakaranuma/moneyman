@@ -62,7 +62,7 @@ class SmsService {
   static const String _smsBoxName = 'sms_transactions';
   static const String _installDateKey = 'app_install_date';
   static const String _settingsBoxName = 'app_settings';
-  
+
   static final SmsQuery _query = SmsQuery();
 
   // Bank sender patterns - add more as needed
@@ -88,7 +88,7 @@ class SmsService {
   static Future<void> init() async {
     await Hive.openBox(_smsBoxName);
     await Hive.openBox(_settingsBoxName);
-    
+
     // Store install date if not already stored
     final settingsBox = Hive.box(_settingsBoxName);
     if (settingsBox.get(_installDateKey) == null) {
@@ -110,7 +110,7 @@ class SmsService {
     if (status.isGranted) {
       return true;
     }
-    
+
     final result = await Permission.sms.request();
     return result.isGranted;
   }
@@ -119,34 +119,37 @@ class SmsService {
     return await Permission.sms.isGranted;
   }
 
-  static Future<List<ParsedSmsTransaction>> fetchAndParseSmsMessages({bool fetchAll = false}) async {
+  static Future<List<ParsedSmsTransaction>> fetchAndParseSmsMessages({
+    bool fetchAll = false,
+  }) async {
     final hasPermission = await requestSmsPermission();
     if (!hasPermission) {
       return [];
     }
 
     final installDate = getInstallDate();
-    
+
     // Fetch all inbox messages
-    final messages = await _query.querySms(
-      kinds: [SmsQueryKind.inbox],
-    );
+    final messages = await _query.querySms(kinds: [SmsQueryKind.inbox]);
 
     final List<ParsedSmsTransaction> transactions = [];
 
     for (final message in messages) {
       // Filter by date - only get messages from install month onwards (unless fetchAll is true)
-      if (!fetchAll && message.date != null && message.date!.isBefore(
-        DateTime(installDate.year, installDate.month, 1)
-      )) {
+      if (!fetchAll &&
+          message.date != null &&
+          message.date!.isBefore(
+            DateTime(installDate.year, installDate.month, 1),
+          )) {
         continue;
       }
 
       // Check if sender is a bank
       final sender = message.sender?.toUpperCase() ?? '';
       final isBankMessage = _bankSenders.any(
-        (bank) => sender.contains(bank) || 
-                  (message.body?.toUpperCase().contains(bank) ?? false)
+        (bank) =>
+            sender.contains(bank) ||
+            (message.body?.toUpperCase().contains(bank) ?? false),
       );
 
       if (!isBankMessage) continue;
@@ -177,16 +180,16 @@ class SmsService {
     required DateTime date,
   }) {
     final upperBody = body.toUpperCase();
-    
+
     // First, check if this is a promotional/offer message and skip it
     if (_isPromotionalMessage(upperBody)) {
       return null;
     }
-    
+
     // Determine if credit or debit
     final isCredit = _isCredit(upperBody);
     final isDebit = _isDebit(upperBody);
-    
+
     if (!isCredit && !isDebit) return null;
 
     // Extract amount
@@ -195,10 +198,10 @@ class SmsService {
 
     // Extract account number
     final accountNumber = _extractAccountNumber(body);
-    
+
     // Extract balance
     final balance = _extractBalance(body);
-    
+
     // Determine bank name
     final bankName = _determineBankName(sender, body);
 
@@ -248,23 +251,33 @@ class SmsService {
       'DEAL',
       'SALE',
     ];
-    
+
     // Check for promotional keywords
     final hasPromotionalKeyword = promotionalKeywords.any(
       (keyword) => body.contains(keyword),
     );
-    
+
     // Check for percentage patterns (like "0%", "10% off")
-    final hasPercentage = RegExp(r'\d+%\s*(?:OFF|DISCOUNT|INSTALLMENT)?', caseSensitive: false).hasMatch(body);
-    
+    final hasPercentage = RegExp(
+      r'\d+%\s*(?:OFF|DISCOUNT|INSTALLMENT)?',
+      caseSensitive: false,
+    ).hasMatch(body);
+
     // Check for time-based validity patterns (like "till Feb 2026", "until 2026")
-    final hasValidityPeriod = RegExp(r'(?:TILL|UNTIL|VALID|TILL|UPTO)\s+\w+\s+\d{4}', caseSensitive: false).hasMatch(body);
-    
+    final hasValidityPeriod = RegExp(
+      r'(?:TILL|UNTIL|VALID|TILL|UPTO)\s+\w+\s+\d{4}',
+      caseSensitive: false,
+    ).hasMatch(body);
+
     // Check if "credit" appears in "credit card" context (not as a transaction)
-    final hasCreditCardContext = RegExp(r'CREDIT\s+CARD|CARD\s+CREDIT', caseSensitive: false).hasMatch(body);
-    
+    final hasCreditCardContext = RegExp(
+      r'CREDIT\s+CARD|CARD\s+CREDIT',
+      caseSensitive: false,
+    ).hasMatch(body);
+
     // Check if message lacks actual transaction indicators
-    final hasTransactionIndicators = body.contains('CREDITED TO') ||
+    final hasTransactionIndicators =
+        body.contains('CREDITED TO') ||
         body.contains('DEBITED FROM') ||
         body.contains('BALANCE') ||
         body.contains('ACCOUNT') ||
@@ -272,18 +285,21 @@ class SmsService {
         body.contains('TRANSACTION') ||
         body.contains('REF NO') ||
         body.contains('TXN');
-    
+
     // If it has promotional keywords but lacks transaction indicators, it's promotional
-    if ((hasPromotionalKeyword || hasPercentage || hasValidityPeriod || hasCreditCardContext) && 
+    if ((hasPromotionalKeyword ||
+            hasPercentage ||
+            hasValidityPeriod ||
+            hasCreditCardContext) &&
         !hasTransactionIndicators) {
       return true;
     }
-    
+
     // Additional check: if "credit" appears but only in "credit card" context without transaction keywords
     if (hasCreditCardContext && !hasTransactionIndicators) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -303,10 +319,12 @@ class SmsService {
       'REFUND',
       'REVERSED',
     ];
-    
+
     // Check for credit keywords
-    final hasCreditKeyword = creditKeywords.any((keyword) => body.contains(keyword));
-    
+    final hasCreditKeyword = creditKeywords.any(
+      (keyword) => body.contains(keyword),
+    );
+
     // Also check for standalone "CREDIT" but only if it's part of a transaction pattern
     if (!hasCreditKeyword && body.contains('CREDIT')) {
       // Check if it's in a transaction context (not "credit card")
@@ -314,15 +332,15 @@ class SmsService {
         return false; // It's about credit card, not a credit transaction
       }
       // Check if it's followed by transaction-related words
-      if (body.contains('CREDIT') && 
-          (body.contains('BALANCE') || 
-           body.contains('ACCOUNT') || 
-           body.contains('A/C') ||
-           body.contains('AMOUNT'))) {
+      if (body.contains('CREDIT') &&
+          (body.contains('BALANCE') ||
+              body.contains('ACCOUNT') ||
+              body.contains('A/C') ||
+              body.contains('AMOUNT'))) {
         return true;
       }
     }
-    
+
     return hasCreditKeyword;
   }
 
@@ -347,10 +365,12 @@ class SmsService {
       'DEDUCTED FROM',
       'DEDUCTED',
     ];
-    
+
     // Check for debit keywords
-    final hasDebitKeyword = debitKeywords.any((keyword) => body.contains(keyword));
-    
+    final hasDebitKeyword = debitKeywords.any(
+      (keyword) => body.contains(keyword),
+    );
+
     // Also check for standalone "DEBIT" but only if it's part of a transaction pattern
     if (!hasDebitKeyword && body.contains('DEBIT')) {
       // Check if it's in a transaction context (not "debit card")
@@ -358,15 +378,15 @@ class SmsService {
         return false; // It's about debit card, not a debit transaction
       }
       // Check if it's followed by transaction-related words
-      if (body.contains('DEBIT') && 
-          (body.contains('BALANCE') || 
-           body.contains('ACCOUNT') || 
-           body.contains('A/C') ||
-           body.contains('AMOUNT'))) {
+      if (body.contains('DEBIT') &&
+          (body.contains('BALANCE') ||
+              body.contains('ACCOUNT') ||
+              body.contains('A/C') ||
+              body.contains('AMOUNT'))) {
         return true;
       }
     }
-    
+
     return hasDebitKeyword;
   }
 
@@ -374,8 +394,14 @@ class SmsService {
     // Common patterns for amounts in bank messages
     // Rs.1,234.56 or Rs 1234.56 or LKR 1,234.56 or INR 1234 or $1234.56
     final patterns = [
-      RegExp(r'(?:RS\.?|LKR|INR|USD|\$)\s*([0-9,]+\.?[0-9]*)', caseSensitive: false),
-      RegExp(r'(?:AMOUNT|AMT)[:\s]*(?:RS\.?|LKR|INR|USD|\$)?\s*([0-9,]+\.?[0-9]*)', caseSensitive: false),
+      RegExp(
+        r'(?:RS\.?|LKR|INR|USD|\$)\s*([0-9,]+\.?[0-9]*)',
+        caseSensitive: false,
+      ),
+      RegExp(
+        r'(?:AMOUNT|AMT)[:\s]*(?:RS\.?|LKR|INR|USD|\$)?\s*([0-9,]+\.?[0-9]*)',
+        caseSensitive: false,
+      ),
       RegExp(r'([0-9,]+\.?[0-9]*)\s*(?:RS\.?|LKR|INR)', caseSensitive: false),
     ];
 
@@ -412,7 +438,10 @@ class SmsService {
 
   static String? _extractBalance(String body) {
     final patterns = [
-      RegExp(r'(?:BAL|BALANCE|AVAIL|AVL)[:\s]*(?:RS\.?|LKR|INR|USD|\$)?\s*([0-9,]+\.?[0-9]*)', caseSensitive: false),
+      RegExp(
+        r'(?:BAL|BALANCE|AVAIL|AVL)[:\s]*(?:RS\.?|LKR|INR|USD|\$)?\s*([0-9,]+\.?[0-9]*)',
+        caseSensitive: false,
+      ),
     ];
 
     for (final pattern in patterns) {
@@ -426,12 +455,13 @@ class SmsService {
 
   static String _determineBankName(String sender, String body) {
     final combined = '$sender $body'.toUpperCase();
-    
+
     if (combined.contains('BOC') || combined.contains('BANK OF CEYLON')) {
       return 'Bank of Ceylon';
     } else if (combined.contains('HNB') || combined.contains('HATTON')) {
       return 'HNB';
-    } else if (combined.contains('COMBANK') || combined.contains('COMMERCIAL')) {
+    } else if (combined.contains('COMBANK') ||
+        combined.contains('COMMERCIAL')) {
       return 'Commercial Bank';
     } else if (combined.contains('SAMPATH')) {
       return 'Sampath Bank';
@@ -443,7 +473,8 @@ class SmsService {
       return 'DFCC Bank';
     } else if (combined.contains('PEOPLES') || combined.contains("PEOPLE'S")) {
       return "People's Bank";
-    } else if (combined.contains('NSB') || combined.contains('NATIONAL SAVINGS')) {
+    } else if (combined.contains('NSB') ||
+        combined.contains('NATIONAL SAVINGS')) {
       return 'NSB';
     } else if (combined.contains('HDFC')) {
       return 'HDFC';
@@ -460,7 +491,7 @@ class SmsService {
     } else if (combined.contains('PHONEPE')) {
       return 'PhonePe';
     }
-    
+
     return sender;
   }
 
@@ -479,4 +510,3 @@ class SmsService {
     await _smsBox.clear();
   }
 }
-
