@@ -60,16 +60,16 @@ class MoreScreen extends StatelessWidget {
                     ],
                     onTap: () => context.goToSmsTransactions(),
                   ),
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.settings_rounded,
-                    label: 'Settings',
-                    gradient: [
-                      AppColors.textMuted,
-                      AppColors.textMuted.withValues(alpha: 0.7),
-                    ],
-                    onTap: () => context.goToSettings(),
-                  ),
+                  // _buildSettingsItem(
+                  //   context,
+                  //   icon: Icons.settings_rounded,
+                  //   label: 'Settings',
+                  //   gradient: [
+                  //     AppColors.textMuted,
+                  //     AppColors.textMuted.withValues(alpha: 0.7),
+                  //   ],
+                  //   onTap: () => context.goToSettings(),
+                  // ),
                   _buildSettingsItem(
                     context,
                     icon: Icons.category_rounded,
