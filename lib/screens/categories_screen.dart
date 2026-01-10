@@ -221,7 +221,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           ListTile(
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
-              vertical: 4,
+              // vertical: 4,
             ),
             leading: Row(
               mainAxisSize: MainAxisSize.min,
@@ -246,26 +246,26 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 const SizedBox(width: 10),
                 // Category color indicator + emoji
                 Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        categoryColor,
-                        categoryColor.withValues(alpha: 0.7),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: categoryColor.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
+                  // width: 44,
+                  // height: 44,
+                  // decoration: BoxDecoration(
+                  //   gradient: LinearGradient(
+                  //     colors: [
+                  //       categoryColor,
+                  //       categoryColor.withValues(alpha: 0.7),
+                  //     ],
+                  //     begin: Alignment.topLeft,
+                  //     end: Alignment.bottomRight,
+                  //   ),
+                  //   borderRadius: BorderRadius.circular(12),
+                  //   boxShadow: [
+                  //     BoxShadow(
+                  //       color: categoryColor.withValues(alpha: 0.3),
+                  //       blurRadius: 8,
+                  //       offset: const Offset(0, 2),
+                  //     ),
+                  //   ],
+                  // ),
                   child: Center(
                     child: category.emoji.isNotEmpty
                         ? Text(
@@ -295,14 +295,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 ),
                 if (hasSubcategories)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: categoryColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    // padding: const EdgeInsets.symmetric(
+                    //   horizontal: 8,
+                    //   vertical: 3,
+                    // ),
+                    // decoration: BoxDecoration(
+                    //   color: categoryColor.withValues(alpha: 0.15),
+                    //   borderRadius: BorderRadius.circular(8),
+                    // ),
                     child: Text(
                       '($subcategoryCount)',
                       style: TextStyle(
@@ -321,11 +321,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 GestureDetector(
                   onTap: () => _showEditCategoryDialog(category),
                   child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceVariant.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    // padding: const EdgeInsets.all(8),
+                    // decoration: BoxDecoration(
+                    //   color: AppColors.surfaceVariant.withValues(alpha: 0.5),
+                    //   borderRadius: BorderRadius.circular(8),
+                    // ),
                     child: const Icon(
                       Icons.edit_rounded,
                       color: AppColors.textSecondary,
