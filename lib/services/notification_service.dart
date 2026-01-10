@@ -251,7 +251,7 @@ class NotificationService {
   }
 
   /// Schedule default notifications:
-  /// - 10:30 AM daily (Sri Lankan time): Morning todo list reminder
+  /// - 06:00 AM daily (Sri Lankan time): Morning todo list reminder
   /// - 09:00 PM daily (Sri Lankan time): Evening expenses and todo completion reminder
   static Future<void> scheduleDefaultNotifications() async {
     try {
@@ -270,20 +270,20 @@ class NotificationService {
     }
   }
 
-  /// Schedule daily notification at 10:30 AM (morning, Sri Lankan time) for todo list planning
+  /// Schedule daily notification at 06:00 AM (morning, Sri Lankan time) for todo list planning
   static Future<void> scheduleMorningTodoReminder() async {
     try {
       final sriLankanLocation = tz.getLocation('Asia/Colombo');
       final now = tz.TZDateTime.now(sriLankanLocation);
 
-      // Schedule for 10:30 AM Sri Lankan time
+      // Schedule for 06:00 AM Sri Lankan time
       var scheduledDate = tz.TZDateTime(
         sriLankanLocation,
         now.year,
         now.month,
         now.day,
-        10, // 10 AM
-        30, // 30 minutes
+        6, // 6 AM
+        0, // 0 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -305,6 +305,7 @@ class NotificationService {
         autoCancel: true,
         fullScreenIntent: false,
         category: AndroidNotificationCategory.reminder,
+        icon: '@mipmap/ic_launcher',
         largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
       );
 
@@ -389,8 +390,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        10, // 9 PM (21:00)
-        10, // 0 minutes
+        21, // 9 PM (21:00)
+        0, // 0 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -412,6 +413,7 @@ class NotificationService {
         autoCancel: true,
         fullScreenIntent: false,
         category: AndroidNotificationCategory.reminder,
+        icon: '@mipmap/ic_launcher',
         largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
       );
 
@@ -514,6 +516,7 @@ class NotificationService {
       channelShowBadge: true,
       ongoing: false,
       autoCancel: true,
+      icon: '@mipmap/ic_launcher',
       largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
     );
 
@@ -548,14 +551,14 @@ class NotificationService {
       final sriLankanLocation = tz.getLocation('Asia/Colombo');
       final now = tz.TZDateTime.now(sriLankanLocation);
 
-      // Check if it's past 10:30 AM today (morning notification)
+      // Check if it's past 06:00 AM today (morning notification)
       final morningTargetTime = tz.TZDateTime(
         sriLankanLocation,
         now.year,
         now.month,
         now.day,
-        10, // 10 AM
-        30, // 30 minutes
+        6, // 6 AM
+        0, // 0 minutes
       );
 
       // Check if it's past 09:00 PM today (evening notification)
@@ -564,8 +567,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        10, // 9 PM
-        10, // 0 minutes
+        21, // 9 PM
+        0, // 0 minutes
       );
 
       // If current time is within 5 minutes of notification time
@@ -604,6 +607,7 @@ class NotificationService {
                 showWhen: true,
                 enableVibration: true,
                 playSound: true,
+                icon: '@mipmap/ic_launcher',
                 largeIcon: const DrawableResourceAndroidBitmap(
                   '@mipmap/ic_launcher',
                 ),
@@ -628,6 +632,7 @@ class NotificationService {
                 showWhen: true,
                 enableVibration: true,
                 playSound: true,
+                icon: '@mipmap/ic_launcher',
                 largeIcon: const DrawableResourceAndroidBitmap(
                   '@mipmap/ic_launcher',
                 ),
