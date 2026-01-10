@@ -22,6 +22,7 @@ class Transaction {
   AccountType accountType; // Cash, Card, Bank, Other
   String? fromAccount; // For transfers
   String? toAccount; // For transfers
+  bool isBookmarked; // Bookmark flag
 
   Transaction({
     required this.id,
@@ -34,6 +35,7 @@ class Transaction {
     required this.accountType,
     this.fromAccount,
     this.toAccount,
+    this.isBookmarked = false,
   });
 
   // Helper getter for backward compatibility
@@ -51,6 +53,7 @@ class Transaction {
       'accountType': accountType.name,
       'fromAccount': fromAccount,
       'toAccount': toAccount,
+      'isBookmarked': isBookmarked,
     };
   }
 
@@ -76,6 +79,7 @@ class Transaction {
           : AccountType.cash,
       fromAccount: json['fromAccount'],
       toAccount: json['toAccount'],
+      isBookmarked: json['isBookmarked'] ?? false,
     );
   }
 }

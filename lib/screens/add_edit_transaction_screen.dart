@@ -43,10 +43,14 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   String? _toAccount;
   bool _categoryError = false;
   bool _hasAttemptedSave = false;
+  bool _isEditMode = false; // false for view mode, true for edit mode
 
   @override
   void initState() {
     super.initState();
+    // If viewing an existing transaction, start in view mode
+    // If creating new transaction, start in edit mode
+    _isEditMode = widget.transaction == null;
     if (widget.transaction != null) {
       _titleController = TextEditingController(text: widget.transaction!.title);
       _amountController = TextEditingController(
@@ -956,6 +960,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         toAccount: _transactionType == TransactionType.transfer
             ? _toAccount?.trim()
             : null,
+        isBookmarked: widget.transaction?.isBookmarked ?? false,
       );
 
       if (widget.transaction != null) {
@@ -965,9 +970,59 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       }
 
       // Verify the transaction was saved correctly
-      StorageService.getTransaction(transaction.id);
+      final savedTransaction = StorageService.getTransaction(transaction.id);
 
-      context.pop(true); // Return true to indicate transaction was saved
+      if (savedTransaction == null) {
+        // Transaction wasn't saved properly
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to save transaction'),
+              backgroundColor: AppColors.expense,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: AppColors.income,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  widget.transaction != null
+                      ? 'Transaction updated'
+                      : 'Transaction saved',
+                  style: GoogleFonts.inter(),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.surface,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // Return to previous screen with success indicator
+      // This will trigger refresh in home screen
+      if (mounted) {
+        context.pop(true); // Return true to indicate transaction was saved
+      }
     }
   }
 
@@ -1100,72 +1155,68 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           ),
         ),
         title: Text(
-          widget.transaction != null ? 'Edit Transaction' : 'New Transaction',
+          _isEditMode
+              ? (widget.transaction != null
+                    ? 'Edit Transaction'
+                    : 'New Transaction')
+              : (widget.transaction!.type == TransactionType.income
+                    ? 'Income'
+                    : widget.transaction!.type == TransactionType.expense
+                    ? 'Expense'
+                    : 'Transfer'),
           style: GoogleFonts.inter(
             color: AppColors.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
         ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.all(8),
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.download_rounded,
-              color: AppColors.textSecondary,
-              size: 20,
-            ),
-          ),
-        ],
+        actions: [],
       ),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            // Transaction Type Selector
-            _buildTypeSelector(),
+      body: _isEditMode
+          ? Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  // Transaction Type Selector
+                  _buildTypeSelector(),
 
-            Expanded(
-              child: Builder(
-                builder: (context) {
-                  final padding = _getResponsivePadding(context);
-                  return SingleChildScrollView(
-                    padding: EdgeInsets.all(padding),
-                    child: Column(
-                      children: [
-                        // Amount Card
-                        _buildAmountCard(),
-                        SizedBox(height: padding),
+                  Expanded(
+                    child: Builder(
+                      builder: (context) {
+                        final padding = _getResponsivePadding(context);
+                        return SingleChildScrollView(
+                          padding: EdgeInsets.all(padding),
+                          child: Column(
+                            children: [
+                              // Amount Card
+                              _buildAmountCard(),
+                              SizedBox(height: padding),
 
-                        // Details Card
-                        _buildDetailsCard(dateStr, timeStr),
-                        SizedBox(height: padding),
+                              // Details Card
+                              _buildDetailsCard(dateStr, timeStr),
+                              SizedBox(height: padding),
 
-                        // Transfer specific fields
-                        if (_transactionType == TransactionType.transfer)
-                          _buildTransferCard(),
+                              // Transfer specific fields
+                              if (_transactionType == TransactionType.transfer)
+                                _buildTransferCard(),
 
-                        // Description Card
-                        _buildDescriptionCard(),
-                        SizedBox(height: padding * 1.5),
+                              // Description Card
+                              _buildDescriptionCard(),
+                              SizedBox(height: padding * 1.5),
 
-                        // Save Buttons
-                        _buildSaveButtons(),
-                        SizedBox(height: padding * 2),
-                      ],
+                              // Save Buttons
+                              _buildSaveButtons(),
+                              SizedBox(height: padding * 2),
+                            ],
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
-      ),
+            )
+          : _buildViewMode(),
     );
   }
 
@@ -1210,32 +1261,35 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
 
     return Expanded(
       child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _transactionType = type;
-            _categoryError = false; // Clear error when type changes
-            // Reset category when type changes
-            // Also validate if current category is valid for new type
-            if (_selectedCategory != null && type != TransactionType.transfer) {
-              final isValidCategory =
-                  CategoryService.getCategoryByName(
-                    _selectedCategory!,
-                    isIncome: type == TransactionType.income,
-                  ) !=
-                  null;
+        onTap: _isEditMode
+            ? () {
+                setState(() {
+                  _transactionType = type;
+                  _categoryError = false; // Clear error when type changes
+                  // Reset category when type changes
+                  // Also validate if current category is valid for new type
+                  if (_selectedCategory != null &&
+                      type != TransactionType.transfer) {
+                    final isValidCategory =
+                        CategoryService.getCategoryByName(
+                          _selectedCategory!,
+                          isIncome: type == TransactionType.income,
+                        ) !=
+                        null;
 
-              if (!isValidCategory) {
-                // Category is not valid for new type, reset it
-                _selectedCategory = null;
-                _selectedSubcategory = null;
+                    if (!isValidCategory) {
+                      // Category is not valid for new type, reset it
+                      _selectedCategory = null;
+                      _selectedSubcategory = null;
+                    }
+                  } else {
+                    // Transfer type or no category - reset
+                    _selectedCategory = null;
+                    _selectedSubcategory = null;
+                  }
+                });
               }
-            } else {
-              // Transfer type or no category - reset
-              _selectedCategory = null;
-              _selectedSubcategory = null;
-            }
-          });
-        },
+            : null, // Disable tap in view mode
         child: Builder(
           builder: (context) {
             final padding = _getResponsivePadding(context);
@@ -1959,6 +2013,855 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         );
       },
     );
+  }
+
+  Widget _buildViewMode() {
+    if (widget.transaction == null) return const SizedBox.shrink();
+
+    final transaction = widget.transaction!;
+    final dateStr = DateFormat('MMM dd, yyyy').format(transaction.date);
+    final timeStr = DateFormat('h:mm a').format(transaction.date);
+    final emoji = CategoryService.getCategoryEmoji(
+      transaction.category,
+      isIncome: transaction.type == TransactionType.income,
+    );
+
+    return Column(
+      children: [
+        // Transaction Type Selector (tappable to edit)
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              _isEditMode = true;
+            });
+          },
+          child: Builder(
+            builder: (context) {
+              final padding = _getResponsivePadding(context);
+              return Container(
+                margin: EdgeInsets.all(padding * 0.8),
+                padding: EdgeInsets.all(padding * 0.2),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(padding * 0.8),
+                  border: Border.all(color: AppColors.surfaceVariant, width: 1),
+                ),
+                child: Row(
+                  children: [
+                    _buildTypeButton(
+                      'Income',
+                      TransactionType.income,
+                      _getTypeColor(TransactionType.income),
+                    ),
+                    _buildTypeButton(
+                      'Expense',
+                      TransactionType.expense,
+                      _getTypeColor(TransactionType.expense),
+                    ),
+                    _buildTypeButton(
+                      'Transfer',
+                      TransactionType.transfer,
+                      _getTypeColor(TransactionType.transfer),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+
+        Expanded(
+          child: Builder(
+            builder: (context) {
+              final padding = _getResponsivePadding(context);
+              return SingleChildScrollView(
+                padding: EdgeInsets.all(padding),
+                child: Column(
+                  children: [
+                    // Amount Card (read-only)
+                    _buildViewAmountCard(transaction),
+                    SizedBox(height: padding),
+
+                    // Details Card (read-only)
+                    _buildViewDetailsCard(transaction, dateStr, timeStr, emoji),
+                    SizedBox(height: padding),
+
+                    // Transfer specific fields
+                    if (transaction.type == TransactionType.transfer)
+                      _buildViewTransferCard(transaction),
+
+                    // Description Card (read-only)
+                    _buildViewDescriptionCard(transaction),
+                    SizedBox(height: padding * 1.5),
+
+                    // Action Buttons (Copy, Bookmark, Delete)
+                    _buildActionButtons(transaction),
+                    SizedBox(height: padding * 2),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildViewAmountCard(Transaction transaction) {
+    return Builder(
+      builder: (context) {
+        final padding = _getResponsivePadding(context);
+        final typeColor = _getTypeColor(transaction.type);
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _isEditMode = true;
+            });
+          },
+          child: Container(
+            padding: EdgeInsets.all(padding * 1.2),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  typeColor.withValues(alpha: 0.15),
+                  typeColor.withValues(alpha: 0.05),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(padding * 1.2),
+              border: Border.all(
+                color: typeColor.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              children: [
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: _getResponsiveSize(context, 16) + padding * 0.8,
+                        height: _getResponsiveSize(context, 16) + padding * 0.8,
+                        child: Container(
+                          padding: EdgeInsets.all(padding * 0.4),
+                          decoration: BoxDecoration(
+                            color: typeColor.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(padding * 0.5),
+                          ),
+                          child: Icon(
+                            transaction.type == TransactionType.income
+                                ? Icons.arrow_downward_rounded
+                                : transaction.type == TransactionType.expense
+                                ? Icons.arrow_upward_rounded
+                                : Icons.swap_horiz_rounded,
+                            color: typeColor,
+                            size: _getResponsiveSize(context, 16),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: padding * 0.4),
+                      Text(
+                        'Amount',
+                        style: GoogleFonts.inter(
+                          color: typeColor,
+                          fontSize: _getResponsiveFontSize(context, 13),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: padding * 0.8),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: padding * 1.0,
+                    vertical: padding * 0.8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(padding),
+                    border: Border.all(
+                      color: typeColor.withValues(alpha: 0.3),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Rs. ',
+                        style: GoogleFonts.inter(
+                          color: typeColor,
+                          fontSize: _getResponsiveFontSize(context, 20),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        _formatCurrency(transaction.amount),
+                        style: GoogleFonts.inter(
+                          color: typeColor,
+                          fontSize: _getResponsiveFontSize(context, 32),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildViewDetailsCard(
+    Transaction transaction,
+    String dateStr,
+    String timeStr,
+    String emoji,
+  ) {
+    return Builder(
+      builder: (context) {
+        final padding = _getResponsivePadding(context);
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(padding * 1.0),
+            border: Border.all(color: AppColors.surfaceVariant, width: 1),
+          ),
+          child: Column(
+            children: [
+              // Date & Time
+              _buildViewDetailRow(
+                icon: Icons.calendar_today_rounded,
+                label: 'Date',
+                value: '$dateStr  •  $timeStr',
+              ),
+              Container(
+                height: 1,
+                color: AppColors.surfaceVariant.withValues(alpha: 0.5),
+              ),
+
+              // Category (only show for Income and Expense, not for Transfer)
+              if (transaction.type != TransactionType.transfer) ...[
+                _buildViewDetailRow(
+                  icon: Icons.category_rounded,
+                  label: 'Category',
+                  value: transaction.category ?? 'N/A',
+                  emoji: emoji.isNotEmpty ? emoji : null,
+                ),
+                Container(
+                  height: 1,
+                  color: AppColors.surfaceVariant.withValues(alpha: 0.5),
+                ),
+              ],
+
+              // Account
+              _buildViewDetailRow(
+                icon: Icons.account_balance_wallet_rounded,
+                label: 'Account',
+                value: _getAccountLabel(transaction.accountType),
+              ),
+              Container(
+                height: 1,
+                color: AppColors.surfaceVariant.withValues(alpha: 0.5),
+              ),
+
+              // Note
+              _buildViewNoteRow(transaction),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildViewDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    String? emoji,
+    VoidCallback? onTap,
+  }) {
+    return Builder(
+      builder: (context) {
+        final padding = _getResponsivePadding(context);
+        final typeColor = widget.transaction != null
+            ? _getTypeColor(widget.transaction!.type)
+            : AppColors.primary;
+        return GestureDetector(
+          onTap:
+              onTap ??
+              () {
+                setState(() {
+                  _isEditMode = true;
+                });
+              },
+          child: Padding(
+            padding: EdgeInsets.all(padding),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: _getResponsiveSize(context, 16) + padding * 1.0,
+                  height: _getResponsiveSize(context, 16) + padding * 1.0,
+                  child: Container(
+                    padding: EdgeInsets.all(padding * 0.5),
+                    decoration: BoxDecoration(
+                      color: typeColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(padding * 0.5),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: typeColor,
+                      size: _getResponsiveSize(context, 16),
+                    ),
+                  ),
+                ),
+                SizedBox(width: padding * 0.875),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        label,
+                        style: GoogleFonts.inter(
+                          color: AppColors.textMuted,
+                          fontSize: _getResponsiveFontSize(context, 11),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          if (emoji != null && emoji.isNotEmpty) ...[
+                            Text(
+                              emoji,
+                              style: TextStyle(
+                                fontSize: _getResponsiveFontSize(context, 16),
+                              ),
+                            ),
+                            SizedBox(width: padding * 0.375),
+                          ],
+                          Expanded(
+                            child: Text(
+                              value,
+                              style: GoogleFonts.inter(
+                                color: AppColors.textPrimary,
+                                fontSize: _getResponsiveFontSize(context, 14),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildViewNoteRow(Transaction transaction) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _isEditMode = true;
+        });
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: _getTypeColor(transaction.type).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.note_rounded,
+                color: _getTypeColor(transaction.type),
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Note',
+                    style: GoogleFonts.inter(
+                      color: AppColors.textMuted,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.surfaceVariant,
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      transaction.note ?? 'No note',
+                      style: GoogleFonts.inter(
+                        color: transaction.note != null
+                            ? AppColors.textPrimary
+                            : AppColors.textMuted,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildViewTransferCard(Transaction transaction) {
+    return Builder(
+      builder: (context) {
+        final padding = _getResponsivePadding(context);
+        return Container(
+          margin: EdgeInsets.only(bottom: padding),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(padding * 1.0),
+            border: Border.all(color: AppColors.surfaceVariant, width: 1),
+          ),
+          child: Column(
+            children: [
+              _buildViewTransferField(
+                'From Account',
+                transaction.fromAccount ?? 'N/A',
+              ),
+              Container(
+                height: 1,
+                color: AppColors.surfaceVariant.withValues(alpha: 0.5),
+              ),
+              _buildViewTransferField(
+                'To Account',
+                transaction.toAccount ?? 'N/A',
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildViewTransferField(String label, String value) {
+    return Builder(
+      builder: (context) {
+        final padding = _getResponsivePadding(context);
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _isEditMode = true;
+            });
+          },
+          child: Padding(
+            padding: EdgeInsets.all(padding),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(padding * 0.6),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(padding * 0.6),
+                  ),
+                  child: Icon(
+                    label.startsWith('From')
+                        ? Icons.arrow_circle_up_rounded
+                        : Icons.arrow_circle_down_rounded,
+                    color: AppColors.secondary,
+                    size: _getResponsiveSize(context, 16),
+                  ),
+                ),
+                SizedBox(width: padding * 0.875),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: GoogleFonts.inter(
+                          color: AppColors.textMuted,
+                          fontSize: _getResponsiveFontSize(context, 11),
+                        ),
+                      ),
+                      SizedBox(height: padding * 0.3),
+                      Text(
+                        value,
+                        style: GoogleFonts.inter(
+                          color: AppColors.textPrimary,
+                          fontSize: _getResponsiveFontSize(context, 13),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildViewDescriptionCard(Transaction transaction) {
+    return Builder(
+      builder: (context) {
+        final padding = _getResponsivePadding(context);
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _isEditMode = true;
+            });
+          },
+          child: Container(
+            padding: EdgeInsets.all(padding),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(padding * 1.0),
+              border: Border.all(color: AppColors.surfaceVariant, width: 1),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(padding * 0.6),
+                  decoration: BoxDecoration(
+                    color: _getTypeColor(
+                      transaction.type,
+                    ).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(padding * 0.6),
+                  ),
+                  child: Icon(
+                    Icons.description_rounded,
+                    color: _getTypeColor(transaction.type),
+                    size: _getResponsiveSize(context, 16),
+                  ),
+                ),
+                SizedBox(width: padding * 0.875),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Description',
+                        style: GoogleFonts.inter(
+                          color: AppColors.textMuted,
+                          fontSize: _getResponsiveFontSize(context, 11),
+                        ),
+                      ),
+                      SizedBox(height: padding * 0.4),
+                      Text(
+                        transaction.title,
+                        style: GoogleFonts.inter(
+                          color: AppColors.textPrimary,
+                          fontSize: _getResponsiveFontSize(context, 13),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildActionButtons(Transaction transaction) {
+    return Builder(
+      builder: (context) {
+        final padding = _getResponsivePadding(context);
+        return Row(
+          children: [
+            // Delete Button
+            Expanded(
+              child: GestureDetector(
+                onTap: () => _showDeleteConfirmation(transaction),
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: padding * 1.1),
+                  decoration: BoxDecoration(
+                    color: AppColors.expense.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(padding * 1.0),
+                    border: Border.all(
+                      color: AppColors.expense.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.delete_outline_rounded,
+                        color: AppColors.expense,
+                        size: 24,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Delete',
+                        style: GoogleFonts.inter(
+                          color: AppColors.expense,
+                          fontSize: _getResponsiveFontSize(context, 12),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: padding * 0.75),
+            // Copy Button
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  final transactionText =
+                      '${transaction.title}\n'
+                      'Rs. ${_formatCurrency(transaction.amount)}\n'
+                      '${DateFormat('MMM dd, yyyy - hh:mm a').format(transaction.date)}\n'
+                      '${transaction.category ?? 'N/A'}';
+                  Clipboard.setData(ClipboardData(text: transactionText));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: AppColors.secondary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.check_rounded,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Transaction copied',
+                            style: GoogleFonts.inter(),
+                          ),
+                        ],
+                      ),
+                      backgroundColor: AppColors.surface,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: padding * 1.1),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(padding * 1.0),
+                    border: Border.all(
+                      color: AppColors.secondary.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.copy_rounded,
+                        color: AppColors.secondary,
+                        size: 24,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Copy',
+                        style: GoogleFonts.inter(
+                          color: AppColors.secondary,
+                          fontSize: _getResponsiveFontSize(context, 12),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: padding * 0.75),
+            // Bookmark Button
+            Expanded(
+              child: GestureDetector(
+                onTap: () async {
+                  final updatedTransaction = Transaction(
+                    id: transaction.id,
+                    title: transaction.title,
+                    amount: transaction.amount,
+                    type: transaction.type,
+                    date: transaction.date,
+                    category: transaction.category,
+                    note: transaction.note,
+                    accountType: transaction.accountType,
+                    fromAccount: transaction.fromAccount,
+                    toAccount: transaction.toAccount,
+                    isBookmarked: !transaction.isBookmarked,
+                  );
+                  await StorageService.updateTransaction(updatedTransaction);
+                  setState(() {
+                    widget.transaction!.isBookmarked =
+                        !transaction.isBookmarked;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: AppColors.income,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.check_rounded,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            transaction.isBookmarked
+                                ? 'Bookmark removed'
+                                : 'Transaction bookmarked',
+                            style: GoogleFonts.inter(),
+                          ),
+                        ],
+                      ),
+                      backgroundColor: AppColors.surface,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: padding * 1.1),
+                  decoration: BoxDecoration(
+                    color: transaction.isBookmarked
+                        ? AppColors.income.withValues(alpha: 0.15)
+                        : AppColors.income.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(padding * 1.0),
+                    border: Border.all(
+                      color: AppColors.income.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        transaction.isBookmarked
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_border_rounded,
+                        color: AppColors.income,
+                        size: 24,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Bookmark',
+                        style: GoogleFonts.inter(
+                          color: AppColors.income,
+                          fontSize: _getResponsiveFontSize(context, 12),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmation(Transaction transaction) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Delete Transaction',
+          style: GoogleFonts.inter(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to delete this transaction? This action cannot be undone.',
+          style: GoogleFonts.inter(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: AppColors.textMuted),
+            ),
+          ),
+          GestureDetector(
+            onTap: () async {
+              await StorageService.deleteTransaction(transaction.id);
+              Navigator.pop(context);
+              if (mounted) {
+                context.pop(true);
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.expense.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.expense.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                'Delete',
+                style: GoogleFonts.inter(
+                  color: AppColors.expense,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatCurrency(double amount) {
+    return NumberFormat('#,##0.00').format(amount);
   }
 
   Widget _buildSaveButtons() {
