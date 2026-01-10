@@ -148,10 +148,17 @@ class DefaultCategories {
       subcategories: ['Miscellaneous', 'Uncategorized', 'Other Expense'],
     ),
     Category(
-      id: 'bike',
-      name: 'Bike',
-      emoji: '🏍️',
-      subcategories: ['potrol', 'service', 'oil', 'other'],
+      id: 'vehicle',
+      name: 'Vehicle',
+      emoji: '🚗',
+      subcategories: [
+        'Fuel',
+        'Service',
+        'Maintenance',
+        'Insurance',
+        'Parking',
+        'Other',
+      ],
     ),
   ];
 

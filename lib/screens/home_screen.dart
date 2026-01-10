@@ -2096,7 +2096,7 @@ class _HomeScreenState extends State<HomeScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Category name (e.g., "Food snacks", "Bike petrol")
+                  // Category name (e.g., "Food snacks", "Vehicle Fuel")
                   Text(
                     transaction.category ?? 'Other',
                     style: GoogleFonts.inter(
