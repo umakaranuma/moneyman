@@ -763,7 +763,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _openSearchScreen() async {
-    final result = await Navigator.push<String?>(
+    await Navigator.push<void>(
       context,
       MaterialPageRoute(
         builder: (context) => _SearchScreen(
@@ -771,16 +771,6 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
     );
-
-    if (!mounted) return;
-
-    if (result != null) {
-      setState(() {
-        _searchQuery = result.trim();
-        _searchController.text = _searchQuery;
-        _refreshKey++;
-      });
-    }
   }
 
   void _showBookmarkedTransactions() {
@@ -2939,14 +2929,20 @@ class _SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<_SearchScreen> {
   late final TextEditingController _controller;
+  List<Transaction> _allTransactions = [];
+  List<Transaction> _filteredTransactions = [];
+  bool _isLoading = true;
+  String _query = '';
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialQuery);
+    _query = widget.initialQuery;
     _controller.addListener(() {
-      setState(() {});
+      _applyFilter(_controller.text);
     });
+    _loadTransactions();
   }
 
   @override
@@ -2955,8 +2951,56 @@ class _SearchScreenState extends State<_SearchScreen> {
     super.dispose();
   }
 
-  void _submit() {
-    Navigator.pop(context, _controller.text.trim());
+  Future<void> _loadTransactions() async {
+    final transactions = StorageService.getAllTransactions();
+    setState(() {
+      _allTransactions = transactions;
+      _isLoading = false;
+    });
+    _applyFilter(_controller.text);
+  }
+
+  void _applyFilter(String value) {
+    final query = value.trim().toLowerCase();
+    final filtered = query.isEmpty
+        ? List<Transaction>.from(_allTransactions)
+        : _allTransactions.where((t) {
+            return t.title.toLowerCase().contains(query) ||
+                (t.category?.toLowerCase().contains(query) ?? false) ||
+                (t.note?.toLowerCase().contains(query) ?? false);
+          }).toList();
+
+    setState(() {
+      _query = value.trim();
+      _filteredTransactions = filtered;
+    });
+  }
+
+  String _formatCurrency(double amount) {
+    final formatter = NumberFormat('#,##0.00', 'en_US');
+    return formatter.format(amount);
+  }
+
+  Color _getTypeColor(TransactionType type) {
+    switch (type) {
+      case TransactionType.income:
+        return AppColors.income;
+      case TransactionType.expense:
+        return AppColors.expense;
+      case TransactionType.transfer:
+        return AppColors.transfer;
+    }
+  }
+
+  IconData _getTypeIcon(TransactionType type) {
+    switch (type) {
+      case TransactionType.income:
+        return Icons.arrow_downward_rounded;
+      case TransactionType.expense:
+        return Icons.arrow_upward_rounded;
+      case TransactionType.transfer:
+        return Icons.swap_horiz_rounded;
+    }
   }
 
   @override
@@ -2970,7 +3014,6 @@ class _SearchScreenState extends State<_SearchScreen> {
           controller: _controller,
           autofocus: true,
           textInputAction: TextInputAction.search,
-          onSubmitted: (_) => _submit(),
           style: GoogleFonts.inter(color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: 'Search by title, category, or note...',
@@ -3004,11 +3047,71 @@ class _SearchScreenState extends State<_SearchScreen> {
           IconButton(
             icon: Icon(Icons.search_rounded, color: AppColors.primary),
             tooltip: 'Search',
-            onPressed: _submit,
+            onPressed: () => _applyFilter(_controller.text),
           ),
         ],
       ),
-      body: const SizedBox.shrink(),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _filteredTransactions.isEmpty
+          ? Center(
+              child: Text(
+                _query.isEmpty
+                    ? 'No transactions available'
+                    : 'No results found',
+                style: GoogleFonts.inter(color: AppColors.textMuted),
+              ),
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              itemCount: _filteredTransactions.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 6),
+              itemBuilder: (context, index) {
+                final transaction = _filteredTransactions[index];
+                final typeColor = _getTypeColor(transaction.type);
+                return ListTile(
+                  onTap: () async {
+                    final result =
+                        await context.goToEditTransaction<bool>(transaction);
+                    if (result == true) {
+                      await _loadTransactions();
+                    }
+                  },
+                  leading: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: typeColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(_getTypeIcon(transaction.type), color: typeColor),
+                  ),
+                  title: Text(
+                    transaction.title,
+                    style: GoogleFonts.inter(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  subtitle: Text(
+                    transaction.category ?? 'Other',
+                    style: GoogleFonts.inter(
+                      color: AppColors.textMuted,
+                      fontSize: 11,
+                    ),
+                  ),
+                  trailing: Text(
+                    'Rs. ${_formatCurrency(transaction.amount)}',
+                    style: GoogleFonts.inter(
+                      color: typeColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
