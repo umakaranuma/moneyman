@@ -23,6 +23,8 @@ class _StatsScreenState extends State<StatsScreen>
   DateTime _selectedMonth = DateTime.now();
   String _periodType = 'Monthly'; // Monthly, Weekly, Daily
   int _refreshKey = 0; // Key to force FutureBuilder refresh
+  Map<String, Map<String, double>> _cachedMonthlyData = {};
+  List<Transaction> _cachedTransactions = [];
 
   @override
   void initState() {
@@ -399,7 +401,10 @@ class _StatsScreenState extends State<StatsScreen>
         key: ValueKey(_refreshKey), // Force refresh when key changes
         future: _getMonthlyData(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          final hasCachedData = _cachedMonthlyData.isNotEmpty;
+          final isWaiting =
+              snapshot.connectionState == ConnectionState.waiting;
+          if (isWaiting && !snapshot.hasData && !hasCachedData) {
             return Scaffold(
               backgroundColor: AppColors.background,
               body: SafeArea(
@@ -411,7 +416,10 @@ class _StatsScreenState extends State<StatsScreen>
             );
           }
 
-          final monthlyData = snapshot.data ?? {};
+          if (snapshot.hasData) {
+            _cachedMonthlyData = snapshot.data ?? {};
+          }
+          final monthlyData = snapshot.data ?? _cachedMonthlyData;
 
           // Get current month data for balance display
           final currentMonthKey = DateFormat('MMM yyyy').format(_selectedMonth);
@@ -456,7 +464,10 @@ class _StatsScreenState extends State<StatsScreen>
       key: ValueKey(_refreshKey), // Force refresh when key changes
       future: _getFilteredTransactions(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        final hasCachedData = _cachedTransactions.isNotEmpty;
+        final isWaiting =
+            snapshot.connectionState == ConnectionState.waiting;
+        if (isWaiting && !snapshot.hasData && !hasCachedData) {
           return Scaffold(
             backgroundColor: AppColors.background,
             body: SafeArea(
@@ -468,7 +479,10 @@ class _StatsScreenState extends State<StatsScreen>
           );
         }
 
-        final transactions = snapshot.data ?? [];
+        if (snapshot.hasData) {
+          _cachedTransactions = snapshot.data ?? [];
+        }
+        final transactions = snapshot.data ?? _cachedTransactions;
 
         final income = transactions
             .where((t) => t.type == TransactionType.income)

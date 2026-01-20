@@ -101,7 +101,7 @@ class TermsOfServiceScreen extends StatelessWidget {
                 _buildSection(
                   'Contact Information',
                   'If you have any questions about these Terms of Service, please contact us at:\n\n'
-                      'Email: support@finzo.app\n'
+                      'Email: fynux.bussiness@gmail.com\n'
                       'Or through the Feedback section in the app.',
                 ),
                 const SizedBox(height: 24),

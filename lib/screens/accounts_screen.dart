@@ -17,6 +17,7 @@ class AccountsScreen extends StatefulWidget {
 class _AccountsScreenState extends State<AccountsScreen>
     with WidgetsBindingObserver {
   int _refreshKey = 0; // Key to force rebuild
+  List<Transaction> _cachedTransactions = [];
 
   @override
   void initState() {
@@ -68,7 +69,14 @@ class _AccountsScreenState extends State<AccountsScreen>
           key: ValueKey(_refreshKey), // Force refresh when key changes
           future: _getAllTransactions(),
           builder: (context, snapshot) {
-            final transactions = snapshot.data ?? [];
+            if (snapshot.hasData) {
+              _cachedTransactions = snapshot.data ?? [];
+            }
+            final hasCachedData = _cachedTransactions.isNotEmpty;
+            final isWaiting =
+                snapshot.connectionState == ConnectionState.waiting;
+            final transactions = snapshot.data ??
+                (isWaiting && hasCachedData ? _cachedTransactions : []);
             final balances = _calculateBalancesFromTransactions(transactions);
 
             return CustomScrollView(

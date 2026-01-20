@@ -23,6 +23,7 @@ class Transaction {
   String? fromAccount; // For transfers
   String? toAccount; // For transfers
   bool isBookmarked; // Bookmark flag
+  List<String> imagePaths; // Attachments
 
   Transaction({
     required this.id,
@@ -36,6 +37,7 @@ class Transaction {
     this.fromAccount,
     this.toAccount,
     this.isBookmarked = false,
+    this.imagePaths = const [],
   });
 
   // Helper getter for backward compatibility
@@ -54,10 +56,17 @@ class Transaction {
       'fromAccount': fromAccount,
       'toAccount': toAccount,
       'isBookmarked': isBookmarked,
+      'imagePaths': imagePaths,
     };
   }
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
+    final rawImagePaths = json['imagePaths'];
+    final imagePaths = rawImagePaths is List
+        ? rawImagePaths.map((e) => e.toString()).toList()
+        : (json['imagePath'] != null
+            ? [json['imagePath'].toString()]
+            : <String>[]);
     return Transaction(
       id: json['id'],
       title: json['title'],
@@ -80,6 +89,7 @@ class Transaction {
       fromAccount: json['fromAccount'],
       toAccount: json['toAccount'],
       isBookmarked: json['isBookmarked'] ?? false,
+      imagePaths: imagePaths,
     );
   }
 }

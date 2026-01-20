@@ -1,10 +1,14 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/transaction.dart';
 import '../models/category.dart';
 import '../services/storage_service.dart';
@@ -30,6 +34,7 @@ class AddEditTransactionScreen extends StatefulWidget {
 
 class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
+  final ImagePicker _imagePicker = ImagePicker();
   late TextEditingController _titleController;
   late TextEditingController _amountController;
   late TextEditingController _noteController;
@@ -41,6 +46,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   TimeOfDay _selectedTime = TimeOfDay.now();
   String? _fromAccount;
   String? _toAccount;
+  List<String> _imagePaths = [];
   bool _categoryError = false;
   bool _hasAttemptedSave = false;
   bool _isEditMode = false; // false for view mode, true for edit mode
@@ -66,6 +72,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       _selectedTime = TimeOfDay.fromDateTime(widget.transaction!.date);
       _fromAccount = widget.transaction!.fromAccount;
       _toAccount = widget.transaction!.toAccount;
+      _imagePaths = List<String>.from(widget.transaction!.imagePaths);
 
       // Validate category - if it's not in saved categories, reset it
       // This handles SMS transactions with categories like "Bank Transaction" or "Transfer"
@@ -93,6 +100,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       _amountController = TextEditingController();
       _noteController = TextEditingController();
       _transactionType = widget.initialType ?? TransactionType.expense;
+      _imagePaths = [];
     }
   }
 
@@ -143,6 +151,106 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
     // Reduced scaling for more compact UI (0.85 to 1.1 instead of 0.9 to 1.2)
     return baseSize *
         (scaleFactor < 0.85 ? 0.85 : (scaleFactor > 1.1 ? 1.1 : scaleFactor));
+  }
+
+  void _showImageSourceSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt_rounded),
+                title: Text('Take photo', style: GoogleFonts.inter()),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImageFromCamera();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_rounded),
+                title: Text('Choose from gallery', style: GoogleFonts.inter()),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImagesFromGallery();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    final XFile? image = await _imagePicker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 85,
+    );
+    if (image == null) return;
+
+    final savedPath = await _persistImage(image);
+    if (savedPath == null || !mounted) return;
+
+    setState(() {
+      _imagePaths.add(savedPath);
+    });
+  }
+
+  Future<void> _pickImagesFromGallery() async {
+    final images = await _imagePicker.pickMultiImage(imageQuality: 85);
+    if (images.isEmpty) return;
+
+    final savedPaths = <String>[];
+    for (final image in images) {
+      final savedPath = await _persistImage(image);
+      if (savedPath != null) {
+        savedPaths.add(savedPath);
+      }
+    }
+
+    if (!mounted || savedPaths.isEmpty) return;
+    setState(() {
+      _imagePaths.addAll(savedPaths);
+    });
+  }
+
+  String _getFileExtension(String path) {
+    final index = path.lastIndexOf('.');
+    if (index == -1) return '.jpg';
+    return path.substring(index);
+  }
+
+  Future<String?> _persistImage(XFile image) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final imagesDir = Directory('${directory.path}/transaction_images');
+      if (!await imagesDir.exists()) {
+        await imagesDir.create(recursive: true);
+      }
+
+      final extension = _getFileExtension(image.path);
+      final filename =
+          'txn_${DateTime.now().millisecondsSinceEpoch}_${Helpers.generateId()}$extension';
+      final newPath = '${imagesDir.path}/$filename';
+      final savedFile = await File(image.path).copy(newPath);
+      return savedFile.path;
+    } catch (_) {
+      if (!mounted) return null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to add image'),
+          backgroundColor: AppColors.expense,
+        ),
+      );
+      return null;
+    }
   }
 
   Future<void> _selectDate() async {
@@ -961,6 +1069,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
             ? _toAccount?.trim()
             : null,
         isBookmarked: widget.transaction?.isBookmarked ?? false,
+        imagePaths: List<String>.from(_imagePaths),
       );
 
       if (widget.transaction != null) {
@@ -1076,6 +1185,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         toAccount: _transactionType == TransactionType.transfer
             ? _toAccount?.trim()
             : null,
+        imagePaths: List<String>.from(_imagePaths),
       );
 
       StorageService.addTransaction(transaction);
@@ -1089,6 +1199,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         _selectedSubcategory = null;
         _fromAccount = null;
         _toAccount = null;
+        _imagePaths = [];
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1565,6 +1676,16 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
 
               // Note
               _buildNoteRow(),
+              if (_imagePaths.isNotEmpty) ...[
+                Container(
+                  height: 1,
+                  color: AppColors.surfaceVariant.withValues(alpha: 0.5),
+                ),
+                _buildAttachmentsRow(
+                  imagePaths: _imagePaths,
+                  editable: true,
+                ),
+              ],
             ],
           ),
         );
@@ -1762,6 +1883,129 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAttachmentsRow({
+    required List<String> imagePaths,
+    required bool editable,
+  }) {
+    if (imagePaths.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: _activeColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(Icons.image_rounded, color: _activeColor, size: 18),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Attachments',
+                  style: GoogleFonts.inter(
+                    color: AppColors.textMuted,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 70,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: imagePaths.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final path = imagePaths[index];
+                      return _buildAttachmentThumbnail(
+                        path,
+                        removable: editable,
+                        onRemove: () {
+                          setState(() {
+                            _imagePaths.removeAt(index);
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAttachmentThumbnail(
+    String path, {
+    required bool removable,
+    required VoidCallback onRemove,
+  }) {
+    return GestureDetector(
+      onTap: () => _showImagePreview(path),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.file(
+              File(path),
+              width: 70,
+              height: 70,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                width: 70,
+                height: 70,
+                color: AppColors.surfaceVariant,
+                child: const Icon(Icons.broken_image_rounded),
+              ),
+            ),
+          ),
+          if (removable)
+            Positioned(
+              right: -6,
+              top: -6,
+              child: IconButton(
+                onPressed: onRemove,
+                icon: const Icon(Icons.cancel_rounded, size: 18),
+                color: AppColors.expense,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showImagePreview(String path) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.file(
+              File(path),
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => Container(
+                color: AppColors.surface,
+                padding: const EdgeInsets.all(24),
+                child: const Icon(Icons.broken_image_rounded, size: 48),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -1994,16 +2238,19 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
               ),
               SizedBox(width: padding * 0.5),
               GestureDetector(
-                onTap: () {},
+                onTap: _showImageSourceSheet,
                 child: Container(
                   padding: EdgeInsets.all(padding * 0.6),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceVariant,
+                    color: _imagePaths.isNotEmpty
+                        ? _activeColor.withValues(alpha: 0.1)
+                        : AppColors.surfaceVariant,
                     borderRadius: BorderRadius.circular(padding * 0.6),
                   ),
                   child: Icon(
                     Icons.camera_alt_rounded,
-                    color: AppColors.textMuted,
+                    color:
+                        _imagePaths.isNotEmpty ? _activeColor : AppColors.textMuted,
                     size: _getResponsiveSize(context, 16),
                   ),
                 ),
@@ -2273,6 +2520,16 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
 
               // Note
               _buildViewNoteRow(transaction),
+              if (transaction.imagePaths.isNotEmpty) ...[
+                Container(
+                  height: 1,
+                  color: AppColors.surfaceVariant.withValues(alpha: 0.5),
+                ),
+                _buildAttachmentsRow(
+                  imagePaths: transaction.imagePaths,
+                  editable: false,
+                ),
+              ],
             ],
           ),
         );
@@ -2726,6 +2983,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     fromAccount: transaction.fromAccount,
                     toAccount: transaction.toAccount,
                     isBookmarked: !transaction.isBookmarked,
+                    imagePaths: transaction.imagePaths,
                   );
                   await StorageService.updateTransaction(updatedTransaction);
                   setState(() {

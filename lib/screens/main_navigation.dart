@@ -18,6 +18,7 @@ class _MainNavigationState extends State<MainNavigation>
     with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   late AnimationController _fabAnimationController;
+  late final PageController _pageController;
 
   final List<Widget> _screens = [
     const HomeScreen(),
@@ -56,37 +57,43 @@ class _MainNavigationState extends State<MainNavigation>
       vsync: this,
       duration: const Duration(milliseconds: 200),
     );
+    _pageController = PageController(initialPage: _currentIndex);
   }
 
   @override
   void dispose() {
     _fabAnimationController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 400),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        child: _screens[_currentIndex],
-        transitionBuilder: (child, animation) {
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.02),
-                end: Offset.zero,
-              ).animate(animation),
-              child: child,
-            ),
+    return WillPopScope(
+      onWillPop: () async {
+        if (_currentIndex != 0) {
+          _pageController.animateToPage(
+            0,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOutCubic,
           );
-        },
+          return false;
+        }
+        return true;
+      },
+      child: Scaffold(
+        body: PageView(
+          controller: _pageController,
+          onPageChanged: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          children: _screens,
+        ),
+        extendBody: true,
+        bottomNavigationBar: _buildBottomNavBar(),
       ),
-      extendBody: true,
-      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
@@ -145,9 +152,17 @@ class _MainNavigationState extends State<MainNavigation>
 
     return GestureDetector(
       onTap: () {
+        if (_currentIndex == index) {
+          return;
+        }
         setState(() {
           _currentIndex = index;
         });
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOutCubic,
+        );
       },
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(

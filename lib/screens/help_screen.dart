@@ -167,7 +167,7 @@ class _HelpScreenState extends State<HelpScreen> {
                     _buildContactTile(
                       icon: Icons.email_rounded,
                       title: 'Email Support',
-                      subtitle: 'support@finzo.app',
+                      subtitle: 'fynux.bussiness@gmail.com',
                       onTap: () => _openEmailSupport(),
                     ),
                   ],
@@ -607,12 +607,12 @@ class _HelpScreenState extends State<HelpScreen> {
             '4. The app will update immediately';
       
       default:
-        return 'For more help, please contact our support team at support@finzo.app or use the Feedback section in the app.';
+        return 'For more help, please contact our support team at fynux.bussiness@gmail.com or use the Feedback section in the app.';
     }
   }
 
   void _openEmailSupport() {
-    AppUtils.openUrl('mailto:support@finzo.app?subject=Support Request');
+    AppUtils.openUrl('mailto:fynux.bussiness@gmail.com?subject=Support Request');
   }
 }
 

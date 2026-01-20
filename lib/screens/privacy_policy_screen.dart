@@ -94,7 +94,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 _buildSection(
                   'Contact Us',
                   'If you have any questions about this Privacy Policy, please contact us at:\n\n'
-                      'Email: support@finzo.app\n'
+                      'Email: fynux.bussiness@gmail.com\n'
                       'Or through the Feedback section in the app.',
                 ),
                 const SizedBox(height: 24),

@@ -25,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen>
   int _refreshKey = 0; // Key to force FutureBuilder refresh
   String _searchQuery = '';
   TransactionFilter? _activeFilter;
+  List<Transaction> _cachedTransactions = [];
   final TextEditingController _searchController = TextEditingController();
 
   final List<String> _tabs = ['Daily', 'Calendar', 'Monthly', 'Total', 'Note'];
@@ -510,7 +511,16 @@ class _HomeScreenState extends State<HomeScreen>
           key: ValueKey(_refreshKey), // Force refresh when key changes
           future: _getFilteredTransactions(),
           builder: (context, snapshot) {
-            final transactions = snapshot.data ?? [];
+            final hasCachedData = _cachedTransactions.isNotEmpty;
+            final isWaiting =
+                snapshot.connectionState == ConnectionState.waiting;
+            if (isWaiting && !snapshot.hasData && !hasCachedData) {
+              return _buildLoadingState();
+            }
+            if (snapshot.hasData) {
+              _cachedTransactions = snapshot.data ?? [];
+            }
+            final transactions = snapshot.data ?? _cachedTransactions;
             final summary = _getSummaryFromTransactions(transactions);
             final groupedTransactions = _groupTransactionsByDate(transactions);
             final sortedDates = groupedTransactions.keys.toList()
@@ -542,6 +552,15 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
       floatingActionButton: _buildFAB(),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: CircularProgressIndicator(
+        color: AppColors.primary,
+        backgroundColor: AppColors.surfaceVariant,
+      ),
     );
   }
 
@@ -655,7 +674,7 @@ class _HomeScreenState extends State<HomeScreen>
             color: _searchQuery.isNotEmpty
                 ? AppColors.primary
                 : AppColors.textSecondary,
-            onTap: () => _showSearchDialog(),
+            onTap: () => _openSearchScreen(),
           ),
           const SizedBox(width: 8),
           Stack(
@@ -743,93 +762,25 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  void _showSearchDialog() {
-    _searchController.text = _searchQuery;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Search Transactions',
-          style: GoogleFonts.inter(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
+  Future<void> _openSearchScreen() async {
+    final result = await Navigator.push<String?>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => _SearchScreen(
+          initialQuery: _searchQuery,
         ),
-        content: TextField(
-          controller: _searchController,
-          autofocus: true,
-          style: GoogleFonts.inter(color: AppColors.textPrimary),
-          decoration: InputDecoration(
-            hintText: 'Search by title, category, or note...',
-            hintStyle: GoogleFonts.inter(color: AppColors.textMuted),
-            prefixIcon: Icon(Icons.search_rounded, color: AppColors.textMuted),
-            suffixIcon: _searchController.text.isNotEmpty
-                ? IconButton(
-                    icon: Icon(Icons.clear_rounded, color: AppColors.textMuted),
-                    onPressed: () {
-                      _searchController.clear();
-                    },
-                  )
-                : null,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.surfaceVariant),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.surfaceVariant),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.primary, width: 2),
-            ),
-            filled: true,
-            fillColor: AppColors.background,
-          ),
-          onChanged: (value) {
-            setState(() {});
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _searchQuery = '';
-                _searchController.clear();
-              });
-              Navigator.pop(context);
-              setState(() {
-                _refreshKey++;
-              });
-            },
-            child: Text(
-              'Clear',
-              style: GoogleFonts.inter(color: AppColors.textMuted),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _searchQuery = _searchController.text.trim();
-              });
-              Navigator.pop(context);
-              setState(() {
-                _refreshKey++;
-              });
-            },
-            child: Text(
-              'Search',
-              style: GoogleFonts.inter(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
       ),
     );
+
+    if (!mounted) return;
+
+    if (result != null) {
+      setState(() {
+        _searchQuery = result.trim();
+        _searchController.text = _searchQuery;
+        _refreshKey++;
+      });
+    }
   }
 
   void _showBookmarkedTransactions() {
@@ -1040,7 +991,17 @@ class _HomeScreenState extends State<HomeScreen>
           fontWeight: FontWeight.w400,
           fontSize: 12,
         ),
-        tabs: _tabs.map((tab) => Tab(text: tab, height: 40)).toList(),
+        tabs: _tabs
+            .map(
+              (tab) => Tab(
+                height: 40,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(tab),
+                ),
+              ),
+            )
+            .toList(),
       ),
     );
   }
@@ -2644,6 +2605,7 @@ class _HomeScreenState extends State<HomeScreen>
                     fromAccount: transaction.fromAccount,
                     toAccount: transaction.toAccount,
                     isBookmarked: !transaction.isBookmarked,
+                    imagePaths: transaction.imagePaths,
                   );
                   await StorageService.updateTransaction(updatedTransaction);
                   Navigator.pop(context);
@@ -2963,5 +2925,90 @@ class _HomeScreenState extends State<HomeScreen>
       case AccountType.other:
         return 'Accounts';
     }
+  }
+}
+
+class _SearchScreen extends StatefulWidget {
+  const _SearchScreen({required this.initialQuery});
+
+  final String initialQuery;
+
+  @override
+  State<_SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<_SearchScreen> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialQuery);
+    _controller.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    Navigator.pop(context, _controller.text.trim());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        titleSpacing: 0,
+        title: TextField(
+          controller: _controller,
+          autofocus: true,
+          textInputAction: TextInputAction.search,
+          onSubmitted: (_) => _submit(),
+          style: GoogleFonts.inter(color: AppColors.textPrimary),
+          decoration: InputDecoration(
+            hintText: 'Search by title, category, or note...',
+            hintStyle: GoogleFonts.inter(color: AppColors.textMuted),
+            prefixIcon: Icon(Icons.search_rounded, color: AppColors.textMuted),
+            suffixIcon: _controller.text.isNotEmpty
+                ? IconButton(
+                    icon: Icon(Icons.clear_rounded, color: AppColors.textMuted),
+                    onPressed: () {
+                      _controller.clear();
+                    },
+                  )
+                : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.surfaceVariant),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.surfaceVariant),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.primary, width: 2),
+            ),
+            filled: true,
+            fillColor: AppColors.surface,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.search_rounded, color: AppColors.primary),
+            tooltip: 'Search',
+            onPressed: _submit,
+          ),
+        ],
+      ),
+      body: const SizedBox.shrink(),
+    );
   }
 }
