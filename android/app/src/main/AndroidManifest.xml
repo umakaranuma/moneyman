@@ -6,12 +6,12 @@
     <!-- Notification Permissions -->
     <!-- REQUIRED for Android 13+ (API 33+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <!-- REQUIRED for scheduled notifications on Android 12+ (API 31+) -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <!-- For boot receiver to reschedule notifications after device restart -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <!-- For notification vibration -->
     <uses-permission android:name="android.permission.VIBRATE"/>
+    <!-- For wake lock to ensure notifications fire in release builds -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
     
     <application
         android:label="Finzo"
