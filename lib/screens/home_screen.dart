@@ -766,9 +766,7 @@ class _HomeScreenState extends State<HomeScreen>
     await Navigator.push<void>(
       context,
       MaterialPageRoute(
-        builder: (context) => _SearchScreen(
-          initialQuery: _searchQuery,
-        ),
+        builder: (context) => _SearchScreen(initialQuery: _searchQuery),
       ),
     );
   }
@@ -985,10 +983,7 @@ class _HomeScreenState extends State<HomeScreen>
             .map(
               (tab) => Tab(
                 height: 40,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(tab),
-                ),
+                child: FittedBox(fit: BoxFit.scaleDown, child: Text(tab)),
               ),
             )
             .toList(),
@@ -3071,8 +3066,9 @@ class _SearchScreenState extends State<_SearchScreen> {
                 final typeColor = _getTypeColor(transaction.type);
                 return ListTile(
                   onTap: () async {
-                    final result =
-                        await context.goToEditTransaction<bool>(transaction);
+                    final result = await context.goToEditTransaction<bool>(
+                      transaction,
+                    );
                     if (result == true) {
                       await _loadTransactions();
                     }
@@ -3084,7 +3080,10 @@ class _SearchScreenState extends State<_SearchScreen> {
                       color: typeColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(_getTypeIcon(transaction.type), color: typeColor),
+                    child: Icon(
+                      _getTypeIcon(transaction.type),
+                      color: typeColor,
+                    ),
                   ),
                   title: Text(
                     transaction.title,
