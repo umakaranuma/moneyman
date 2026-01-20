@@ -15,3 +15,8 @@
 -keep class org.threeten.bp.** { *; }
 -keep class java.time.** { *; }
 
+# Play Core tasks (Flutter deferred components not used)
+-dontwarn com.google.android.play.core.tasks.OnFailureListener
+-dontwarn com.google.android.play.core.tasks.OnSuccessListener
+-dontwarn com.google.android.play.core.tasks.Task
+
