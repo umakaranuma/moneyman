@@ -52,9 +52,13 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
   }
 
   void _showConvertToSubcategoryDialog(String categoryName) {
+    // Save widget context before showing dialog
+    final widgetContext = context;
+    final isExpense = widget.isExpense;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: const Text(
           'Convert to Subcategory',
@@ -66,29 +70,37 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text(
               'Cancel',
               style: TextStyle(color: AppColors.textMuted),
             ),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Close category screen
+            onPressed: () async {
+              Navigator.pop(dialogContext); // Close dialog
+
+              if (!mounted) return;
 
               // Navigate to add subcategory screen with pre-filled name
-              Navigator.push(
-                context,
+              final result = await Navigator.push(
+                widgetContext,
                 MaterialPageRoute(
                   builder: (context) => AddEditSubcategoryScreen(
                     category: null, // User will select target category
                     subcategory: categoryName,
-                    isExpense: widget.isExpense,
+                    isExpense: isExpense,
                     isConvertingFromCategory: true,
+                    convertedCategoryName:
+                        categoryName, // Pass the converted category name to exclude it
                   ),
                 ),
               );
+
+              // If conversion was successful, return true to parent screen
+              if (result == true && mounted) {
+                Navigator.pop(widgetContext, true);
+              }
             },
             child: const Text(
               'Convert',
@@ -208,9 +220,9 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
               ]
             : [
                 TextButton(
-                  onPressed: () {
+                  onPressed: () async {
                     // Navigate to add subcategory screen
-                    Navigator.push(
+                    final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => AddEditSubcategoryScreen(
@@ -219,6 +231,11 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
                         ),
                       ),
                     );
+
+                    // If subcategory was saved, return true to parent screen
+                    if (result == true && mounted) {
+                      Navigator.pop(context, true);
+                    }
                   },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

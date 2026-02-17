@@ -8,6 +8,7 @@ class AddEditSubcategoryScreen extends StatefulWidget {
   final String? subcategory;
   final bool isExpense;
   final bool isConvertingFromCategory;
+  final String? convertedCategoryName; // Name of category that was converted (to exclude from list)
 
   const AddEditSubcategoryScreen({
     super.key,
@@ -15,6 +16,7 @@ class AddEditSubcategoryScreen extends StatefulWidget {
     this.subcategory,
     required this.isExpense,
     this.isConvertingFromCategory = false,
+    this.convertedCategoryName,
   });
 
   @override
@@ -33,12 +35,20 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
     super.initState();
     _subcategoryController =
         TextEditingController(text: widget.subcategory ?? '');
-    _categoryController = TextEditingController(
-      text: widget.category != null
-          ? '${widget.category!.emoji} ${widget.category!.name}'
-          : '',
-    );
-    _selectedCategory = widget.category;
+    
+    // If converting from category, don't pre-select the category
+    // (since it no longer exists as a main category)
+    if (widget.isConvertingFromCategory) {
+      _categoryController = TextEditingController();
+      _selectedCategory = null;
+    } else {
+      _categoryController = TextEditingController(
+        text: widget.category != null
+            ? '${widget.category!.emoji} ${widget.category!.name}'
+            : '',
+      );
+      _selectedCategory = widget.category;
+    }
     
     // If converting from category, show category picker immediately
     if (widget.isConvertingFromCategory && widget.category == null) {
@@ -56,9 +66,18 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
   }
 
   void _showCategoryPicker() {
-    final categories = CategoryService.getCategories(
+    // Get fresh categories list to ensure latest data
+    var categories = CategoryService.getCategories(
       isIncome: !widget.isExpense,
     );
+
+    // If converting from category, exclude the converted category from the list
+    // (since it no longer exists as a main category)
+    if (widget.isConvertingFromCategory && widget.convertedCategoryName != null) {
+      categories = categories.where((cat) => 
+        cat.name != widget.convertedCategoryName
+      ).toList();
+    }
 
     showModalBottomSheet(
       context: context,
@@ -90,43 +109,57 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
               ),
               const SizedBox(height: 16),
               Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    final category = categories[index];
-                    final isSelected = _selectedCategory?.id == category.id;
-                    return ListTile(
-                      leading: category.emoji.isNotEmpty
-                          ? Text(
-                              category.emoji,
-                              style: const TextStyle(fontSize: 24),
-                            )
-                          : const Icon(Icons.category_rounded),
-                      title: Text(
-                        category.name,
-                        style: TextStyle(
-                          color: isSelected
-                              ? AppColors.fab
-                              : AppColors.textPrimary,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.normal,
+                child: categories.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Text(
+                            'No categories available. Please create a category first.',
+                            style: TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: categories.length,
+                        itemBuilder: (context, index) {
+                          final category = categories[index];
+                          final isSelected = _selectedCategory?.id == category.id;
+                          return ListTile(
+                            leading: category.emoji.isNotEmpty
+                                ? Text(
+                                    category.emoji,
+                                    style: const TextStyle(fontSize: 24),
+                                  )
+                                : const Icon(Icons.category_rounded),
+                            title: Text(
+                              category.name,
+                              style: TextStyle(
+                                color: isSelected
+                                    ? AppColors.fab
+                                    : AppColors.textPrimary,
+                                fontWeight:
+                                    isSelected ? FontWeight.w600 : FontWeight.normal,
+                              ),
+                            ),
+                            trailing: isSelected
+                                ? const Icon(Icons.check, color: AppColors.fab)
+                                : null,
+                            onTap: () {
+                              setState(() {
+                                _selectedCategory = category;
+                                _categoryController.text =
+                                    '${category.emoji} ${category.name}';
+                              });
+                              Navigator.pop(context);
+                            },
+                          );
+                        },
                       ),
-                      trailing: isSelected
-                          ? const Icon(Icons.check, color: AppColors.fab)
-                          : null,
-                      onTap: () {
-                        setState(() {
-                          _selectedCategory = category;
-                          _categoryController.text =
-                              '${category.emoji} ${category.name}';
-                        });
-                        Navigator.pop(context);
-                      },
-                    );
-                  },
-                ),
               ),
             ],
           ),
@@ -210,6 +243,7 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
           );
 
           if (mounted) {
+            // Return true to indicate successful save/update
             Navigator.pop(context, true);
           }
         }
@@ -304,8 +338,10 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
                   isIncome: !widget.isExpense,
                 );
 
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context, true); // Close subcategory screen
+                if (mounted) {
+                  Navigator.pop(context); // Close dialog
+                  Navigator.pop(context, true); // Close subcategory screen with result
+                }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
