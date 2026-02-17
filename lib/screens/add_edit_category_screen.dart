@@ -76,7 +76,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
             onPressed: () {
               Navigator.pop(context); // Close dialog
               Navigator.pop(context); // Close category screen
-              
+
               // Navigate to add subcategory screen with pre-filled name
               Navigator.push(
                 context,
@@ -107,9 +107,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
         try {
           // Get categories and create a mutable copy
           final allCategories = List<Category>.from(
-            CategoryService.getCategories(
-              isIncome: !widget.isExpense,
-            ),
+            CategoryService.getCategories(isIncome: !widget.isExpense),
           );
 
           if (widget.category != null) {
@@ -186,8 +184,8 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
           widget.category != null
               ? 'Edit Category'
               : widget.isExpense
-                  ? 'Expenses Category'
-                  : 'Income Category',
+              ? 'Expenses Category'
+              : 'Income Category',
           style: const TextStyle(
             color: AppColors.textPrimary,
             fontSize: 18,
@@ -275,10 +273,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
                     ),
                   ),
                   focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: AppColors.fab,
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: AppColors.fab, width: 2),
                   ),
                 ),
                 autofocus: widget.category == null,
@@ -309,10 +304,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
                   ),
                   child: const Text(
                     'Save',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -323,4 +315,3 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
     );
   }
 }
-

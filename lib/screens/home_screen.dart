@@ -506,7 +506,7 @@ class _HomeScreenState extends State<HomeScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        bottom: false,
+        bottom: true,
         child: FutureBuilder<List<Transaction>>(
           key: ValueKey(_refreshKey), // Force refresh when key changes
           future: _getFilteredTransactions(),
@@ -596,8 +596,11 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildFAB() {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    // Reduced gap: Bottom nav bar (72px) + margin (16px) = 88px from bottom
+    // Reduced from 80 to 76 for a smaller gap between FAB and nav bar
     return Container(
-      margin: const EdgeInsets.only(bottom: 80),
+      margin: EdgeInsets.only(bottom: bottomPadding),
       child: GestureDetector(
         onTap: () async {
           final result = await context.goToAddTransaction<bool>();

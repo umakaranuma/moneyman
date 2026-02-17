@@ -98,9 +98,11 @@ class _MainNavigationState extends State<MainNavigation>
   }
 
   Widget _buildBottomNavBar() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: ClipRRect(
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
@@ -142,6 +144,7 @@ class _MainNavigationState extends State<MainNavigation>
             ),
           ),
         ),
+      ),
       ),
     );
   }
