@@ -2,6 +2,14 @@ enum AccountCategory {
   cash,
   bank,
   card,
+  debitCard,
+  savings,
+  topUpPrepaid,
+  investments,
+  overdrafts,
+  loan,
+  insurance,
+  others,
 }
 
 enum CurrencyType {
@@ -17,6 +25,7 @@ class Account {
   double balance;
   double? balancePayable; // For credit cards
   double? outstandingBalance; // For credit cards
+  String? description;
   DateTime createdAt;
   DateTime updatedAt;
 
@@ -28,6 +37,7 @@ class Account {
     this.balance = 0.0,
     this.balancePayable,
     this.outstandingBalance,
+    this.description,
     DateTime? createdAt,
     DateTime? updatedAt,
   })  : createdAt = createdAt ?? DateTime.now(),
@@ -50,6 +60,22 @@ class Account {
         return 'Accounts';
       case AccountCategory.card:
         return 'Card';
+      case AccountCategory.debitCard:
+        return 'Debit Card';
+      case AccountCategory.savings:
+        return 'Savings';
+      case AccountCategory.topUpPrepaid:
+        return 'Top-Up/Prepaid';
+      case AccountCategory.investments:
+        return 'Investments';
+      case AccountCategory.overdrafts:
+        return 'Overdrafts';
+      case AccountCategory.loan:
+        return 'Loan';
+      case AccountCategory.insurance:
+        return 'Insurance';
+      case AccountCategory.others:
+        return 'Others';
     }
   }
 
@@ -62,6 +88,7 @@ class Account {
       'balance': balance,
       'balancePayable': balancePayable,
       'outstandingBalance': outstandingBalance,
+      'description': description,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -82,6 +109,7 @@ class Account {
       balance: (json['balance'] ?? 0.0).toDouble(),
       balancePayable: json['balancePayable']?.toDouble(),
       outstandingBalance: json['outstandingBalance']?.toDouble(),
+      description: json['description'],
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),

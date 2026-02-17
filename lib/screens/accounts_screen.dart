@@ -4,8 +4,11 @@ import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import '../services/storage_service.dart';
 import '../services/sms_service.dart';
+import '../services/account_service.dart';
 import '../models/transaction.dart';
+import '../models/account.dart';
 import 'stats_screen.dart';
+import 'add_account_screen.dart';
 
 class AccountsScreen extends StatefulWidget {
   const AccountsScreen({super.key});
@@ -17,7 +20,7 @@ class AccountsScreen extends StatefulWidget {
 class _AccountsScreenState extends State<AccountsScreen>
     with WidgetsBindingObserver {
   int _refreshKey = 0; // Key to force rebuild
-  List<Transaction> _cachedTransactions = [];
+  Set<String> _hiddenAccountIds = {}; // Track hidden accounts
 
   @override
   void initState() {
@@ -58,20 +61,23 @@ class _AccountsScreenState extends State<AccountsScreen>
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
-        child: FutureBuilder<List<Transaction>>(
+        child: FutureBuilder<Map<String, dynamic>>(
           key: ValueKey(_refreshKey), // Force refresh when key changes
-          future: _getAllTransactions(),
+          future: _getAccountsAndTransactions(),
           builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              _cachedTransactions = snapshot.data ?? [];
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
             }
-            final hasCachedData = _cachedTransactions.isNotEmpty;
-            final isWaiting =
-                snapshot.connectionState == ConnectionState.waiting;
+
+            final accounts = snapshot.data!['accounts'] as List<Account>;
             final transactions =
-                snapshot.data ??
-                (isWaiting && hasCachedData ? _cachedTransactions : []);
+                snapshot.data!['transactions'] as List<Transaction>;
             final balances = _calculateBalancesFromTransactions(transactions);
+
+            // Filter out hidden accounts
+            final visibleAccounts = accounts.where((account) {
+              return !_hiddenAccountIds.contains(account.id);
+            }).toList();
 
             return CustomScrollView(
               slivers: [
@@ -101,65 +107,7 @@ class _AccountsScreenState extends State<AccountsScreen>
                       right: 16,
                       bottom: 16,
                     ),
-                    child: Column(
-                      children: [
-                        // Cash Section
-                        _buildAccountCard(
-                          title: 'Cash',
-                          icon: Icons.payments_rounded,
-                          gradient: [
-                            AppColors.income,
-                            AppColors.income.withValues(alpha: 0.7),
-                          ],
-                          accounts: [
-                            _AccountItem(
-                              name: 'Cash',
-                              currency: 'Rs.',
-                              balance: balances['cash_inr'] ?? 0.0,
-                              icon: Icons.monetization_on_rounded,
-                            ),
-                            _AccountItem(
-                              name: 'Cash USD',
-                              currency: '\$',
-                              balance: balances['cash_usd'] ?? 0.0,
-                              icon: Icons.attach_money_rounded,
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Bank Section
-                        _buildAccountCard(
-                          title: 'Bank Accounts',
-                          icon: Icons.account_balance_rounded,
-                          gradient: [AppColors.primary, AppColors.primaryLight],
-                          accounts: [
-                            _AccountItem(
-                              name: 'Accounts',
-                              currency: 'Rs.',
-                              balance: balances['bank_inr'] ?? 0.0,
-                              icon: Icons.savings_rounded,
-                            ),
-                            _AccountItem(
-                              name: 'Accounts USD',
-                              currency: '\$',
-                              balance: balances['bank_usd'] ?? 0.0,
-                              icon: Icons.account_balance_wallet_rounded,
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Card Section
-                        _buildCardSection(balances),
-
-                        // Bottom padding to account for bottom navigation bar
-                        // Nav bar: 72px height + 16px margin = 88px, plus safe area
-                        SizedBox(height: MediaQuery.of(context).padding.bottom),
-                      ],
-                    ),
+                    child: _buildAccountSections(visibleAccounts, balances),
                   ),
                 ),
               ],
@@ -218,7 +166,7 @@ class _AccountsScreenState extends State<AccountsScreen>
             },
           ),
           const SizedBox(width: 8),
-          _buildHeaderButton(Icons.more_vert_rounded),
+          _buildPopupMenuButton(),
         ],
       ),
     );
@@ -236,6 +184,389 @@ class _AccountsScreenState extends State<AccountsScreen>
           border: Border.all(color: AppColors.surfaceVariant, width: 1),
         ),
         child: Icon(icon, color: AppColors.textSecondary, size: 20),
+      ),
+    );
+  }
+
+  Widget _buildPopupMenuButton() {
+    return PopupMenuButton<String>(
+      icon: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.surfaceVariant, width: 1),
+        ),
+        child: Icon(
+          Icons.more_vert_rounded,
+          color: AppColors.textSecondary,
+          size: 20,
+        ),
+      ),
+      color: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      onSelected: (value) {
+        switch (value) {
+          case 'add':
+            _navigateToAddAccount();
+            break;
+          case 'show_hide':
+            _showHideAccountsDialog();
+            break;
+          case 'delete':
+            _showDeleteAccountsDialog();
+            break;
+          case 'modify_orders':
+            _showModifyOrdersDialog();
+            break;
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'add',
+          child: Row(
+            children: [
+              Icon(Icons.add_rounded, color: AppColors.primary, size: 18),
+              const SizedBox(width: 12),
+              Text(
+                'Add',
+                style: GoogleFonts.inter(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'show_hide',
+          child: Row(
+            children: [
+              Icon(
+                Icons.visibility_rounded,
+                color: AppColors.secondary,
+                size: 18,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Show/Hide',
+                style: GoogleFonts.inter(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(Icons.delete_rounded, color: AppColors.expense, size: 18),
+              const SizedBox(width: 12),
+              Text(
+                'Delete',
+                style: GoogleFonts.inter(
+                  color: AppColors.expense,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'modify_orders',
+          child: Row(
+            children: [
+              Icon(
+                Icons.swap_vert_rounded,
+                color: AppColors.textSecondary,
+                size: 18,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Modify Orders',
+                style: GoogleFonts.inter(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _navigateToAddAccount() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddAccountScreen()),
+    );
+    if (result == true) {
+      setState(() {
+        _refreshKey++;
+      });
+    }
+  }
+
+  Future<Map<String, dynamic>> _getAccountsAndTransactions() async {
+    final accounts = AccountService.getAllAccounts();
+    final transactions = await _getAllTransactions();
+    return {'accounts': accounts, 'transactions': transactions};
+  }
+
+  void _showHideAccountsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _HideAccountsDialog(
+        hiddenAccountIds: _hiddenAccountIds,
+        onChanged: (hiddenIds) {
+          setState(() {
+            _hiddenAccountIds = hiddenIds;
+          });
+        },
+      ),
+    );
+  }
+
+  void _showDeleteAccountsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _DeleteAccountsDialog(
+        onDeleted: () {
+          setState(() {
+            _refreshKey++;
+          });
+        },
+      ),
+    );
+  }
+
+  void _showModifyOrdersDialog() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Modify Orders feature coming soon',
+          style: GoogleFonts.inter(),
+        ),
+        backgroundColor: AppColors.surface,
+      ),
+    );
+  }
+
+  Widget _buildAccountSections(
+    List<Account> accounts,
+    Map<String, double> balances,
+  ) {
+    // Group accounts by category
+    final accountsByCategory = <AccountCategory, List<Account>>{};
+    for (var account in accounts) {
+      accountsByCategory.putIfAbsent(account.category, () => []).add(account);
+    }
+
+    final widgets = <Widget>[];
+
+    // Build sections for each category
+    for (var category in AccountCategory.values) {
+      final categoryAccounts = accountsByCategory[category] ?? [];
+      if (categoryAccounts.isEmpty) continue;
+
+      // Get gradient and icon for category
+      List<Color> gradient;
+      IconData icon;
+      String title;
+
+      switch (category) {
+        case AccountCategory.cash:
+          gradient = [
+            AppColors.income,
+            AppColors.income.withValues(alpha: 0.7),
+          ];
+          icon = Icons.payments_rounded;
+          title = 'Cash';
+          break;
+        case AccountCategory.bank:
+        case AccountCategory.savings:
+          gradient = [AppColors.primary, AppColors.primaryLight];
+          icon = Icons.account_balance_rounded;
+          title = category == AccountCategory.savings
+              ? 'Savings'
+              : 'Bank Accounts';
+          break;
+        case AccountCategory.card:
+        case AccountCategory.debitCard:
+          gradient = [AppColors.secondary, AppColors.primary];
+          icon = Icons.credit_card_rounded;
+          title = category == AccountCategory.debitCard
+              ? 'Debit Cards'
+              : 'Credit Cards';
+          break;
+        default:
+          gradient = [AppColors.surface, AppColors.surfaceVariant];
+          icon = Icons.account_balance_wallet_rounded;
+          title = categoryAccounts.first.categoryLabel;
+      }
+
+      if (category == AccountCategory.card ||
+          category == AccountCategory.debitCard) {
+        widgets.add(_buildCardSectionFromAccounts(categoryAccounts, balances));
+      } else {
+        final accountItems = categoryAccounts.map((account) {
+          final balance = _getAccountBalance(account, balances);
+          return _AccountItem(
+            name: account.name,
+            currency: account.currencySymbol,
+            balance: balance,
+            icon: _getAccountIcon(account.category),
+            accountId: account.id,
+          );
+        }).toList();
+
+        widgets.add(
+          _buildAccountCard(
+            title: title,
+            icon: icon,
+            gradient: gradient,
+            accounts: accountItems,
+          ),
+        );
+      }
+
+      widgets.add(const SizedBox(height: 16));
+    }
+
+    // Bottom padding
+    widgets.add(SizedBox(height: MediaQuery.of(context).padding.bottom));
+
+    return Column(children: widgets);
+  }
+
+  double _getAccountBalance(Account account, Map<String, double> balances) {
+    // Try to get balance from account first, then from transaction balances
+    if (account.balance != 0.0) {
+      return account.balance;
+    }
+
+    // Map account to balance key
+    final currencyKey = account.currency == CurrencyType.inr ? 'inr' : 'usd';
+    final categoryKey = account.category.name;
+    final balanceKey = '${categoryKey}_$currencyKey';
+
+    return balances[balanceKey] ?? 0.0;
+  }
+
+  IconData _getAccountIcon(AccountCategory category) {
+    switch (category) {
+      case AccountCategory.cash:
+        return Icons.monetization_on_rounded;
+      case AccountCategory.bank:
+      case AccountCategory.savings:
+        return Icons.savings_rounded;
+      case AccountCategory.card:
+      case AccountCategory.debitCard:
+        return Icons.credit_card_rounded;
+      case AccountCategory.investments:
+        return Icons.trending_up_rounded;
+      case AccountCategory.loan:
+        return Icons.account_balance_rounded;
+      case AccountCategory.insurance:
+        return Icons.shield_rounded;
+      default:
+        return Icons.account_balance_wallet_rounded;
+    }
+  }
+
+  Widget _buildCardSectionFromAccounts(
+    List<Account> cardAccounts,
+    Map<String, double> balances,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.surface,
+            AppColors.surfaceVariant.withValues(alpha: 0.5),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppColors.secondary.withValues(alpha: 0.15),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.secondary, AppColors.primary],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.secondary.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.credit_card_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Text(
+                  'Credit Cards',
+                  style: GoogleFonts.inter(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            height: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            color: AppColors.surfaceVariant,
+          ),
+          // Card Items
+          ...cardAccounts.asMap().entries.map((entry) {
+            final index = entry.key;
+            final account = entry.value;
+            final isLast = index == cardAccounts.length - 1;
+
+            return Column(
+              children: [
+                _buildCardItem(
+                  name: account.name,
+                  currency: account.currencySymbol,
+                  payable: account.balancePayable ?? 0.0,
+                  outstanding: account.outstandingBalance ?? 0.0,
+                ),
+                if (!isLast)
+                  Container(
+                    height: 1,
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    color: AppColors.surfaceVariant.withValues(alpha: 0.5),
+                  ),
+              ],
+            );
+          }),
+        ],
       ),
     );
   }
@@ -791,93 +1122,6 @@ class _AccountsScreenState extends State<AccountsScreen>
     );
   }
 
-  Widget _buildCardSection(Map<String, double> balances) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.surface,
-            AppColors.surfaceVariant.withValues(alpha: 0.5),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppColors.secondary.withValues(alpha: 0.15),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.secondary, AppColors.primary],
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.secondary.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.credit_card_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Text(
-                  'Credit Cards',
-                  style: GoogleFonts.inter(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Container(
-            height: 1,
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            color: AppColors.surfaceVariant,
-          ),
-
-          // Card Items
-          _buildCardItem(
-            name: 'Credit Card',
-            currency: 'Rs.',
-            payable: 0.0,
-            outstanding: 0.0,
-          ),
-          Container(
-            height: 1,
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            color: AppColors.surfaceVariant.withValues(alpha: 0.5),
-          ),
-          _buildCardItem(
-            name: 'Credit Card USD',
-            currency: '\$',
-            payable: 0.0,
-            outstanding: 0.0,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildCardItem({
     required String name,
     required String currency,
@@ -981,12 +1225,14 @@ class _AccountItem {
   final String currency;
   final double balance;
   final IconData icon;
+  final String? accountId;
 
   const _AccountItem({
     required this.name,
     required this.currency,
     required this.balance,
     required this.icon,
+    this.accountId,
   });
 }
 
@@ -1014,5 +1260,188 @@ class _FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_FixedHeaderDelegate oldDelegate) {
     return child != oldDelegate.child || height != oldDelegate.height;
+  }
+}
+
+// Dialog for hiding/showing accounts
+class _HideAccountsDialog extends StatefulWidget {
+  final Set<String> hiddenAccountIds;
+  final Function(Set<String>) onChanged;
+
+  const _HideAccountsDialog({
+    required this.hiddenAccountIds,
+    required this.onChanged,
+  });
+
+  @override
+  State<_HideAccountsDialog> createState() => _HideAccountsDialogState();
+}
+
+class _HideAccountsDialogState extends State<_HideAccountsDialog> {
+  late Set<String> _selectedHiddenIds;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedHiddenIds = Set.from(widget.hiddenAccountIds);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accounts = AccountService.getAllAccounts();
+
+    return AlertDialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      title: Text(
+        'Show/Hide Accounts',
+        style: GoogleFonts.inter(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: accounts.length,
+          itemBuilder: (context, index) {
+            final account = accounts[index];
+            final isHidden = _selectedHiddenIds.contains(account.id);
+
+            return CheckboxListTile(
+              value: !isHidden,
+              onChanged: (value) {
+                setState(() {
+                  if (value == true) {
+                    _selectedHiddenIds.remove(account.id);
+                  } else {
+                    _selectedHiddenIds.add(account.id);
+                  }
+                });
+              },
+              title: Text(
+                account.name,
+                style: GoogleFonts.inter(color: AppColors.textPrimary),
+              ),
+              subtitle: Text(
+                '${account.categoryLabel} • ${account.currencySymbol}',
+                style: GoogleFonts.inter(
+                  color: AppColors.textMuted,
+                  fontSize: 12,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            'Cancel',
+            style: GoogleFonts.inter(color: AppColors.textSecondary),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            widget.onChanged(_selectedHiddenIds);
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          child: Text('Save', style: GoogleFonts.inter(color: Colors.white)),
+        ),
+      ],
+    );
+  }
+}
+
+// Dialog for deleting accounts
+class _DeleteAccountsDialog extends StatefulWidget {
+  final VoidCallback onDeleted;
+
+  const _DeleteAccountsDialog({required this.onDeleted});
+
+  @override
+  State<_DeleteAccountsDialog> createState() => _DeleteAccountsDialogState();
+}
+
+class _DeleteAccountsDialogState extends State<_DeleteAccountsDialog> {
+  final Set<String> _selectedIds = {};
+
+  @override
+  Widget build(BuildContext context) {
+    final accounts = AccountService.getAllAccounts();
+
+    return AlertDialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      title: Text(
+        'Delete Accounts',
+        style: GoogleFonts.inter(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: accounts.length,
+          itemBuilder: (context, index) {
+            final account = accounts[index];
+            final isSelected = _selectedIds.contains(account.id);
+
+            return CheckboxListTile(
+              value: isSelected,
+              onChanged: (value) {
+                setState(() {
+                  if (value == true) {
+                    _selectedIds.add(account.id);
+                  } else {
+                    _selectedIds.remove(account.id);
+                  }
+                });
+              },
+              title: Text(
+                account.name,
+                style: GoogleFonts.inter(color: AppColors.textPrimary),
+              ),
+              subtitle: Text(
+                '${account.categoryLabel} • ${account.currencySymbol}',
+                style: GoogleFonts.inter(
+                  color: AppColors.textMuted,
+                  fontSize: 12,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            'Cancel',
+            style: GoogleFonts.inter(color: AppColors.textSecondary),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: _selectedIds.isEmpty
+              ? null
+              : () async {
+                  for (var id in _selectedIds) {
+                    await AccountService.deleteAccount(id);
+                  }
+                  widget.onDeleted();
+                  if (mounted) {
+                    Navigator.pop(context);
+                  }
+                },
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.expense),
+          child: Text('Delete', style: GoogleFonts.inter(color: Colors.white)),
+        ),
+      ],
+    );
   }
 }
