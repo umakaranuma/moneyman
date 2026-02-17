@@ -1284,11 +1284,12 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         ),
         actions: [],
       ),
-      body: _isEditMode
-          ? Form(
-              key: _formKey,
-              child: Column(
-                children: [
+      body: SafeArea(
+        child: _isEditMode
+            ? Form(
+                key: _formKey,
+                child: Column(
+                  children: [
                   // Transaction Type Selector
                   _buildTypeSelector(),
 
@@ -1328,7 +1329,8 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 ],
               ),
             )
-          : _buildViewMode(),
+            : _buildViewMode(),
+      ),
     );
   }
 

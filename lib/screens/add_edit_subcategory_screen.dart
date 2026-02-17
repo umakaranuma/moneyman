@@ -373,10 +373,11 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
           ),
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
             const SizedBox(height: 20),
             // Category Field (Read-only, tappable to change)
             Padding(
@@ -495,6 +496,7 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

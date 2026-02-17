@@ -242,74 +242,79 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
                 ),
               ],
       ),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            // Category Name Input
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: TextFormField(
-                controller: _nameController,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 16,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Category Name',
-                  labelStyle: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+              // Category Name Input
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: TextFormField(
+                  controller: _nameController,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
                   ),
-                  hintText: 'Enter category name',
-                  hintStyle: TextStyle(
-                    color: AppColors.textMuted.withValues(alpha: 0.5),
-                  ),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: AppColors.surfaceVariant,
-                      width: 1,
+                  decoration: InputDecoration(
+                    labelText: 'Category Name',
+                    labelStyle: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                    hintText: 'Enter category name',
+                    hintStyle: TextStyle(
+                      color: AppColors.textMuted.withValues(alpha: 0.5),
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(
+                        color: AppColors.surfaceVariant,
+                        width: 1,
+                      ),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: AppColors.fab, width: 2),
                     ),
                   ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.fab, width: 2),
-                  ),
+                  autofocus: widget.category == null,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter a category name';
+                    }
+                    return null;
+                  },
                 ),
-                autofocus: widget.category == null,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a category name';
-                  }
-                  return null;
-                },
               ),
-            ),
-            const Spacer(),
-            // Save Button
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _saveCategory,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.fab,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+              const Spacer(),
+              // Save Button
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _saveCategory,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.fab,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
                     ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Save',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    child: const Text(
+                      'Save',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

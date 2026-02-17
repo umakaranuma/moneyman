@@ -163,11 +163,12 @@ class _AddEditTodoScreenState extends State<AddEditTodoScreen> {
           ),
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
             // Title Card
             Container(
               decoration: BoxDecoration(
@@ -405,6 +406,7 @@ class _AddEditTodoScreenState extends State<AddEditTodoScreen> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
