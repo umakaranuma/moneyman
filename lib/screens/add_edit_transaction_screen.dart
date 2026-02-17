@@ -16,6 +16,7 @@ import '../services/category_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/helpers.dart';
 import 'categories_screen.dart';
+import 'calculator_screen.dart';
 
 class AddEditTransactionScreen extends StatefulWidget {
   final Transaction? transaction;
@@ -1570,6 +1571,47 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                           }
                           return null;
                         },
+                      ),
+                    ),
+                    SizedBox(width: padding * 0.5),
+                    GestureDetector(
+                      onTap: () async {
+                        // Get current amount value
+                        final currentAmount = _amountController.text.trim();
+                        final initialValue = currentAmount.isEmpty ? null : currentAmount;
+                        
+                        // Navigate to calculator screen
+                        final result = await Navigator.push<String>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CalculatorScreen(
+                              initialValue: initialValue,
+                            ),
+                          ),
+                        );
+                        
+                        // Update amount field with calculated result
+                        if (result != null && result.isNotEmpty && mounted) {
+                          setState(() {
+                            _amountController.text = result;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(padding * 0.6),
+                        decoration: BoxDecoration(
+                          color: _activeColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(padding * 0.8),
+                          border: Border.all(
+                            color: _activeColor.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.calculate_rounded,
+                          color: _activeColor,
+                          size: _getResponsiveSize(context, 20),
+                        ),
                       ),
                     ),
                   ],

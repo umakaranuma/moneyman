@@ -3,18 +3,44 @@ import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
 class CalculatorScreen extends StatefulWidget {
-  const CalculatorScreen({super.key});
+  final String? initialValue;
+  
+  const CalculatorScreen({super.key, this.initialValue});
 
   @override
   State<CalculatorScreen> createState() => _CalculatorScreenState();
 }
 
 class _CalculatorScreenState extends State<CalculatorScreen> {
-  String _display = '0';
+  late String _display;
   double _result = 0;
   String _operation = '';
   bool _shouldResetDisplay = false;
   String? _pressedButton;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize display with initial value or '0'
+    if (widget.initialValue != null && widget.initialValue!.isNotEmpty) {
+      // Remove currency symbols and parse the value
+      String cleanValue = widget.initialValue!
+          .replaceAll('Rs.', '')
+          .replaceAll('\$', '')
+          .replaceAll(',', '')
+          .trim();
+      try {
+        double parsedValue = double.parse(cleanValue);
+        _display = parsedValue % 1 == 0
+            ? parsedValue.toInt().toString()
+            : parsedValue.toStringAsFixed(2);
+      } catch (e) {
+        _display = '0';
+      }
+    } else {
+      _display = '0';
+    }
+  }
 
   void _onButtonPressed(String value) {
     setState(() {
@@ -94,7 +120,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () {
+                      // Return the current display value when going back
+                      Navigator.pop(context, _display);
+                    },
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
