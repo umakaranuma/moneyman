@@ -147,8 +147,13 @@ class MoreScreen extends StatelessWidget {
             // About Section
             SliverToBoxAdapter(child: _buildAboutSection(context)),
 
-            // Bottom spacing
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            // Bottom spacing to account for bottom navigation bar
+            // Nav bar: 72px height + 16px margin = 88px, plus safe area
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 16 + MediaQuery.of(context).padding.bottom,
+              ),
+            ),
           ],
         ),
       ),
@@ -611,11 +616,11 @@ class _FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: AppColors.background,
-      child: child,
-    );
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(color: AppColors.background, child: child);
   }
 
   @override

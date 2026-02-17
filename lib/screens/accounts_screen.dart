@@ -155,7 +155,9 @@ class _AccountsScreenState extends State<AccountsScreen>
                         // Card Section
                         _buildCardSection(balances),
 
-                        const SizedBox(height: 100),
+                        // Bottom padding to account for bottom navigation bar
+                        // Nav bar: 72px height + 16px margin = 88px, plus safe area
+                        SizedBox(height: MediaQuery.of(context).padding.bottom),
                       ],
                     ),
                   ),
