@@ -44,15 +44,8 @@ class _AccountsScreenState extends State<AccountsScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Refresh when screen becomes visible (e.g., returning from other screens)
-    // Use a small delay to avoid unnecessary refreshes during initial build
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) {
-        setState(() {
-          _refreshKey++;
-        });
-      }
-    });
+    // Don't refresh on every screen switch - only refresh when actually needed
+    // This prevents blinking and loading screens when navigating
   }
 
   @override
@@ -75,22 +68,39 @@ class _AccountsScreenState extends State<AccountsScreen>
             final hasCachedData = _cachedTransactions.isNotEmpty;
             final isWaiting =
                 snapshot.connectionState == ConnectionState.waiting;
-            final transactions = snapshot.data ??
+            final transactions =
+                snapshot.data ??
                 (isWaiting && hasCachedData ? _cachedTransactions : []);
             final balances = _calculateBalancesFromTransactions(transactions);
 
             return CustomScrollView(
               slivers: [
-                // App Bar
-                SliverToBoxAdapter(child: _buildHeader()),
+                // Fixed Header
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _FixedHeaderDelegate(
+                    child: _buildHeader(),
+                    height: 80, // Header height: padding (16*2) + content (~48)
+                  ),
+                ),
 
-                // Summary Cards
-                SliverToBoxAdapter(child: _buildSummaryCards(balances)),
+                // Fixed Summary Cards
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _FixedHeaderDelegate(
+                    child: _buildSummaryCards(balances),
+                    height: 140, // Summary cards fixed height
+                  ),
+                ),
 
                 // Account Sections
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      bottom: 16,
+                    ),
                     child: Column(
                       children: [
                         // Cash Section
@@ -475,6 +485,7 @@ class _AccountsScreenState extends State<AccountsScreen>
     final total = totalAssets - totalLiabilities;
 
     return Container(
+      padding: const EdgeInsets.only(bottom: 16),
       height: 140,
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -975,4 +986,31 @@ class _AccountItem {
     required this.balance,
     required this.icon,
   });
+}
+
+class _FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final double height;
+
+  _FixedHeaderDelegate({required this.child, required this.height});
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(color: AppColors.background, child: child);
+  }
+
+  @override
+  bool shouldRebuild(_FixedHeaderDelegate oldDelegate) {
+    return child != oldDelegate.child || height != oldDelegate.height;
+  }
 }

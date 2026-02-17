@@ -16,8 +16,14 @@ class MoreScreen extends StatelessWidget {
         bottom: false,
         child: CustomScrollView(
           slivers: [
-            // Header
-            SliverToBoxAdapter(child: _buildHeader()),
+            // Fixed Header
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _FixedHeaderDelegate(
+                child: _buildHeader(),
+                height: 100, // Header height: padding (16*2) + content (~68)
+              ),
+            ),
 
             // Pro Banner - Commented out as Pro features are not implemented yet
             // SliverToBoxAdapter(child: _buildProBanner(context)),
@@ -588,5 +594,32 @@ class MoreScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final double height;
+
+  _FixedHeaderDelegate({required this.child, required this.height});
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: AppColors.background,
+      child: child,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_FixedHeaderDelegate oldDelegate) {
+    return child != oldDelegate.child || height != oldDelegate.height;
   }
 }
