@@ -399,13 +399,13 @@ class _StatsScreenState extends State<StatsScreen>
           if (snapshot.hasData) {
             _cachedMonthlyData = snapshot.data ?? {};
           }
-          
+
           // Always use cached data if available, even while loading new data
           // This prevents showing loading screen when switching between screens
-          final monthlyData = _cachedMonthlyData.isNotEmpty 
-              ? _cachedMonthlyData 
+          final monthlyData = _cachedMonthlyData.isNotEmpty
+              ? _cachedMonthlyData
               : (snapshot.data ?? {});
-          
+
           // Never show loading screen - always show content immediately
           // If data is empty, show empty state instead of loading
 
@@ -456,13 +456,13 @@ class _StatsScreenState extends State<StatsScreen>
         if (snapshot.hasData) {
           _cachedTransactions = snapshot.data ?? [];
         }
-        
+
         // Always use cached data if available, even while loading new data
         // This prevents showing loading screen when switching between screens
-        final transactions = _cachedTransactions.isNotEmpty 
-            ? _cachedTransactions 
+        final transactions = _cachedTransactions.isNotEmpty
+            ? _cachedTransactions
             : (snapshot.data ?? []);
-        
+
         // Never show loading screen - always show content immediately
         // If data is empty, show empty state instead of loading
 
