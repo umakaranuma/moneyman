@@ -55,14 +55,8 @@ class _StatsScreenState extends State<StatsScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Refresh when screen becomes visible (e.g., returning from other screens)
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) {
-        setState(() {
-          _refreshKey++;
-        });
-      }
-    });
+    // Don't refresh on every screen switch - only refresh when actually needed
+    // This prevents blinking and loading screens when navigating
   }
 
   void _previousMonth() {
@@ -401,25 +395,19 @@ class _StatsScreenState extends State<StatsScreen>
         key: ValueKey(_refreshKey), // Force refresh when key changes
         future: _getMonthlyData(),
         builder: (context, snapshot) {
-          final hasCachedData = _cachedMonthlyData.isNotEmpty;
-          final isWaiting =
-              snapshot.connectionState == ConnectionState.waiting;
-          if (isWaiting && !snapshot.hasData && !hasCachedData) {
-            return Scaffold(
-              backgroundColor: AppColors.background,
-              body: SafeArea(
-                bottom: false,
-                child: Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                ),
-              ),
-            );
-          }
-
+          // Always update cache when we have new data
           if (snapshot.hasData) {
             _cachedMonthlyData = snapshot.data ?? {};
           }
-          final monthlyData = snapshot.data ?? _cachedMonthlyData;
+          
+          // Always use cached data if available, even while loading new data
+          // This prevents showing loading screen when switching between screens
+          final monthlyData = _cachedMonthlyData.isNotEmpty 
+              ? _cachedMonthlyData 
+              : (snapshot.data ?? {});
+          
+          // Never show loading screen - always show content immediately
+          // If data is empty, show empty state instead of loading
 
           // Get current month data for balance display
           final currentMonthKey = DateFormat('MMM yyyy').format(_selectedMonth);
@@ -464,25 +452,19 @@ class _StatsScreenState extends State<StatsScreen>
       key: ValueKey(_refreshKey), // Force refresh when key changes
       future: _getFilteredTransactions(),
       builder: (context, snapshot) {
-        final hasCachedData = _cachedTransactions.isNotEmpty;
-        final isWaiting =
-            snapshot.connectionState == ConnectionState.waiting;
-        if (isWaiting && !snapshot.hasData && !hasCachedData) {
-          return Scaffold(
-            backgroundColor: AppColors.background,
-            body: SafeArea(
-              bottom: false,
-              child: Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              ),
-            ),
-          );
-        }
-
+        // Always update cache when we have new data
         if (snapshot.hasData) {
           _cachedTransactions = snapshot.data ?? [];
         }
-        final transactions = snapshot.data ?? _cachedTransactions;
+        
+        // Always use cached data if available, even while loading new data
+        // This prevents showing loading screen when switching between screens
+        final transactions = _cachedTransactions.isNotEmpty 
+            ? _cachedTransactions 
+            : (snapshot.data ?? []);
+        
+        // Never show loading screen - always show content immediately
+        // If data is empty, show empty state instead of loading
 
         final income = transactions
             .where((t) => t.type == TransactionType.income)

@@ -60,15 +60,8 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Refresh when screen becomes visible (e.g., returning from SMS screen)
-    // Use a small delay to avoid unnecessary refreshes during initial build
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) {
-        setState(() {
-          _refreshKey++;
-        });
-      }
-    });
+    // Don't refresh on every screen switch - only refresh when actually needed
+    // This prevents blinking and loading screens when navigating
   }
 
   void _handleTabChange() {
@@ -508,19 +501,22 @@ class _HomeScreenState extends State<HomeScreen>
       body: SafeArea(
         bottom: true,
         child: FutureBuilder<List<Transaction>>(
-          key: ValueKey(_refreshKey), // Force refresh when key changes
+          key: ValueKey(_refreshKey),
           future: _getFilteredTransactions(),
           builder: (context, snapshot) {
-            final hasCachedData = _cachedTransactions.isNotEmpty;
-            final isWaiting =
-                snapshot.connectionState == ConnectionState.waiting;
-            if (isWaiting && !snapshot.hasData && !hasCachedData) {
-              return _buildLoadingState();
-            }
+            // Always update cache when we have new data
             if (snapshot.hasData) {
               _cachedTransactions = snapshot.data ?? [];
             }
-            final transactions = snapshot.data ?? _cachedTransactions;
+
+            // Always use cached data if available, even while loading new data
+            // This prevents showing loading screen when switching between screens
+            final transactions = _cachedTransactions.isNotEmpty
+                ? _cachedTransactions
+                : (snapshot.data ?? []);
+
+            // Never show loading screen - always show content immediately
+            // If data is empty, show empty state instead of loading
             final summary = _getSummaryFromTransactions(transactions);
             final groupedTransactions = _groupTransactionsByDate(transactions);
             final sortedDates = groupedTransactions.keys.toList()
@@ -552,15 +548,6 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
       floatingActionButton: _buildFAB(),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return Center(
-      child: CircularProgressIndicator(
-        color: AppColors.primary,
-        backgroundColor: AppColors.surfaceVariant,
-      ),
     );
   }
 

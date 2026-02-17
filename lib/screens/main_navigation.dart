@@ -72,11 +72,10 @@ class _MainNavigationState extends State<MainNavigation>
     return WillPopScope(
       onWillPop: () async {
         if (_currentIndex != 0) {
-          _pageController.animateToPage(
-            0,
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeOutCubic,
-          );
+          _pageController.jumpToPage(0);
+          setState(() {
+            _currentIndex = 0;
+          });
           return false;
         }
         return true;
@@ -84,6 +83,8 @@ class _MainNavigationState extends State<MainNavigation>
       child: Scaffold(
         body: PageView(
           controller: _pageController,
+          physics:
+              const NeverScrollableScrollPhysics(), // Disable swipe to prevent loading screens
           onPageChanged: (index) {
             setState(() {
               _currentIndex = index;
@@ -103,48 +104,48 @@ class _MainNavigationState extends State<MainNavigation>
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            height: 72,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppColors.surface.withValues(alpha: 0.95),
-                  AppColors.surfaceVariant.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(28),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              height: 72,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.surface.withValues(alpha: 0.95),
+                    AppColors.surfaceVariant.withValues(alpha: 0.85),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 30,
+                    offset: const Offset(0, 10),
+                  ),
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, -2),
+                  ),
                 ],
               ),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 30,
-                  offset: const Offset(0, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(
+                  _navItems.length,
+                  (index) => _buildNavItem(index),
                 ),
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(
-                _navItems.length,
-                (index) => _buildNavItem(index),
               ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -161,11 +162,7 @@ class _MainNavigationState extends State<MainNavigation>
         setState(() {
           _currentIndex = index;
         });
-        _pageController.animateToPage(
-          index,
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeOutCubic,
-        );
+        _pageController.jumpToPage(index);
       },
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
