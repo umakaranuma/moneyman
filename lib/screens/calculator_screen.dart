@@ -121,7 +121,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                     style: GoogleFonts.inter(
                       color: AppColors.textPrimary,
                       fontSize: 24,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w500,
                       letterSpacing: -0.5,
                     ),
                   ),
@@ -182,7 +182,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                             style: GoogleFonts.inter(
                               color: AppColors.primary,
                               fontSize: 16,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ),
@@ -196,7 +196,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                         style: GoogleFonts.inter(
                           color: AppColors.textPrimary,
                           fontSize: 64,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w400,
                           letterSpacing: -2,
                           height: 1.1,
                         ),
@@ -434,7 +434,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                       ? AppColors.primary
                       : textColor,
               fontSize: 28,
-              fontWeight: isEquals ? FontWeight.w700 : FontWeight.w600,
+              fontWeight: isEquals ? FontWeight.w500 : FontWeight.w400,
               letterSpacing: -0.5,
             ),
           ),
