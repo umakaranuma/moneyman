@@ -11,228 +11,203 @@ class MoreScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: CustomScrollView(
-          slivers: [
-            // Fixed Header
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _FixedHeaderDelegate(
-                child: _buildHeader(),
-                height: 100, // Header height: padding (16*2) + content (~68)
-              ),
-            ),
-
-            // Pro Banner - Commented out as Pro features are not implemented yet
-            // SliverToBoxAdapter(child: _buildProBanner(context)),
-
-            // Settings Grid
-            SliverPadding(
-              padding: const EdgeInsets.all(16),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 0.95,
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(color: AppColors.background),
+        child: SafeArea(
+          bottom: false,
+          child: CustomScrollView(
+            slivers: [
+              // Fixed Header
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _FixedHeaderDelegate(
+                  child: _buildHeader(),
+                  height: 100, // Header height: padding (16*2) + content (~68)
                 ),
-                delegate: SliverChildListDelegate([
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.checklist_rounded,
-                    label: 'Todos',
-                    gradient: [AppColors.primary, AppColors.primaryLight],
-                    onTap: () => context.goToTodos(),
-                  ),
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.note_alt_rounded,
-                    label: 'Notes',
-                    gradient: [
-                      const Color(0xFFF59E0B),
-                      const Color(0xFFF97316),
-                    ],
-                    onTap: () => context.goToNotes(),
-                  ),
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.sms_rounded,
-                    label: 'SMS Import',
-                    gradient: [
-                      AppColors.income,
-                      AppColors.income.withValues(alpha: 0.7),
-                    ],
-                    onTap: () => context.goToSmsTransactions(),
-                  ),
-                  // _buildSettingsItem(
-                  //   context,
-                  //   icon: Icons.settings_rounded,
-                  //   label: 'Settings',
-                  //   gradient: [
-                  //     AppColors.textMuted,
-                  //     AppColors.textMuted.withValues(alpha: 0.7),
-                  //   ],
-                  //   onTap: () => context.goToSettings(),
-                  // ),
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.category_rounded,
-                    label: 'Categories',
-                    gradient: [AppColors.primary, AppColors.primaryLight],
-                    onTap: () => context.goToCategories(),
-                  ),
-                  // Security - Commented out as not implemented yet
-                  // _buildSettingsItem(
-                  //   context,
-                  //   icon: Icons.lock_rounded,
-                  //   label: 'Security',
-                  //   gradient: [AppColors.secondary, AppColors.primary],
-                  //   onTap: () => context.goToSecurity(),
-                  // ),
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.calculate_rounded,
-                    label: 'Calculator',
-                    gradient: [
-                      AppColors.transfer,
-                      AppColors.transfer.withValues(alpha: 0.7),
-                    ],
-                    onTap: () => context.goToCalculator(),
-                  ),
-                  // Sync - Commented out as not implemented yet
-                  // _buildSettingsItem(
-                  //   context,
-                  //   icon: Icons.devices_rounded,
-                  //   label: 'Sync',
-                  //   gradient: [
-                  //     const Color(0xFFE879F9),
-                  //     const Color(0xFFD946EF),
-                  //   ],
-                  //   onTap: () => context.goToSync(),
-                  // ),
-                  // Backup - Commented out as not implemented yet
-                  // _buildSettingsItem(
-                  //   context,
-                  //   icon: Icons.cloud_upload_rounded,
-                  //   label: 'Backup',
-                  //   gradient: [
-                  //     const Color(0xFF48DBFB),
-                  //     const Color(0xFF0ABDE3),
-                  //   ],
-                  //   onTap: () => context.goToBackup(),
-                  // ),
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.chat_bubble_rounded,
-                    label: 'Feedback',
-                    gradient: [
-                      const Color(0xFFFECA57),
-                      const Color(0xFFFF9F43),
-                    ],
-                    onTap: () => context.goToFeedback(),
-                  ),
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.help_rounded,
-                    label: 'Help',
-                    gradient: [AppColors.secondary, AppColors.secondaryLight],
-                    onTap: () => context.goToHelp(),
-                  ),
-                ]),
               ),
-            ),
 
-            // About Section
-            SliverToBoxAdapter(child: _buildAboutSection(context)),
+              // Pro Banner - Commented out as Pro features are not implemented yet
+              // SliverToBoxAdapter(child: _buildProBanner(context)),
 
-            // Bottom spacing to account for bottom navigation bar
-            // Nav bar: 72px height + 16px margin = 88px, plus safe area
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 16 + MediaQuery.of(context).padding.bottom,
+              // Settings Grid
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 0.85,
+                  ),
+                  delegate: SliverChildListDelegate([
+                    _buildSettingsItem(
+                      context,
+                      icon: Icons.checklist_rounded,
+                      label: 'Todos',
+                      onTap: () => context.goToTodos(),
+                    ),
+                    _buildSettingsItem(
+                      context,
+                      icon: Icons.note_alt_rounded,
+                      label: 'Notes',
+                      onTap: () => context.goToNotes(),
+                    ),
+                    _buildSettingsItem(
+                      context,
+                      icon: Icons.sms_rounded,
+                      label: 'SMS Import',
+                      onTap: () => context.goToSmsTransactions(),
+                    ),
+                    // _buildSettingsItem(
+                    //   context,
+                    //   icon: Icons.settings_rounded,
+                    //   label: 'Settings',
+                    //   onTap: () => context.goToSettings(),
+                    // ),
+                    _buildSettingsItem(
+                      context,
+                      icon: Icons.category_rounded,
+                      label: 'Categories',
+                      onTap: () => context.goToCategories(),
+                    ),
+                    // Security - Commented out as not implemented yet
+                    // _buildSettingsItem(
+                    //   context,
+                    //   icon: Icons.lock_rounded,
+                    //   label: 'Security',
+                    //   onTap: () => context.goToSecurity(),
+                    // ),
+                    _buildSettingsItem(
+                      context,
+                      icon: Icons.calculate_rounded,
+                      label: 'Calculator',
+                      onTap: () => context.goToCalculator(),
+                    ),
+                    // Sync - Commented out as not implemented yet
+                    // _buildSettingsItem(
+                    //   context,
+                    //   icon: Icons.devices_rounded,
+                    //   label: 'Sync',
+                    //   onTap: () => context.goToSync(),
+                    // ),
+                    // Backup - Commented out as not implemented yet
+                    // _buildSettingsItem(
+                    //   context,
+                    //   icon: Icons.cloud_upload_rounded,
+                    //   label: 'Backup',
+                    //   onTap: () => context.goToBackup(),
+                    // ),
+                    _buildSettingsItem(
+                      context,
+                      icon: Icons.chat_bubble_rounded,
+                      label: 'Feedback',
+                      onTap: () => context.goToFeedback(),
+                    ),
+                    _buildSettingsItem(
+                      context,
+                      icon: Icons.help_rounded,
+                      label: 'Help',
+                      onTap: () => context.goToHelp(),
+                    ),
+                  ]),
+                ),
               ),
-            ),
-          ],
+
+              // About Section
+              SliverToBoxAdapter(child: _buildAboutSection(context)),
+
+              // Bottom spacing to account for bottom navigation bar
+              // Nav bar: 72px height + 16px margin = 88px, plus safe area
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 16 + MediaQuery.of(context).padding.bottom,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildHeader() {
-    return Padding(
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary.withOpacity(0.12), Colors.transparent],
+        ),
+      ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.secondary, AppColors.primary],
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: AppColors.primary.withOpacity(.2),
+                width: 1,
               ),
-              borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.secondary.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
             child: const Icon(
-              Icons.apps_rounded,
-              color: Colors.white,
-              size: 24,
+              Icons.dashboard_customize_rounded,
+              color: AppColors.primary,
+              size: 26,
             ),
           ),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Settings',
-                style: GoogleFonts.inter(
-                  color: AppColors.textPrimary,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Settings",
+                  style: GoogleFonts.inter(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-              Text(
-                'Customize your experience',
-                style: GoogleFonts.inter(
-                  color: AppColors.textMuted,
-                  fontSize: 12,
+                Text(
+                  "Manage your Finzo experience",
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppColors.textMuted,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const Spacer(),
           FutureBuilder<PackageInfo>(
             future: PackageInfo.fromPlatform(),
             builder: (context, snapshot) {
               final version = snapshot.hasData
-                  ? 'v${snapshot.data!.version}'
-                  : 'v1.0.0';
+                  ? "v${snapshot.data!.version}"
+                  : "v1.0.0";
               return Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
+                  horizontal: 12,
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
+                  borderRadius: BorderRadius.circular(30),
+                  color: AppColors.primary.withOpacity(.12),
                 ),
                 child: Text(
                   version,
                   style: GoogleFonts.inter(
                     color: AppColors.primary,
-                    fontSize: 11,
                     fontWeight: FontWeight.w600,
+                    fontSize: 11,
                   ),
                 ),
               );
@@ -430,54 +405,47 @@ class MoreScreen extends StatelessWidget {
     BuildContext context, {
     required IconData icon,
     required String label,
-    required List<Color> gradient,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
+      borderRadius: BorderRadius.circular(26),
       onTap: onTap,
-      child: Container(
+      child: Ink(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.surface,
-              AppColors.surfaceVariant.withValues(alpha: 0.5),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: gradient[0].withValues(alpha: 0.15),
-            width: 1,
-          ),
+          borderRadius: BorderRadius.circular(26),
+          color: AppColors.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: gradient),
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: gradient[0].withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: AppColors.primary.withOpacity(.2),
+                  width: 1,
+                ),
               ),
-              child: Icon(icon, color: Colors.white, size: 22),
+              child: Icon(icon, color: AppColors.primary, size: 26),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
             Text(
               label,
-              style: GoogleFonts.inter(
-                color: AppColors.textPrimary,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
               textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
             ),
           ],
         ),
@@ -490,51 +458,40 @@ class MoreScreen extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.surface,
-            AppColors.surfaceVariant.withValues(alpha: 0.5),
-          ],
+        borderRadius: BorderRadius.circular(22),
+        color: AppColors.background,
+        border: Border.all(
+          color: AppColors.surfaceVariant.withOpacity(.15),
+          width: 1,
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.surfaceVariant, width: 1),
       ),
       child: Column(
         children: [
           _buildAboutItem(
             icon: Icons.star_rounded,
-            title: 'Rate Us',
-            subtitle: 'Love the app? Rate us 5 stars!',
-            gradient: [AppColors.primary, AppColors.secondary],
+            title: "Rate Finzo",
+            subtitle: "Support us with a review",
             onTap: () => AppUtils.rateApp(),
           ),
           const SizedBox(height: 12),
           _buildAboutItem(
             icon: Icons.share_rounded,
-            title: 'Share App',
-            subtitle: 'Share with friends and family',
-            gradient: [
-              AppColors.transfer,
-              AppColors.transfer.withValues(alpha: 0.7),
-            ],
+            title: "Share App",
+            subtitle: "Invite your friends",
             onTap: () => AppUtils.shareApp(),
           ),
           const SizedBox(height: 12),
           _buildAboutItem(
             icon: Icons.privacy_tip_rounded,
-            title: 'Privacy Policy',
-            subtitle: 'Learn how we protect your data',
-            gradient: [AppColors.primary, AppColors.primaryLight],
+            title: "Privacy Policy",
+            subtitle: "Your data protection info",
             onTap: () => context.goToPrivacyPolicy(),
           ),
           const SizedBox(height: 12),
           _buildAboutItem(
             icon: Icons.description_rounded,
-            title: 'Terms of Service',
-            subtitle: 'Read our terms and conditions',
-            gradient: [AppColors.secondary, AppColors.secondaryLight],
+            title: "Terms of Service",
+            subtitle: "App usage terms",
             onTap: () => context.goToTermsOfService(),
           ),
         ],
@@ -546,56 +503,66 @@ class MoreScreen extends StatelessWidget {
     required IconData icon,
     required String title,
     required String subtitle,
-    required List<Color> gradient,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: gradient),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: Colors.white, size: 18),
+      borderRadius: BorderRadius.circular(14),
+      child: Ink(
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.surface.withOpacity(.3),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: AppColors.surfaceVariant.withOpacity(.1),
+              width: 1,
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.inter(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(.2),
+                    width: 1,
                   ),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.inter(
-                      color: AppColors.textMuted,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
+                ),
+                child: Icon(icon, color: AppColors.primary, size: 18),
               ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.textMuted,
-              size: 20,
-            ),
-          ],
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.inter(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.inter(
+                        color: AppColors.textMuted,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textMuted,
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
     );
