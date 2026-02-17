@@ -190,7 +190,7 @@ class _AccountsScreenState extends State<AccountsScreen>
 
   Widget _buildPopupMenuButton() {
     return PopupMenuButton<String>(
-      icon: Container(
+      child: Container(
         width: 44,
         height: 44,
         decoration: BoxDecoration(
