@@ -66,6 +66,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Temporarily disable minify to test if ProGuard is causing issues
+            // If notifications work after this, then ProGuard was the problem
+            // You can re-enable minify after confirming notifications work
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }

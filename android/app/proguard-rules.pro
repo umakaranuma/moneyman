@@ -11,9 +11,11 @@
 # Permission handler
 -keep class com.baseflow.permissionhandler.** { *; }
 
-# Timezone
+# Timezone - Keep all timezone related classes
 -keep class org.threeten.bp.** { *; }
 -keep class java.time.** { *; }
+-keep class timezone.** { *; }
+-keep class com.beyondeye.kbloc.** { *; }
 
 # Play Core tasks (Flutter deferred components not used)
 -dontwarn com.google.android.play.core.tasks.OnFailureListener

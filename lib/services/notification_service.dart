@@ -27,18 +27,28 @@ class NotificationService {
       // Initialize timezone
       tz.initializeTimeZones();
 
+      // Set timezone - try Asia/Colombo first (Sri Lankan time)
+      // This is reliable and works in both debug and release builds
       try {
         tz.setLocalLocation(tz.getLocation('Asia/Colombo'));
+        developer.log(
+          'Timezone set to Asia/Colombo (Sri Lankan time)',
+          name: 'NotificationService',
+        );
       } catch (e) {
         developer.log(
-          'Error setting timezone: $e',
+          'Error setting Asia/Colombo timezone, trying UTC: $e',
           name: 'NotificationService',
         );
         try {
           tz.setLocalLocation(tz.getLocation('UTC'));
+          developer.log(
+            'Timezone set to UTC as fallback',
+            name: 'NotificationService',
+          );
         } catch (e2) {
           developer.log(
-            'UTC fallback failed: $e2',
+            'UTC fallback also failed: $e2',
             name: 'NotificationService',
           );
         }
@@ -315,7 +325,7 @@ class NotificationService {
 
   /// Schedule default notifications:
   /// - 12:20 AM daily (Sri Lankan time): Morning todo list reminder
-  /// - 09:00 PM daily (Sri Lankan time): Evening expenses and todo completion reminder
+  /// - 10:25 PM daily (Sri Lankan time): Evening expenses and todo completion reminder
   static Future<void> scheduleDefaultNotifications() async {
     try {
       developer.log(
@@ -347,15 +357,16 @@ class NotificationService {
     }
   }
 
-  /// Schedule daily notification at 12:20 AM (morning, Sri Lankan time) for todo list planning
+  /// Schedule daily notification at 12:20 AM (morning, local time) for todo list planning
   static Future<void> scheduleMorningTodoReminder() async {
     try {
-      final sriLankanLocation = tz.getLocation('Asia/Colombo');
-      final now = tz.TZDateTime.now(sriLankanLocation);
+      // Use the current local timezone (set during init)
+      final localLocation = tz.local;
+      final now = tz.TZDateTime.now(localLocation);
 
-      // Schedule for 12:20 AM Sri Lankan time
+      // Schedule for 12:20 AM local time
       var scheduledDate = tz.TZDateTime(
-        sriLankanLocation,
+        localLocation,
         now.year,
         now.month,
         now.day,
@@ -464,20 +475,21 @@ class NotificationService {
     }
   }
 
-  /// Schedule daily notification at 09:00 PM (evening, Sri Lankan time) for expenses and todo completion
+  /// Schedule daily notification at 10:25 PM (evening, local time) for expenses and todo completion
   static Future<void> scheduleEveningExpensesReminder() async {
     try {
-      final sriLankanLocation = tz.getLocation('Asia/Colombo');
-      final now = tz.TZDateTime.now(sriLankanLocation);
+      // Use the current local timezone (set during init)
+      final localLocation = tz.local;
+      final now = tz.TZDateTime.now(localLocation);
 
-      // Schedule for 09:00 PM Sri Lankan time
+      // Schedule for 10:25 PM local time
       var scheduledDate = tz.TZDateTime(
-        sriLankanLocation,
+        localLocation,
         now.year,
         now.month,
         now.day,
-        21, // 9 PM (21:00)
-        0, // 0 minutes
+        22, // 10 PM (22:00)
+        25, // 25 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -645,12 +657,13 @@ class NotificationService {
   /// Check if notifications should have fired and manually trigger if needed
   static Future<void> checkAndTriggerMissedNotifications() async {
     try {
-      final sriLankanLocation = tz.getLocation('Asia/Colombo');
-      final now = tz.TZDateTime.now(sriLankanLocation);
+      // Use the current local timezone (set during init)
+      final localLocation = tz.local;
+      final now = tz.TZDateTime.now(localLocation);
 
       // Check if it's past 12:20 AM today (morning notification)
       final morningTargetTime = tz.TZDateTime(
-        sriLankanLocation,
+        localLocation,
         now.year,
         now.month,
         now.day,
@@ -658,14 +671,14 @@ class NotificationService {
         20, // 20 minutes
       );
 
-      // Check if it's past 09:00 PM today (evening notification)
+      // Check if it's past 10:25 PM today (evening notification)
       final eveningTargetTime = tz.TZDateTime(
-        sriLankanLocation,
+        localLocation,
         now.year,
         now.month,
         now.day,
-        21, // 9 PM
-        0, // 0 minutes
+        22, // 10 PM
+        25, // 25 minutes
       );
 
       // If current time is within 5 minutes of notification time
