@@ -1874,16 +1874,19 @@ class _HomeScreenState extends State<HomeScreen>
 
     double income = 0.0;
     double expense = 0.0;
+    double transfer = 0.0;
 
     for (var transaction in transactions) {
       if (transaction.type == TransactionType.income) {
         income += transaction.amount;
       } else if (transaction.type == TransactionType.expense) {
         expense += transaction.amount;
+      } else if (transaction.type == TransactionType.transfer) {
+        transfer += transaction.amount;
       }
     }
 
-    return {'income': income, 'expense': expense};
+    return {'income': income, 'expense': expense, 'transfer': transfer};
   }
 
   List<Transaction> _getTransactionsForDay(
@@ -1897,81 +1900,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildCalendarView(List<Transaction> allTransactions) {
     final transactionsByDate = _getTransactionsByDate(allTransactions);
-    final selectedDayTransactions = _getTransactionsForDay(
-      _selectedDay,
-      allTransactions,
-    );
 
-    return Column(
-      children: [
-        // Calendar Grid
-        Expanded(
-          child: _buildCalendarGrid(transactionsByDate, allTransactions),
-        ),
-        // Selected Day Transactions
-        if (selectedDayTransactions.isNotEmpty)
-          Container(
-            height: 200,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(24),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 20,
-                  offset: const Offset(0, -5),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.primary.withValues(alpha: 0.1),
-                        AppColors.primaryLight.withValues(alpha: 0.05),
-                      ],
-                    ),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        DateFormat('MMMM dd, yyyy').format(_selectedDay),
-                        style: GoogleFonts.inter(
-                          color: AppColors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: selectedDayTransactions.length,
-                    itemBuilder: (context, index) {
-                      return _buildTransactionItem(
-                        selectedDayTransactions[index],
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
+    return _buildCalendarGrid(transactionsByDate, allTransactions);
   }
 
   Widget _buildCalendarGrid(
@@ -1999,7 +1929,7 @@ class _HomeScreenState extends State<HomeScreen>
       children: [
         // Week day headers
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           margin: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: weekDays.map((day) {
@@ -2009,11 +1939,12 @@ class _HomeScreenState extends State<HomeScreen>
                   child: Text(
                     day,
                     style: GoogleFonts.inter(
-                      fontSize: 12,
+                      fontSize: 13,
                       color: isWeekend
                           ? AppColors.secondary
                           : AppColors.textMuted,
                       fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
@@ -2025,10 +1956,13 @@ class _HomeScreenState extends State<HomeScreen>
         Expanded(
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.only(bottom: 16),
             child: GridView.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 7,
-                childAspectRatio: 0.65,
+                childAspectRatio: 0.7,
+                crossAxisSpacing: 4,
+                mainAxisSpacing: 4,
               ),
               itemCount: 42, // 6 weeks x 7 days
               itemBuilder: (context, index) {
@@ -2057,11 +1991,17 @@ class _HomeScreenState extends State<HomeScreen>
                   }
 
                   final dayTotals = _getDayTotals(otherDate, allTransactions);
+                  final dayTransactions = _getTransactionsForDay(
+                    otherDate,
+                    allTransactions,
+                  );
 
                   return _buildCalendarDay(
                     otherDate.day,
                     dayTotals['income']!,
                     dayTotals['expense']!,
+                    dayTotals['transfer']!,
+                    transactionCount: dayTransactions.length,
                     isCurrentMonth: false,
                     isToday: false,
                     isSelected: false,
@@ -2076,6 +2016,10 @@ class _HomeScreenState extends State<HomeScreen>
                   dayOffset + 1,
                 );
                 final dayTotals = _getDayTotals(currentDate, allTransactions);
+                final dayTransactions = _getTransactionsForDay(
+                  currentDate,
+                  allTransactions,
+                );
                 final isToday = _isToday(currentDate);
                 final isSelected = _isSameDay(currentDate, _selectedDay);
 
@@ -2083,14 +2027,20 @@ class _HomeScreenState extends State<HomeScreen>
                   dayOffset + 1,
                   dayTotals['income']!,
                   dayTotals['expense']!,
+                  dayTotals['transfer']!,
+                  transactionCount: dayTransactions.length,
                   isCurrentMonth: true,
                   isToday: isToday,
                   isSelected: isSelected,
                   isSunday: index % 7 == 0,
                   onTap: () {
-                    setState(() {
-                      _selectedDay = currentDate;
-                    });
+                    if (dayTransactions.isNotEmpty) {
+                      _showDayTransactionsModal(currentDate, dayTransactions);
+                    } else {
+                      setState(() {
+                        _selectedDay = currentDate;
+                      });
+                    }
                   },
                 );
               },
@@ -2112,22 +2062,184 @@ class _HomeScreenState extends State<HomeScreen>
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
+  void _showDayTransactionsModal(
+    DateTime date,
+    List<Transaction> transactions,
+  ) {
+    // Sort transactions by time (newest first)
+    transactions.sort((a, b) => b.date.compareTo(a.date));
+
+    final dayIncome = transactions
+        .where((t) => t.type == TransactionType.income)
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final dayExpense = transactions
+        .where((t) => t.type == TransactionType.expense)
+        .fold(0.0, (sum, t) => sum + t.amount);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textMuted,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [AppColors.primary, AppColors.primaryLight],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.calendar_today_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            DateFormat('EEEE, MMMM dd, yyyy').format(date),
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              if (dayIncome > 0)
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.income,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Rs. ${_formatCurrency(dayIncome)}',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        color: AppColors.income,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              if (dayIncome > 0 && dayExpense > 0)
+                                const SizedBox(width: 12),
+                              if (dayExpense > 0)
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.expense,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Rs. ${_formatCurrency(dayExpense)}',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        color: AppColors.expense,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceVariant,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          color: AppColors.textMuted,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Transactions List
+              Flexible(
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  shrinkWrap: true,
+                  itemCount: transactions.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    return _buildTransactionItem(transactions[index]);
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildCalendarDay(
     int day,
     double income,
-    double expense, {
+    double expense,
+    double transfer, {
+    required int transactionCount,
     required bool isCurrentMonth,
     required bool isToday,
     required bool isSelected,
     required bool isSunday,
     VoidCallback? onTap,
   }) {
+    final hasTransactions = transactionCount > 0;
     final formatter = NumberFormat('#,##0', 'en_US');
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.all(2),
         decoration: BoxDecoration(
           gradient: isSelected
               ? const LinearGradient(
@@ -2138,74 +2250,110 @@ class _HomeScreenState extends State<HomeScreen>
               : isToday
               ? LinearGradient(
                   colors: [
-                    AppColors.primary.withValues(alpha: 0.2),
-                    AppColors.primaryLight.withValues(alpha: 0.1),
+                    AppColors.primary.withValues(alpha: 0.15),
+                    AppColors.primaryLight.withValues(alpha: 0.08),
                   ],
                 )
               : null,
-          color: isSelected || isToday
-              ? null
-              : AppColors.surface.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(12),
+          color: isSelected || isToday ? null : AppColors.surface,
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected
                 ? AppColors.primary
                 : isToday
-                ? AppColors.primary.withValues(alpha: 0.3)
-                : AppColors.surfaceVariant.withValues(alpha: 0.3),
+                ? AppColors.primary.withValues(alpha: 0.4)
+                : hasTransactions
+                ? AppColors.surfaceVariant.withValues(alpha: 0.5)
+                : AppColors.surfaceVariant.withValues(alpha: 0.2),
             width: isSelected ? 2 : 1,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Day number
-            Text(
-              '$day',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: isToday || isSelected
-                    ? FontWeight.w700
-                    : FontWeight.w500,
-                color: isSelected
-                    ? Colors.white
-                    : !isCurrentMonth
-                    ? AppColors.textMuted.withValues(alpha: 0.3)
-                    : isSunday
-                    ? AppColors.secondary
-                    : AppColors.textPrimary,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Day number
+              Text(
+                '$day',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: isToday || isSelected
+                      ? FontWeight.w700
+                      : FontWeight.w600,
+                  color: isSelected
+                      ? Colors.white
+                      : !isCurrentMonth
+                      ? AppColors.textMuted.withValues(alpha: 0.3)
+                      : isSunday
+                      ? AppColors.secondary
+                      : AppColors.textPrimary,
+                ),
               ),
-            ),
-            // Income and expense amounts
-            if (isCurrentMonth) ...[
-              if (income > 0)
-                Text(
-                  formatter.format(income),
-                  style: GoogleFonts.inter(
-                    fontSize: 7,
-                    color: isSelected
-                        ? Colors.white.withValues(alpha: 0.9)
-                        : AppColors.income,
-                    fontWeight: FontWeight.w500,
+              const Spacer(),
+              // Amounts list
+              if (isCurrentMonth && hasTransactions) ...[
+                if (income > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 1),
+                    child: Text(
+                      formatter.format(income),
+                      style: GoogleFonts.inter(
+                        fontSize: 7.5,
+                        fontWeight: FontWeight.w500,
+                        color: isSelected
+                            ? Colors.white.withValues(alpha: 0.95)
+                            : AppColors.income,
+                        height: 1.0,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              if (expense > 0)
-                Text(
-                  formatter.format(expense),
-                  style: GoogleFonts.inter(
-                    fontSize: 7,
-                    color: isSelected
-                        ? Colors.white.withValues(alpha: 0.8)
-                        : AppColors.expense,
-                    fontWeight: FontWeight.w500,
+                if (expense > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 1),
+                    child: Text(
+                      formatter.format(expense),
+                      style: GoogleFonts.inter(
+                        fontSize: 7.5,
+                        fontWeight: FontWeight.w500,
+                        color: isSelected
+                            ? Colors.white.withValues(alpha: 0.9)
+                            : AppColors.expense,
+                        height: 1.0,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                if (transfer > 0)
+                  Text(
+                    formatter.format(transfer),
+                    style: GoogleFonts.inter(
+                      fontSize: 7.5,
+                      fontWeight: FontWeight.w500,
+                      color: isSelected
+                          ? Colors.white.withValues(alpha: 0.85)
+                          : AppColors.transfer,
+                      height: 1.0,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

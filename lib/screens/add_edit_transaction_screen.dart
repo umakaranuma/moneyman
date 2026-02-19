@@ -332,20 +332,21 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       builder: (context) {
         final screenHeight = MediaQuery.of(context).size.height;
         final bottomSheetHeight = screenHeight * 0.7;
-        return Container(
-          height: bottomSheetHeight,
-          constraints: BoxConstraints(
-            maxHeight: screenHeight * 0.85,
-            minHeight: screenHeight * 0.5,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(_getResponsiveSize(context, 28)),
+        return SafeArea(
+          child: Container(
+            height: bottomSheetHeight,
+            constraints: BoxConstraints(
+              maxHeight: screenHeight * 0.85,
+              minHeight: screenHeight * 0.5,
             ),
-          ),
-          child: Column(
-            children: [
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(_getResponsiveSize(context, 28)),
+              ),
+            ),
+            child: Column(
+              children: [
               // Handle
               Container(
                 margin: const EdgeInsets.only(top: 12),
@@ -599,6 +600,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 ),
               ),
             ],
+            ),
           ),
         );
       },
@@ -620,20 +622,21 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       isScrollControlled: true,
       builder: (context) {
         final screenHeight = MediaQuery.of(context).size.height;
-        return Container(
-          constraints: BoxConstraints(
-            maxHeight: screenHeight * 0.75,
-            minHeight: screenHeight * 0.4,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(_getResponsiveSize(context, 28)),
+        return SafeArea(
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: screenHeight * 0.75,
+              minHeight: screenHeight * 0.4,
             ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(_getResponsiveSize(context, 28)),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
               Container(
                 margin: const EdgeInsets.only(top: 12),
                 width: 40,
@@ -871,6 +874,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 ),
               ),
             ],
+            ),
           ),
         );
       },
@@ -882,15 +886,16 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+        return SafeArea(
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
               Container(
                 width: 40,
                 height: 4,
@@ -1013,6 +1018,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
               }),
               const SizedBox(height: 16),
             ],
+            ),
           ),
         );
       },
@@ -1097,14 +1103,51 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
 
       // Show success message
       if (mounted) {
+        String message;
+        Color iconColor;
+        
+        if (widget.transaction != null) {
+          // Update message
+          switch (_transactionType) {
+            case TransactionType.income:
+              message = 'Income transaction updated successfully!';
+              iconColor = AppColors.income;
+              break;
+            case TransactionType.expense:
+              message = 'Expense transaction updated successfully!';
+              iconColor = AppColors.primary;
+              break;
+            case TransactionType.transfer:
+              message = 'Transfer transaction updated successfully!';
+              iconColor = AppColors.secondary;
+              break;
+          }
+        } else {
+          // New transaction message
+          switch (_transactionType) {
+            case TransactionType.income:
+              message = 'Your income has been added successfully!';
+              iconColor = AppColors.income;
+              break;
+            case TransactionType.expense:
+              message = 'Your expense has been recorded successfully!';
+              iconColor = AppColors.primary;
+              break;
+            case TransactionType.transfer:
+              message = 'Your transfer has been saved successfully!';
+              iconColor = AppColors.secondary;
+              break;
+          }
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: AppColors.income,
+                  decoration: BoxDecoration(
+                    color: iconColor,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -1114,11 +1157,11 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Text(
-                  widget.transaction != null
-                      ? 'Transaction updated'
-                      : 'Transaction saved',
-                  style: GoogleFonts.inter(),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: GoogleFonts.inter(),
+                  ),
                 ),
               ],
             ),
@@ -1203,14 +1246,33 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         _imagePaths = [];
       });
 
+      // Show user-friendly success message based on transaction type
+      String message;
+      Color iconColor;
+      
+      switch (_transactionType) {
+        case TransactionType.income:
+          message = 'Income added! Ready for next entry.';
+          iconColor = AppColors.income;
+          break;
+        case TransactionType.expense:
+          message = 'Expense recorded! Ready for next entry.';
+          iconColor = AppColors.primary;
+          break;
+        case TransactionType.transfer:
+          message = 'Transfer saved! Ready for next entry.';
+          iconColor = AppColors.secondary;
+          break;
+      }
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
+                decoration: BoxDecoration(
+                  color: iconColor,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -1220,7 +1282,12 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 ),
               ),
               const SizedBox(width: 10),
-              const Text('Transaction saved'),
+              Expanded(
+                child: Text(
+                  message,
+                  style: GoogleFonts.inter(),
+                ),
+              ),
             ],
           ),
           duration: const Duration(seconds: 2),
