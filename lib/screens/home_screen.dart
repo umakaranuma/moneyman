@@ -967,7 +967,7 @@ class _HomeScreenState extends State<HomeScreen>
         ),
         unselectedLabelStyle: GoogleFonts.inter(
           fontWeight: FontWeight.w400,
-          fontSize: 12,
+          fontSize: 10,
         ),
         tabs: _tabs
             .map(
