@@ -2075,6 +2075,9 @@ class _HomeScreenState extends State<HomeScreen>
     final dayExpense = transactions
         .where((t) => t.type == TransactionType.expense)
         .fold(0.0, (sum, t) => sum + t.amount);
+    final dayTransfer = transactions
+        .where((t) => t.type == TransactionType.transfer)
+        .fold(0.0, (sum, t) => sum + t.amount);
 
     showModalBottomSheet(
       context: context,
@@ -2132,10 +2135,13 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Row(
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 6,
                             children: [
                               if (dayIncome > 0)
                                 Row(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Container(
                                       width: 8,
@@ -2156,10 +2162,9 @@ class _HomeScreenState extends State<HomeScreen>
                                     ),
                                   ],
                                 ),
-                              if (dayIncome > 0 && dayExpense > 0)
-                                const SizedBox(width: 12),
                               if (dayExpense > 0)
                                 Row(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Container(
                                       width: 8,
@@ -2175,6 +2180,29 @@ class _HomeScreenState extends State<HomeScreen>
                                       style: GoogleFonts.inter(
                                         fontSize: 11,
                                         color: AppColors.expense,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              if (dayTransfer > 0)
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.transfer,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Rs. ${_formatCurrency(dayTransfer)}',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        color: AppColors.transfer,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -3008,7 +3036,9 @@ class _HomeScreenState extends State<HomeScreen>
                 fontWeight: FontWeight.w600,
                 color: transaction.type == TransactionType.income
                     ? AppColors.income
-                    : AppColors.expense,
+                    : transaction.type == TransactionType.expense
+                    ? AppColors.expense
+                    : AppColors.transfer,
               ),
             ),
           ],
