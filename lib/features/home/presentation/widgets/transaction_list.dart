@@ -88,21 +88,39 @@ class _DateGroup extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              Text(
-                dayExpense > 0
-                    ? '-Rs. ${SummaryCard.formatCurrency(dayExpense)}'
-                    : dayIncome > 0
-                        ? '+Rs. ${SummaryCard.formatCurrency(dayIncome)}'
-                        : 'Rs. 0',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: dayExpense > 0
-                      ? AppColors.expense
-                      : dayIncome > 0
-                          ? AppColors.income
-                          : AppColors.textMuted,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    dayIncome > 0
+                        ? 'Rs. ${SummaryCard.formatCurrency(dayIncome)}'
+                        : 'Rs.00',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.income,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  if (dayExpense > 0)
+                    Text(
+                      'Rs. ${SummaryCard.formatCurrency(dayExpense)}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.expense,
+                      ),
+                    ),
+                  if (dayExpense == 0)
+                    Text(
+                      'Rs.00',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
