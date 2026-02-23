@@ -17,16 +17,38 @@ class CategoriesScreen extends StatefulWidget {
 class _CategoriesScreenState extends State<CategoriesScreen> {
   late bool _isExpense;
   late List<Category> _categories;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _isExpense = widget.isExpense;
     _categories = []; // Initialize empty to avoid late initialization error
+    _searchController.addListener(() {
+      setState(() => _searchQuery = _searchController.text.trim());
+    });
     // Wait a bit to ensure Hive is fully initialized
     Future.delayed(const Duration(milliseconds: 100), () {
       _loadCategories();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Category> get _filteredCategories {
+    if (_searchQuery.isEmpty) return _categories;
+    final q = _searchQuery.toLowerCase();
+    return _categories
+        .where((c) =>
+            c.name.toLowerCase().contains(q) ||
+            c.emoji.contains(_searchQuery) ||
+            c.subcategories.any((s) => s.toLowerCase().contains(q)))
+        .toList();
   }
 
   Future<void> _loadCategories() async {
@@ -75,26 +97,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     }
   }
 
-  Future<void> _saveCategories() async {
-    try {
-      // Save categories to storage
-      await CategoryService.saveCategories(_categories, isIncome: !_isExpense);
-      print('Categories saved: ${_categories.length}');
-    } catch (e) {
-      print('Error saving categories: $e');
-      // Show error to user
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save categories: $e'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
-  }
-
   void _toggleCategoryType() {
     setState(() {
       _isExpense = !_isExpense;
@@ -106,91 +108,227 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildPremiumHeader(),
+            _buildSearchBar(),
+            const SizedBox(height: 8),
+            Expanded(
+              child: _filteredCategories.isEmpty
+                  ? _buildEmptyState()
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                      itemCount: _filteredCategories.length,
+                      itemBuilder: (_, index) {
+                        final category = _filteredCategories[index];
+                        final actualIndex = _categories
+                            .indexWhere((c) => c.id == category.id);
+                        return _buildPremiumCategoryItem(
+                          category,
+                          actualIndex >= 0 ? actualIndex : index,
+                        );
+                      },
+                    ),
             ),
+          ],
+        ),
+      ),
+      floatingActionButton: _buildAddButton(),
+    );
+  }
+
+  Widget _buildPremiumHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(
+                Icons.arrow_back_rounded,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              _isExpense ? "Expense Categories" : "Income Categories",
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: _toggleCategoryType,
             child: const Icon(
-              Icons.arrow_back_rounded,
-              color: AppColors.textPrimary,
-              size: 20,
+              Icons.swap_horiz_rounded,
+              color: AppColors.textMuted,
             ),
-          ),
-        ),
-        title: GestureDetector(
-          onTap: _toggleCategoryType,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.surfaceVariant, width: 1),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _isExpense ? Icons.trending_down : Icons.trending_up,
-                  color: _isExpense ? AppColors.expense : AppColors.income,
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _isExpense ? 'Expenses' : 'Income',
-                  style: TextStyle(
-                    color: _isExpense ? AppColors.expense : AppColors.income,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.swap_horiz_rounded,
-                  color: AppColors.textMuted,
-                  size: 16,
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: AppColors.textPrimary),
-            onPressed: () => _showAddCategoryDialog(),
           ),
         ],
-      ),
-      body: SafeArea(
-        bottom: true,
-        child: _categories.isEmpty
-            ? _buildEmptyState()
-            : ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: _categories.length,
-                itemBuilder: (context, index) {
-                  final category = _categories[index];
-                  return _buildCategoryItem(category, index);
-                },
-              ),
       ),
     );
   }
 
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: TextField(
+          controller: _searchController,
+          style: const TextStyle(color: AppColors.textPrimary),
+          decoration: const InputDecoration(
+            icon: Icon(Icons.search_rounded, color: AppColors.textMuted),
+            hintText: "Search categories...",
+            hintStyle: TextStyle(color: AppColors.textMuted),
+            border: InputBorder.none,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPremiumCategoryItem(Category category, int index) {
+    final hasSubs = category.subcategories.isNotEmpty;
+
+    return Dismissible(
+      key: ValueKey(category.id),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) => _showDeleteCategoryConfirmation(category),
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+          color: AppColors.expense.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Icon(
+          Icons.delete_outline_rounded,
+          color: AppColors.expense,
+        ),
+      ),
+      child: GestureDetector(
+        onTap: hasSubs
+            ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SubcategoriesScreen(
+                      category: category,
+                      categoryIndex: index,
+                    ),
+                  ),
+                ).then((_) => _loadCategories());
+              }
+            : null,
+        onLongPress: () => _showEditCategoryDialog(category),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: 16,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              )
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    category.emoji.isNotEmpty ? category.emoji : "📁",
+                    style: const TextStyle(fontSize: 22),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      category.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    if (hasSubs)
+                      Text(
+                        "${category.subcategories.length} subcategories",
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textMuted,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddButton() {
+    return FloatingActionButton.extended(
+      backgroundColor: _isExpense ? AppColors.expense : AppColors.income,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+      ),
+      icon: const Icon(Icons.add, color: Colors.white),
+      label: const Text(
+        "Add Category",
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
+      onPressed: _showAddCategoryDialog,
+    );
+  }
+
   Widget _buildEmptyState() {
+    final isSearch = _searchQuery.isNotEmpty;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -203,22 +341,22 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.2),
+                  color: AppColors.primary.withOpacity(0.2),
                   blurRadius: 20,
                   spreadRadius: 5,
                 ),
               ],
             ),
             child: Icon(
-              Icons.category_outlined,
+              isSearch ? Icons.search_off_rounded : Icons.category_outlined,
               size: 60,
               color: AppColors.textMuted,
             ),
           ),
           const SizedBox(height: 24),
           Text(
-            'No Categories Yet',
-            style: TextStyle(
+            isSearch ? 'No matches' : 'No Categories Yet',
+            style: const TextStyle(
               color: AppColors.textPrimary,
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -226,8 +364,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Tap the + button to add your first category',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 14),
+            isSearch
+                ? 'Try a different search'
+                : 'Tap Add Category to create your first one',
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 14),
             textAlign: TextAlign.center,
           ),
         ],
@@ -235,175 +375,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     );
   }
 
-  Widget _buildCategoryItem(Category category, int index) {
-    final hasSubcategories = category.subcategories.isNotEmpty;
-    final subcategoryCount = category.subcategories.length;
-    // Use vibrant color from categoryColors based on index
-    final categoryColor =
-        AppColors.categoryColors[index % AppColors.categoryColors.length];
-
-    return Container(
-      key: ValueKey(category.id),
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: categoryColor.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          // Category Header
-          ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              // vertical: 4,
-            ),
-            leading: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Delete button
-                GestureDetector(
-                  onTap: () => _showDeleteCategoryConfirmation(category),
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: AppColors.expense.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.remove,
-                      color: AppColors.expense,
-                      size: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                // Category color indicator + emoji
-                Container(
-                  // width: 44,
-                  // height: 44,
-                  // decoration: BoxDecoration(
-                  //   gradient: LinearGradient(
-                  //     colors: [
-                  //       categoryColor,
-                  //       categoryColor.withValues(alpha: 0.7),
-                  //     ],
-                  //     begin: Alignment.topLeft,
-                  //     end: Alignment.bottomRight,
-                  //   ),
-                  //   borderRadius: BorderRadius.circular(12),
-                  //   boxShadow: [
-                  //     BoxShadow(
-                  //       color: categoryColor.withValues(alpha: 0.3),
-                  //       blurRadius: 8,
-                  //       offset: const Offset(0, 2),
-                  //     ),
-                  //   ],
-                  // ),
-                  child: Center(
-                    child: category.emoji.isNotEmpty
-                        ? Text(
-                            category.emoji,
-                            style: const TextStyle(fontSize: 20),
-                          )
-                        : const Icon(
-                            Icons.category_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                  ),
-                ),
-              ],
-            ),
-            title: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    category.name,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                if (hasSubcategories)
-                  Container(
-                    // padding: const EdgeInsets.symmetric(
-                    //   horizontal: 8,
-                    //   vertical: 3,
-                    // ),
-                    // decoration: BoxDecoration(
-                    //   color: categoryColor.withValues(alpha: 0.15),
-                    //   borderRadius: BorderRadius.circular(8),
-                    // ),
-                    child: Text(
-                      '($subcategoryCount)',
-                      style: TextStyle(
-                        color: categoryColor,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            subtitle: null,
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: () => _showEditCategoryDialog(category),
-                  child: Container(
-                    // padding: const EdgeInsets.all(8),
-                    // decoration: BoxDecoration(
-                    //   color: AppColors.surfaceVariant.withValues(alpha: 0.5),
-                    //   borderRadius: BorderRadius.circular(8),
-                    // ),
-                    child: const Icon(
-                      Icons.edit_rounded,
-                      color: AppColors.textSecondary,
-                      size: 18,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  Icons.drag_handle_rounded,
-                  color: categoryColor.withValues(alpha: 0.5),
-                  size: 22,
-                ),
-              ],
-            ),
-            onTap: hasSubcategories
-                ? () {
-                    // Navigate to subcategories screen
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SubcategoriesScreen(
-                          category: category,
-                          categoryIndex: index,
-                        ),
-                      ),
-                    ).then((_) {
-                      // Reload categories when returning from subcategories screen
-                      _loadCategories();
-                    });
-                  }
-                : null,
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteCategoryConfirmation(Category category) {
-    showDialog(
+  Future<bool?> _showDeleteCategoryConfirmation(Category category) async {
+    final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
@@ -417,7 +390,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, false),
             child: const Text(
               'Cancel',
               style: TextStyle(color: AppColors.textMuted),
@@ -425,7 +398,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           ),
           TextButton(
             onPressed: () async {
-              // Get categories and create a mutable copy
               final allCategories = List<Category>.from(
                 CategoryService.getCategories(isIncome: !_isExpense),
               );
@@ -434,10 +406,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 allCategories,
                 isIncome: !_isExpense,
               );
-              setState(() {
-                _categories.removeWhere((c) => c.id == category.id);
-              });
-              Navigator.pop(context);
+              if (mounted) {
+                setState(() {
+                  _categories.removeWhere((c) => c.id == category.id);
+                });
+              }
+              if (context.mounted) Navigator.pop(context, true);
             },
             child: const Text(
               'Delete',
@@ -447,6 +421,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         ],
       ),
     );
+    return result;
   }
 
   void _showAddCategoryDialog() {

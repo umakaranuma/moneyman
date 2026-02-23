@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../screens/splash_screen.dart';
 import '../../screens/main_navigation.dart';
-import '../../screens/add_edit_transaction_screen.dart';
+import '../../features/transactions/presentation/screens/add_edit_transaction_screen.dart';
 import '../../screens/notes_screen.dart';
 import '../../screens/add_edit_note_screen.dart';
 import '../../screens/categories_screen.dart';
