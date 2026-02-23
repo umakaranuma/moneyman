@@ -109,8 +109,7 @@ class _DetailRow extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-            const Spacer(),
-            Flexible(
+            Expanded(
               child: Text(
                 value,
                 style: GoogleFonts.inter(

@@ -7,7 +7,7 @@ import '../services/sms_service.dart';
 import '../services/account_service.dart';
 import '../models/transaction.dart';
 import '../models/account.dart';
-import 'stats_screen.dart';
+import '../features/stats/presentation/screens/stats_screen.dart';
 import 'add_account_screen.dart';
 
 class AccountsScreen extends StatefulWidget {

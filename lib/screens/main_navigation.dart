@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../features/home/presentation/screens/home_screen.dart';
-import 'stats_screen.dart';
+import '../features/stats/presentation/screens/stats_screen.dart';
 import 'accounts_screen.dart';
 import 'more_screen.dart';
 
