@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../../../theme/app_theme.dart';
-import '../helpers/stats_calculator.dart';
 
 /// Clean pie chart card: soft surface, one subtle shadow, no gradient/borders.
 class PieChartCard extends StatelessWidget {
@@ -85,7 +84,8 @@ List<PieChartSectionData> buildPieSections(
   return entries.asMap().entries.map((mapEntry) {
     final index = mapEntry.key;
     final entry = mapEntry.value;
-    final color = AppColors.categoryColors[index % AppColors.categoryColors.length];
+    final color =
+        AppColors.categoryColors[index % AppColors.categoryColors.length];
     return PieChartSectionData(
       value: entry.value,
       title: '',

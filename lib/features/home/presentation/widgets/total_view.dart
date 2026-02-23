@@ -1,5 +1,6 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../../../models/transaction.dart';
 import '../../../../services/budget_service.dart';
 import '../../../../theme/app_theme.dart';
@@ -9,6 +10,7 @@ import 'summary_card.dart';
 class TotalView extends StatelessWidget {
   final DateTime selectedMonth;
   final Map<String, double> summary;
+
   /// All transactions (for Total tab parent passes full list). We filter by month inside.
   final List<Transaction> transactions;
 
@@ -22,25 +24,36 @@ class TotalView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final monthTransactions = transactions
-        .where((t) =>
-            t.date.year == selectedMonth.year &&
-            t.date.month == selectedMonth.month)
+        .where(
+          (t) =>
+              t.date.year == selectedMonth.year &&
+              t.date.month == selectedMonth.month,
+        )
         .toList();
     final lastMonth = DateTime(selectedMonth.year, selectedMonth.month - 1);
     final lastMonthExpense = transactions
-        .where((t) =>
-            t.date.year == lastMonth.year &&
-            t.date.month == lastMonth.month &&
-            t.type == TransactionType.expense)
+        .where(
+          (t) =>
+              t.date.year == lastMonth.year &&
+              t.date.month == lastMonth.month &&
+              t.type == TransactionType.expense,
+        )
         .fold(0.0, (sum, t) => sum + t.amount);
 
     final cashExpenses = monthTransactions
-        .where((t) =>
-            t.type == TransactionType.expense &&
-            (t.accountType == AccountType.cash || t.accountType == AccountType.bank))
+        .where(
+          (t) =>
+              t.type == TransactionType.expense &&
+              (t.accountType == AccountType.cash ||
+                  t.accountType == AccountType.bank),
+        )
         .fold(0.0, (sum, t) => sum + t.amount);
     final cardExpenses = monthTransactions
-        .where((t) => t.type == TransactionType.expense && t.accountType == AccountType.card)
+        .where(
+          (t) =>
+              t.type == TransactionType.expense &&
+              t.accountType == AccountType.card,
+        )
         .fold(0.0, (sum, t) => sum + t.amount);
     final transfers = monthTransactions
         .where((t) => t.type == TransactionType.transfer)
@@ -50,11 +63,18 @@ class TotalView extends StatelessWidget {
         ? ((summary['expense']! / lastMonthExpense) * 100).round()
         : 0;
 
-    final budgets = BudgetService.getBudgetsForMonth(selectedMonth.year, selectedMonth.month);
-    final statuses = BudgetService.getBudgetStatuses(selectedMonth.year, selectedMonth.month);
+    final budgets = BudgetService.getBudgetsForMonth(
+      selectedMonth.year,
+      selectedMonth.month,
+    );
+    final statuses = BudgetService.getBudgetStatuses(
+      selectedMonth.year,
+      selectedMonth.month,
+    );
     final overCount = statuses.values.where((s) => s.isOverBudget).length;
     final lastDay = DateTime(selectedMonth.year, selectedMonth.month + 1, 0);
-    final dateRangeStr = '${selectedMonth.month}.1 ~ ${selectedMonth.month}.${lastDay.day}';
+    final dateRangeStr =
+        '${selectedMonth.month}.1 ~ ${selectedMonth.month}.${lastDay.day}';
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
@@ -71,13 +91,26 @@ class TotalView extends StatelessWidget {
           title: 'Accounts',
           dateRange: dateRangeStr,
           children: [
-            _StatRow('Compared (last month)', '$comparisonPercent%', isPercent: true),
+            _StatRow(
+              'Compared (last month)',
+              '$comparisonPercent%',
+              isPercent: true,
+            ),
             const SizedBox(height: 12),
-            _StatRow('Expenses (Cash, Accounts)', 'Rs. ${SummaryCard.formatCurrency(cashExpenses)}'),
+            _StatRow(
+              'Expenses (Cash, Accounts)',
+              'Rs. ${SummaryCard.formatCurrency(cashExpenses)}',
+            ),
             const SizedBox(height: 12),
-            _StatRow('Expenses (Card)', 'Rs. ${SummaryCard.formatCurrency(cardExpenses)}'),
+            _StatRow(
+              'Expenses (Card)',
+              'Rs. ${SummaryCard.formatCurrency(cardExpenses)}',
+            ),
             const SizedBox(height: 12),
-            _StatRow('Transfers', 'Rs. ${SummaryCard.formatCurrency(transfers)}'),
+            _StatRow(
+              'Transfers',
+              'Rs. ${SummaryCard.formatCurrency(transfers)}',
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -87,7 +120,10 @@ class TotalView extends StatelessWidget {
           child: InkWell(
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Export coming soon'), behavior: SnackBarBehavior.floating),
+                const SnackBar(
+                  content: Text('Export coming soon'),
+                  behavior: SnackBarBehavior.floating,
+                ),
               );
             },
             borderRadius: BorderRadius.circular(16),
@@ -96,7 +132,11 @@ class TotalView extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.table_chart_rounded, color: AppColors.income, size: 22),
+                  Icon(
+                    Icons.table_chart_rounded,
+                    color: AppColors.income,
+                    size: 22,
+                  ),
                   const SizedBox(width: 10),
                   Text(
                     'Export to Excel',
@@ -146,7 +186,11 @@ class _BudgetCard extends StatelessWidget {
                   color: AppColors.primary.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.pie_chart_rounded, color: AppColors.primary, size: 20),
+                child: const Icon(
+                  Icons.pie_chart_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Column(
@@ -166,7 +210,10 @@ class _BudgetCard extends StatelessWidget {
                       overCount > 0
                           ? '$budgetCount set · $overCount over'
                           : '$budgetCount set for this month',
-                      style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textMuted,
+                      ),
                     ),
                 ],
               ),
@@ -177,9 +224,19 @@ class _BudgetCard extends StatelessWidget {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Budget Setting', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w500)),
+                Text(
+                  'Budget Setting',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 SizedBox(width: 4),
-                Icon(Icons.chevron_right_rounded, color: AppColors.primary, size: 20),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ],
             ),
           ),
@@ -222,7 +279,11 @@ class _SectionCard extends StatelessWidget {
                       color: AppColors.surfaceVariant,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.account_balance_wallet_rounded, color: AppColors.textPrimary, size: 20),
+                    child: const Icon(
+                      Icons.account_balance_wallet_rounded,
+                      color: AppColors.textPrimary,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -236,14 +297,21 @@ class _SectionCard extends StatelessWidget {
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   dateRange,
-                  style: const TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
@@ -275,7 +343,9 @@ class _StatRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: isPercent ? AppColors.primary.withOpacity(0.1) : AppColors.surfaceVariant,
+            color: isPercent
+                ? AppColors.primary.withOpacity(0.1)
+                : AppColors.surfaceVariant,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(

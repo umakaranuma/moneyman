@@ -5,7 +5,6 @@ import '../../../../models/category.dart';
 import '../helpers/stats_calculator.dart';
 import '../helpers/stats_data_source.dart';
 import '../widgets/stats_header.dart';
-import '../widgets/period_selector.dart';
 import '../widgets/income_expense_segment.dart';
 import '../widgets/pie_chart_card.dart';
 import '../widgets/balance_line_chart_card.dart';
@@ -87,7 +86,7 @@ class _StatsScreenState extends State<StatsScreen>
                 cachedTransactions: _cachedTransactions,
                 onPreviousMonth: _previousMonth,
                 onNextMonth: _nextMonth,
-                onData: (list) => _cachedTransactions = list as List<Transaction>,
+                onData: (list) => _cachedTransactions = list,
               ),
       ),
     );
@@ -118,7 +117,9 @@ class _GraphsView extends StatelessWidget {
       future: StatsDataSource.getMonthlyData(),
       builder: (context, snapshot) {
         if (snapshot.hasData) onData(snapshot.data!);
-        final monthlyData = cachedMonthlyData.isNotEmpty ? cachedMonthlyData : (snapshot.data ?? {});
+        final monthlyData = cachedMonthlyData.isNotEmpty
+            ? cachedMonthlyData
+            : (snapshot.data ?? {});
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -177,7 +178,9 @@ class _AnalyticsView extends StatelessWidget {
       future: StatsDataSource.getFilteredTransactions(selectedMonth),
       builder: (context, snapshot) {
         if (snapshot.hasData) onData(snapshot.data!);
-        final transactions = cachedTransactions.isNotEmpty ? cachedTransactions : (snapshot.data ?? <Transaction>[]);
+        final transactions = cachedTransactions.isNotEmpty
+            ? cachedTransactions
+            : (snapshot.data ?? <Transaction>[]);
         final totals = StatsCalculator.calculateIncomeExpense(transactions);
         final income = totals['income'] ?? 0.0;
         final expense = totals['expense'] ?? 0.0;
@@ -200,8 +203,14 @@ class _AnalyticsView extends StatelessWidget {
               child: TabBarView(
                 controller: controller,
                 children: [
-                  _AnalyticsTabContent(transactions: transactions, isIncome: true),
-                  _AnalyticsTabContent(transactions: transactions, isIncome: false),
+                  _AnalyticsTabContent(
+                    transactions: transactions,
+                    isIncome: true,
+                  ),
+                  _AnalyticsTabContent(
+                    transactions: transactions,
+                    isIncome: false,
+                  ),
                 ],
               ),
             ),
@@ -210,27 +219,37 @@ class _AnalyticsView extends StatelessWidget {
       },
     );
   }
-
 }
 
 class _AnalyticsTabContent extends StatelessWidget {
   final List<Transaction> transactions;
   final bool isIncome;
 
-  const _AnalyticsTabContent({required this.transactions, required this.isIncome});
+  const _AnalyticsTabContent({
+    required this.transactions,
+    required this.isIncome,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final categoryData = StatsCalculator.categoryBreakdown(transactions, isIncome: isIncome);
+    final categoryData = StatsCalculator.categoryBreakdown(
+      transactions,
+      isIncome: isIncome,
+    );
     final total = isIncome
-        ? transactions.where((t) => t.type == TransactionType.income).fold(0.0, (s, t) => s + t.amount)
-        : transactions.where((t) => t.type == TransactionType.expense).fold(0.0, (s, t) => s + t.amount);
+        ? transactions
+              .where((t) => t.type == TransactionType.income)
+              .fold(0.0, (s, t) => s + t.amount)
+        : transactions
+              .where((t) => t.type == TransactionType.expense)
+              .fold(0.0, (s, t) => s + t.amount);
 
     if (categoryData.isEmpty) {
       return EmptyStatsView(isIncome: isIncome);
     }
 
-    final sortedEntries = categoryData.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final sortedEntries = categoryData.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
     final sections = buildPieSections(sortedEntries, total);
 
     return SingleChildScrollView(
@@ -240,11 +259,7 @@ class _AnalyticsTabContent extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 20),
-          PieChartCard(
-            total: total,
-            sections: sections,
-            isIncome: isIncome,
-          ),
+          PieChartCard(total: total, sections: sections, isIncome: isIncome),
           const SizedBox(height: 24),
           _buildCategoryBreakdownHeader(),
           const SizedBox(height: 12),
@@ -252,8 +267,12 @@ class _AnalyticsTabContent extends StatelessWidget {
             final index = e.key;
             final entry = e.value;
             final percentage = total > 0 ? (entry.value / total * 100) : 0.0;
-            final color = AppColors.categoryColors[index % AppColors.categoryColors.length];
-            final emoji = DefaultCategories.getCategoryEmoji(entry.key, isIncome: isIncome);
+            final color = AppColors
+                .categoryColors[index % AppColors.categoryColors.length];
+            final emoji = DefaultCategories.getCategoryEmoji(
+              entry.key,
+              isIncome: isIncome,
+            );
             return CategoryItemTile(
               emoji: emoji,
               name: entry.key,
