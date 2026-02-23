@@ -94,7 +94,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
       context: context,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) => Container(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
@@ -143,18 +143,16 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                     title: Text(
                       currency.displayLabel,
                       style: GoogleFonts.inter(
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.textPrimary,
                         fontSize: 15,
                         fontWeight:
                             isSelected ? FontWeight.w600 : FontWeight.w400,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     trailing: isSelected
                         ? Icon(
                             Icons.check_rounded,
-                            color: AppColors.primary,
+                            color: AppColors.textSecondary,
                             size: 20,
                           )
                         : null,
@@ -177,7 +175,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
       context: context,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) => Container(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
@@ -231,17 +229,16 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                     title: Text(
                       account.categoryLabel,
                       style: GoogleFonts.inter(
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.textPrimary,
                         fontSize: 15,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w400,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     trailing: isSelected
                         ? Icon(
                             Icons.check_rounded,
-                            color: AppColors.primary,
+                            color: AppColors.textSecondary,
                             size: 20,
                           )
                         : null,
@@ -273,20 +270,20 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          widget.account != null ? 'Edit Account' : 'Add Account',
+          widget.account != null ? 'Edit Account' : 'New Account',
           style: GoogleFonts.inter(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
           ),
         ),
-        backgroundColor: AppColors.background,
-        elevation: 0,
       ),
       body: SafeArea(
         child: Form(
@@ -296,182 +293,58 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Group Field
-                _buildLabel('Group'),
-                const SizedBox(height: 4),
-                GestureDetector(
-                  onTap: _showAccountGroupModal,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
+                /// SECTION 1 — BASIC INFO
+                _buildSection(
+                  children: [
+                    _buildSelectorRow(
+                      title: 'Group',
+                      value: account.categoryLabel,
+                      onTap: _showAccountGroupModal,
                     ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.surfaceVariant,
-                        width: 1,
-                      ),
+                    _buildDivider(),
+                    _buildTextFieldRow(
+                      label: 'Name',
+                      controller: _nameController,
+                      hint: 'Account name',
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter account name';
+                        }
+                        return null;
+                      },
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            account.categoryLabel,
-                            style: GoogleFonts.inter(
-                              color: AppColors.textPrimary,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_drop_down_rounded,
-                          color: AppColors.textSecondary,
-                        ),
-                      ],
-                    ),
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 18),
 
-                // Name Field
-                _buildLabel('Name'),
-                const SizedBox(height: 4),
-                TextFormField(
-                  controller: _nameController,
-                  style: GoogleFonts.inter(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'Enter account name',
-                    hintStyle: GoogleFonts.inter(
-                      color: AppColors.textMuted,
+                /// SECTION 2 — FINANCIAL
+                _buildSection(
+                  children: [
+                    _buildAmountField(account),
+                    _buildDivider(),
+                    _buildSelectorRow(
+                      title: 'Currency',
+                      value: _selectedCurrency.displayLabel,
+                      onTap: _showCurrencyModal,
                     ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter account name';
-                    }
-                    return null;
-                  },
+                  ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 18),
 
-                // Amount Field
-                _buildLabel('Amount'),
-                const SizedBox(height: 4),
-                TextFormField(
-                  controller: _amountController,
-                  style: GoogleFonts.inter(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: '0.00',
-                    hintStyle: GoogleFonts.inter(
-                      color: AppColors.textMuted,
+                /// SECTION 3 — OPTIONAL
+                _buildSection(
+                  children: [
+                    _buildTextFieldRow(
+                      label: 'Description',
+                      controller: _descriptionController,
+                      hint: 'Optional note',
+                      maxLines: 2,
                     ),
-                    prefixText: account.currencySymbol + ' ',
-                    prefixStyle: GoogleFonts.inter(
-                      color: AppColors.textPrimary,
-                      fontSize: 16,
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter amount';
-                    }
-                    final amount = double.tryParse(value);
-                    if (amount == null) {
-                      return 'Please enter a valid amount';
-                    }
-                    return null;
-                  },
+                  ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 28),
 
-                // Currency Field (all supported currencies)
-                _buildLabel('Currency'),
-                const SizedBox(height: 4),
-                GestureDetector(
-                  onTap: _showCurrencyModal,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.surfaceVariant,
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _selectedCurrency.displayLabel,
-                            style: GoogleFonts.inter(
-                              color: AppColors.textPrimary,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_drop_down_rounded,
-                          color: AppColors.textSecondary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-
-                // Description Field
-                _buildLabel('Description'),
-                const SizedBox(height: 4),
-                TextFormField(
-                  controller: _descriptionController,
-                  style: GoogleFonts.inter(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                  ),
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    hintText: 'Enter description (optional)',
-                    hintStyle: GoogleFonts.inter(
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Save Button
-                ElevatedButton(
-                  onPressed: _saveAccount,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    'Save',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+                _buildAppleSaveButton(),
               ],
             ),
           ),
@@ -480,16 +353,162 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
     );
   }
 
-  Widget _buildLabel(String label) {
-    return Text(
-      label,
-      style: GoogleFonts.inter(
-        color: AppColors.textSecondary,
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
+  Widget _buildSection({required List<Widget> children}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  Widget _buildDivider() {
+    return const Divider(
+      height: 1,
+      indent: 16,
+      endIndent: 16,
+    );
+  }
+
+  Widget _buildSelectorRow({
+    required String title,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Row(
+          children: [
+            Text(
+              title,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              value,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: AppColors.textMuted,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-}
+  Widget _buildTextFieldRow({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        validator: validator,
+        style: GoogleFonts.inter(
+          fontSize: 15,
+          color: AppColors.textPrimary,
+        ),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: GoogleFonts.inter(
+            fontSize: 13,
+            color: AppColors.textMuted,
+          ),
+          hintText: hint,
+          hintStyle: GoogleFonts.inter(
+            fontSize: 15,
+            color: AppColors.textMuted,
+          ),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.zero,
+        ),
+      ),
+    );
+  }
 
+  Widget _buildAmountField(Account account) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: TextFormField(
+        controller: _amountController,
+        keyboardType:
+            const TextInputType.numberWithOptions(decimal: true),
+        validator: (value) {
+          if (value == null || value.trim().isEmpty) {
+            return 'Please enter amount';
+          }
+          final amount = double.tryParse(value);
+          if (amount == null) {
+            return 'Please enter a valid amount';
+          }
+          return null;
+        },
+        style: GoogleFonts.inter(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
+        decoration: InputDecoration(
+          labelText: 'Amount',
+          labelStyle: GoogleFonts.inter(
+            fontSize: 13,
+            color: AppColors.textMuted,
+          ),
+          prefixText: account.currencySymbol + ' ',
+          prefixStyle: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.zero,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppleSaveButton() {
+    return SizedBox(
+      height: 52,
+      child: ElevatedButton(
+        onPressed: _saveAccount,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          elevation: 0,
+        ),
+        child: Text(
+          'Save',
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+}
