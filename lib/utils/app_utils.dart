@@ -39,7 +39,6 @@ class AppUtils {
       }
     } catch (e) {
       // Handle error silently or show a message
-      print('Error opening app store: $e');
     }
   }
 
@@ -74,7 +73,6 @@ class AppUtils {
       await Share.share(shareText, subject: _appName);
     } catch (e) {
       // Handle error silently or show a message
-      print('Error sharing app: $e');
       rethrow; // Re-throw to allow caller to handle if needed
     }
   }
@@ -86,8 +84,7 @@ class AppUtils {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       }
-    } catch (e) {
-      print('Error opening URL: $e');
-    }
+      // ignore: empty_catches
+    } catch (e) {}
   }
 }

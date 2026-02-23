@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../models/category.dart';
@@ -8,7 +10,8 @@ class AddEditSubcategoryScreen extends StatefulWidget {
   final String? subcategory;
   final bool isExpense;
   final bool isConvertingFromCategory;
-  final String? convertedCategoryName; // Name of category that was converted (to exclude from list)
+  final String?
+  convertedCategoryName; // Name of category that was converted (to exclude from list)
 
   const AddEditSubcategoryScreen({
     super.key,
@@ -33,9 +36,10 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
   @override
   void initState() {
     super.initState();
-    _subcategoryController =
-        TextEditingController(text: widget.subcategory ?? '');
-    
+    _subcategoryController = TextEditingController(
+      text: widget.subcategory ?? '',
+    );
+
     // If converting from category, don't pre-select the category
     // (since it no longer exists as a main category)
     if (widget.isConvertingFromCategory) {
@@ -49,7 +53,7 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
       );
       _selectedCategory = widget.category;
     }
-    
+
     // If converting from category, show category picker immediately
     if (widget.isConvertingFromCategory && widget.category == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -67,16 +71,15 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
 
   void _showCategoryPicker() {
     // Get fresh categories list to ensure latest data
-    var categories = CategoryService.getCategories(
-      isIncome: !widget.isExpense,
-    );
+    var categories = CategoryService.getCategories(isIncome: !widget.isExpense);
 
     // If converting from category, exclude the converted category from the list
     // (since it no longer exists as a main category)
-    if (widget.isConvertingFromCategory && widget.convertedCategoryName != null) {
-      categories = categories.where((cat) => 
-        cat.name != widget.convertedCategoryName
-      ).toList();
+    if (widget.isConvertingFromCategory &&
+        widget.convertedCategoryName != null) {
+      categories = categories
+          .where((cat) => cat.name != widget.convertedCategoryName)
+          .toList();
     }
 
     showModalBottomSheet(
@@ -89,11 +92,9 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
       builder: (context) {
         final screenHeight = MediaQuery.of(context).size.height;
         final maxHeight = screenHeight * 0.7;
-        
+
         return Container(
-          constraints: BoxConstraints(
-            maxHeight: maxHeight,
-          ),
+          constraints: BoxConstraints(maxHeight: maxHeight),
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -128,7 +129,8 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
                         itemCount: categories.length,
                         itemBuilder: (context, index) {
                           final category = categories[index];
-                          final isSelected = _selectedCategory?.id == category.id;
+                          final isSelected =
+                              _selectedCategory?.id == category.id;
                           return ListTile(
                             leading: category.emoji.isNotEmpty
                                 ? Text(
@@ -142,8 +144,9 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
                                 color: isSelected
                                     ? AppColors.fab
                                     : AppColors.textPrimary,
-                                fontWeight:
-                                    isSelected ? FontWeight.w600 : FontWeight.normal,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
                               ),
                             ),
                             trailing: isSelected
@@ -188,16 +191,12 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
       try {
         // Get categories and create a mutable copy
         final allCategories = List<Category>.from(
-          CategoryService.getCategories(
-            isIncome: !widget.isExpense,
-          ),
+          CategoryService.getCategories(isIncome: !widget.isExpense),
         );
 
         // If converting from main category, remove the original category
         if (widget.isConvertingFromCategory && widget.subcategory != null) {
-          allCategories.removeWhere(
-            (c) => c.name == widget.subcategory,
-          );
+          allCategories.removeWhere((c) => c.name == widget.subcategory);
         }
 
         final categoryIndex = allCategories.indexWhere(
@@ -205,8 +204,9 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
         );
 
         if (categoryIndex != -1) {
-          final updatedSubcategories =
-              List<String>.from(allCategories[categoryIndex].subcategories);
+          final updatedSubcategories = List<String>.from(
+            allCategories[categoryIndex].subcategories,
+          );
 
           if (widget.subcategory != null && !widget.isConvertingFromCategory) {
             // Edit existing subcategory
@@ -221,7 +221,9 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Subcategory "$subcategoryName" already exists'),
+                  content: Text(
+                    'Subcategory "$subcategoryName" already exists',
+                  ),
                   backgroundColor: AppColors.error,
                 ),
               );
@@ -297,9 +299,7 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
               try {
                 // Get categories and create a mutable copy
                 final allCategories = List<Category>.from(
-                  CategoryService.getCategories(
-                    isIncome: !widget.isExpense,
-                  ),
+                  CategoryService.getCategories(isIncome: !widget.isExpense),
                 );
 
                 // Remove subcategory from current category
@@ -340,7 +340,10 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
 
                 if (mounted) {
                   Navigator.pop(context); // Close dialog
-                  Navigator.pop(context, true); // Close subcategory screen with result
+                  Navigator.pop(
+                    context,
+                    true,
+                  ); // Close subcategory screen with result
                 }
               } catch (e) {
                 if (mounted) {
@@ -386,9 +389,7 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
           ),
         ),
         title: Text(
-          widget.subcategory != null
-              ? 'Modify Subcategory'
-              : 'Add Subcategory',
+          widget.subcategory != null ? 'Modify Subcategory' : 'Add Subcategory',
           style: const TextStyle(
             color: AppColors.textPrimary,
             fontSize: 18,
@@ -414,128 +415,124 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
           key: _formKey,
           child: Column(
             children: [
-            const SizedBox(height: 20),
-            // Category Field (Read-only, tappable to change)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GestureDetector(
-                onTap: _showCategoryPicker,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Category',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
+              const SizedBox(height: 20),
+              // Category Field (Read-only, tappable to change)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: GestureDetector(
+                  onTap: _showCategoryPicker,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Category',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _categoryController.text.isEmpty
-                                ? 'Select category'
-                                : _categoryController.text,
-                            style: TextStyle(
-                              color: _categoryController.text.isEmpty
-                                  ? AppColors.textMuted
-                                  : AppColors.textPrimary,
-                              fontSize: 16,
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _categoryController.text.isEmpty
+                                  ? 'Select category'
+                                  : _categoryController.text,
+                              style: TextStyle(
+                                color: _categoryController.text.isEmpty
+                                    ? AppColors.textMuted
+                                    : AppColors.textPrimary,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          color: AppColors.textMuted,
-                          size: 16,
-                        ),
-                      ],
-                    ),
-                    Container(
-                      height: 1,
-                      margin: const EdgeInsets.only(top: 8),
-                      color: AppColors.surfaceVariant,
-                    ),
-                  ],
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            color: AppColors.textMuted,
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                      Container(
+                        height: 1,
+                        margin: const EdgeInsets.only(top: 8),
+                        color: AppColors.surfaceVariant,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            // Subcategory Name Input
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: TextFormField(
-                controller: _subcategoryController,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 16,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Subcategory',
-                  labelStyle: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
+              const SizedBox(height: 20),
+              // Subcategory Name Input
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: TextFormField(
+                  controller: _subcategoryController,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
                   ),
-                  hintText: 'Enter subcategory name',
-                  hintStyle: TextStyle(
-                    color: AppColors.textMuted.withValues(alpha: 0.5),
-                  ),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: AppColors.surfaceVariant,
-                      width: 1,
+                  decoration: InputDecoration(
+                    labelText: 'Subcategory',
+                    labelStyle: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                    hintText: 'Enter subcategory name',
+                    hintStyle: TextStyle(
+                      color: AppColors.textMuted.withValues(alpha: 0.5),
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(
+                        color: AppColors.surfaceVariant,
+                        width: 1,
+                      ),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: AppColors.fab, width: 2),
                     ),
                   ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: AppColors.fab,
-                      width: 2,
-                    ),
-                  ),
+                  autofocus: widget.subcategory == null,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter a subcategory name';
+                    }
+                    return null;
+                  },
                 ),
-                autofocus: widget.subcategory == null,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a subcategory name';
-                  }
-                  return null;
-                },
               ),
-            ),
-            const Spacer(),
-            // Save Button
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _saveSubcategory,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.fab,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+              const Spacer(),
+              // Save Button
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _saveSubcategory,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.fab,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
                     ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Save',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                    child: const Text(
+                      'Save',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-

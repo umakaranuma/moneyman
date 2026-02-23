@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
@@ -49,25 +51,26 @@ void showTransactionOptionsSheet(
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: (transaction.type == TransactionType.income
-                              ? AppColors.income
-                              : transaction.type == TransactionType.expense
+                      color:
+                          (transaction.type == TransactionType.income
+                                  ? AppColors.income
+                                  : transaction.type == TransactionType.expense
                                   ? AppColors.expense
                                   : AppColors.transfer)
-                          .withOpacity(0.15),
+                              .withOpacity(0.15),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(
                       transaction.type == TransactionType.income
                           ? Icons.arrow_downward_rounded
                           : transaction.type == TransactionType.expense
-                              ? Icons.arrow_upward_rounded
-                              : Icons.swap_horiz_rounded,
+                          ? Icons.arrow_upward_rounded
+                          : Icons.swap_horiz_rounded,
                       color: transaction.type == TransactionType.income
                           ? AppColors.income
                           : transaction.type == TransactionType.expense
-                              ? AppColors.expense
-                              : AppColors.transfer,
+                          ? AppColors.expense
+                          : AppColors.transfer,
                       size: 24,
                     ),
                   ),
@@ -86,8 +89,13 @@ void showTransactionOptionsSheet(
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          DateFormat('MMM d, yyyy · h:mm a').format(transaction.date),
-                          style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
+                          DateFormat(
+                            'MMM d, yyyy · h:mm a',
+                          ).format(transaction.date),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textMuted,
+                          ),
                         ),
                       ],
                     ),
@@ -100,8 +108,8 @@ void showTransactionOptionsSheet(
                       color: transaction.type == TransactionType.income
                           ? AppColors.income
                           : transaction.type == TransactionType.expense
-                              ? AppColors.expense
-                              : AppColors.transfer,
+                          ? AppColors.expense
+                          : AppColors.transfer,
                     ),
                   ),
                 ],
@@ -127,8 +135,12 @@ void showTransactionOptionsSheet(
                     ),
                     _buildDivider(),
                     _IOSOptionRow(
-                      icon: transaction.isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                      label: transaction.isBookmarked ? 'Remove bookmark' : 'Bookmark',
+                      icon: transaction.isBookmarked
+                          ? Icons.bookmark_rounded
+                          : Icons.bookmark_border_rounded,
+                      label: transaction.isBookmarked
+                          ? 'Remove bookmark'
+                          : 'Bookmark',
                       onTap: () async {
                         final updated = Transaction(
                           id: transaction.id,
@@ -154,7 +166,8 @@ void showTransactionOptionsSheet(
                       icon: Icons.copy_rounded,
                       label: 'Copy',
                       onTap: () {
-                        final text = '${transaction.title}\n'
+                        final text =
+                            '${transaction.title}\n'
                             'Rs. ${SummaryCard.formatCurrency(transaction.amount)}\n'
                             '${DateFormat('MMM d, yyyy · h:mm a').format(transaction.date)}\n'
                             '${transaction.category ?? 'N/A'}';
@@ -193,7 +206,11 @@ void showTransactionOptionsSheet(
               ),
             ),
             // Bottom safe area padding
-            SizedBox(height: MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom : 16),
+            SizedBox(
+              height: MediaQuery.of(context).padding.bottom > 0
+                  ? MediaQuery.of(context).padding.bottom
+                  : 16,
+            ),
           ],
         ),
       ),

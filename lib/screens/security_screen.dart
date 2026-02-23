@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -195,20 +197,14 @@ class _SecurityScreenState extends State<SecurityScreen> {
                       icon: Icons.visibility_off_rounded,
                       title: 'Hide Balance',
                       subtitle: 'Hide balance on home screen',
-                      trailing: Switch(
-                        value: false,
-                        onChanged: (value) {},
-                      ),
+                      trailing: Switch(value: false, onChanged: (value) {}),
                     ),
                     _buildDivider(),
                     _buildSettingTile(
                       icon: Icons.screen_lock_portrait_rounded,
                       title: 'Block Screenshots',
                       subtitle: 'Prevent screenshots in app',
-                      trailing: Switch(
-                        value: false,
-                        onChanged: (value) {},
-                      ),
+                      trailing: Switch(value: false, onChanged: (value) {}),
                     ),
                   ],
                 ),
@@ -274,10 +270,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.surfaceVariant,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.surfaceVariant, width: 1),
       ),
       child: Column(children: children),
     );
@@ -303,7 +296,10 @@ class _SecurityScreenState extends State<SecurityScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: titleColor == AppColors.error
-                      ? [AppColors.error, AppColors.error.withValues(alpha: 0.7)]
+                      ? [
+                          AppColors.error,
+                          AppColors.error.withValues(alpha: 0.7),
+                        ]
                       : [AppColors.secondary, AppColors.primary],
                 ),
                 borderRadius: BorderRadius.circular(12),
@@ -410,20 +406,22 @@ class _SecurityScreenState extends State<SecurityScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [1, 5, 10, 15, 30]
-              .map((minutes) => RadioListTile<int>(
-                    title: Text(
-                      '$minutes ${minutes == 1 ? 'minute' : 'minutes'}',
-                      style: GoogleFonts.inter(color: AppColors.textPrimary),
-                    ),
-                    value: minutes,
-                    groupValue: _autoLockMinutes,
-                    onChanged: (value) {
-                      setState(() {
-                        _autoLockMinutes = value!;
-                      });
-                      Navigator.pop(context);
-                    },
-                  ))
+              .map(
+                (minutes) => RadioListTile<int>(
+                  title: Text(
+                    '$minutes ${minutes == 1 ? 'minute' : 'minutes'}',
+                    style: GoogleFonts.inter(color: AppColors.textPrimary),
+                  ),
+                  value: minutes,
+                  groupValue: _autoLockMinutes,
+                  onChanged: (value) {
+                    setState(() {
+                      _autoLockMinutes = value!;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+              )
               .toList(),
         ),
       ),
@@ -456,17 +454,12 @@ class _SecurityScreenState extends State<SecurityScreen> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(
-                    'All data cleared',
-                    style: GoogleFonts.inter(),
-                  ),
+                  content: Text('All data cleared', style: GoogleFonts.inter()),
                   backgroundColor: AppColors.error,
                 ),
               );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Clear Data'),
           ),
         ],
@@ -474,4 +467,3 @@ class _SecurityScreenState extends State<SecurityScreen> {
     );
   }
 }
-

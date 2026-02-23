@@ -33,16 +33,14 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
     try {
       // Get all categories and create a mutable copy
       final allCategories = List<Category>.from(
-        CategoryService.getCategories(
-          isIncome: _category.isIncome,
-        ),
+        CategoryService.getCategories(isIncome: _category.isIncome),
       );
-      
+
       // Find and update the category
       final categoryIndex = allCategories.indexWhere(
         (c) => c.id == _category.id,
       );
-      
+
       if (categoryIndex != -1) {
         allCategories[categoryIndex] = Category(
           id: _category.id,
@@ -51,20 +49,19 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
           subcategories: _subcategories,
           isIncome: _category.isIncome,
         );
-        
+
         await CategoryService.saveCategories(
           allCategories,
           isIncome: _category.isIncome,
         );
-        
+
         // Update local category
         setState(() {
           _category = allCategories[categoryIndex];
         });
       }
-    } catch (e) {
-      print('Error saving subcategories: $e');
-    }
+      // ignore: empty_catches
+    } catch (e) {}
   }
 
   void _showAddSubcategoryDialog() {
@@ -179,17 +176,13 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
             TextField(
               controller: nameController,
               style: const TextStyle(color: AppColors.textPrimary),
-              decoration: const InputDecoration(
-                labelText: 'Category Name',
-              ),
+              decoration: const InputDecoration(labelText: 'Category Name'),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: emojiController,
               style: const TextStyle(color: AppColors.textPrimary),
-              decoration: const InputDecoration(
-                labelText: 'Emoji',
-              ),
+              decoration: const InputDecoration(labelText: 'Emoji'),
             ),
           ],
         ),
@@ -209,14 +202,12 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                 // Update category in storage
                 // Get categories and create a mutable copy
                 final allCategories = List<Category>.from(
-                  CategoryService.getCategories(
-                    isIncome: _category.isIncome,
-                  ),
+                  CategoryService.getCategories(isIncome: _category.isIncome),
                 );
                 final categoryIndex = allCategories.indexWhere(
                   (c) => c.id == _category.id,
                 );
-                
+
                 if (categoryIndex != -1) {
                   allCategories[categoryIndex] = Category(
                     id: _category.id,
@@ -225,12 +216,12 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                     subcategories: _subcategories,
                     isIncome: _category.isIncome,
                   );
-                  
+
                   CategoryService.saveCategories(
                     allCategories,
                     isIncome: _category.isIncome,
                   );
-                  
+
                   setState(() {
                     _category = allCategories[categoryIndex];
                   });
@@ -247,8 +238,8 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final categoryColor = AppColors.categoryColors[
-        widget.categoryIndex % AppColors.categoryColors.length];
+    final categoryColor = AppColors
+        .categoryColors[widget.categoryIndex % AppColors.categoryColors.length];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -273,10 +264,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
         title: Row(
           children: [
             if (_category.emoji.isNotEmpty)
-              Text(
-                _category.emoji,
-                style: const TextStyle(fontSize: 20),
-              ),
+              Text(_category.emoji, style: const TextStyle(fontSize: 20)),
             const SizedBox(width: 8),
             Text(
               _category.name,
@@ -312,10 +300,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                   const SizedBox(height: 16),
                   Text(
                     'No subcategories yet',
-                    style: TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -346,7 +331,10 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                 final subcategory = _subcategories[index];
                 return Container(
                   key: ValueKey(subcategory),
-                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(16),
@@ -387,10 +375,8 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         GestureDetector(
-                          onTap: () => _showEditSubcategoryDialog(
-                            index,
-                            subcategory,
-                          ),
+                          onTap: () =>
+                              _showEditSubcategoryDialog(index, subcategory),
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
@@ -421,4 +407,3 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
     );
   }
 }
-

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -264,10 +266,7 @@ class _SyncScreenState extends State<SyncScreen> {
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.surfaceVariant,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.surfaceVariant, width: 1),
       ),
       child: Column(children: children),
     );
@@ -428,8 +427,8 @@ class _SyncScreenState extends State<SyncScreen> {
               type == 'upload'
                   ? 'Uploading...'
                   : type == 'download'
-                      ? 'Downloading...'
-                      : 'Syncing...',
+                  ? 'Downloading...'
+                  : 'Syncing...',
               style: GoogleFonts.inter(color: AppColors.textPrimary),
             ),
           ],
@@ -448,8 +447,8 @@ class _SyncScreenState extends State<SyncScreen> {
             type == 'upload'
                 ? 'Upload completed'
                 : type == 'download'
-                    ? 'Download completed'
-                    : 'Sync completed',
+                ? 'Download completed'
+                : 'Sync completed',
             style: GoogleFonts.inter(),
           ),
         ),
@@ -457,4 +456,3 @@ class _SyncScreenState extends State<SyncScreen> {
     });
   }
 }
-

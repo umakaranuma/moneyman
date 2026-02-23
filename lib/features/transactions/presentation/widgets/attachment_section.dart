@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_underscores
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -37,7 +39,11 @@ class AttachmentSection extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(Icons.add_photo_alternate_outlined, color: AppColors.textMuted, size: 24),
+              Icon(
+                Icons.add_photo_alternate_outlined,
+                color: AppColors.textMuted,
+                size: 24,
+              ),
               const SizedBox(width: 12),
               Text(
                 'Add attachments',
@@ -70,10 +76,7 @@ class AttachmentSection extends StatelessWidget {
         children: [
           Text(
             'Attachments',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppColors.textMuted,
-            ),
+            style: GoogleFonts.inter(fontSize: 13, color: AppColors.textMuted),
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -93,15 +96,16 @@ class AttachmentSection extends StatelessWidget {
                         color: AppColors.surfaceVariant.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.add_rounded, color: AppColors.textMuted, size: 28),
+                      child: Icon(
+                        Icons.add_rounded,
+                        color: AppColors.textMuted,
+                        size: 28,
+                      ),
                     ),
                   );
                 }
                 final path = imagePaths[index];
-                return _Thumbnail(
-                  path: path,
-                  onRemove: () => onRemove(index),
-                );
+                return _Thumbnail(path: path, onRemove: () => onRemove(index));
               },
             ),
           ),

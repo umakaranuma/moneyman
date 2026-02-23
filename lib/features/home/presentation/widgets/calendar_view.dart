@@ -1,3 +1,5 @@
+// ignore_for_file: curly_braces_in_flow_control_structures, deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../models/transaction.dart';
@@ -35,9 +37,12 @@ class CalendarView extends StatelessWidget {
     final list = byDate[date] ?? [];
     double income = 0, expense = 0, transfer = 0;
     for (var t in list) {
-      if (t.type == TransactionType.income) income += t.amount;
-      else if (t.type == TransactionType.expense) expense += t.amount;
-      else transfer += t.amount;
+      if (t.type == TransactionType.income) {
+        income += t.amount;
+      } else if (t.type == TransactionType.expense)
+        expense += t.amount;
+      else
+        transfer += t.amount;
     }
     return {'income': income, 'expense': expense, 'transfer': transfer};
   }
@@ -69,7 +74,9 @@ class CalendarView extends StatelessWidget {
                     day,
                     style: TextStyle(
                       fontSize: 12,
-                      color: isWeekend ? AppColors.secondary : AppColors.textMuted,
+                      color: isWeekend
+                          ? AppColors.secondary
+                          : AppColors.textMuted,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -93,12 +100,28 @@ class CalendarView extends StatelessWidget {
               final isCurrentMonth = dayOffset >= 0 && dayOffset < daysInMonth;
               late DateTime cellDate;
               if (dayOffset < 0) {
-                final prev = DateTime(selectedMonth.year, selectedMonth.month, 0);
-                cellDate = DateTime(prev.year, prev.month, prev.day + dayOffset + 1);
+                final prev = DateTime(
+                  selectedMonth.year,
+                  selectedMonth.month,
+                  0,
+                );
+                cellDate = DateTime(
+                  prev.year,
+                  prev.month,
+                  prev.day + dayOffset + 1,
+                );
               } else if (dayOffset >= daysInMonth) {
-                cellDate = DateTime(selectedMonth.year, selectedMonth.month + 1, dayOffset - daysInMonth + 1);
+                cellDate = DateTime(
+                  selectedMonth.year,
+                  selectedMonth.month + 1,
+                  dayOffset - daysInMonth + 1,
+                );
               } else {
-                cellDate = DateTime(selectedMonth.year, selectedMonth.month, dayOffset + 1);
+                cellDate = DateTime(
+                  selectedMonth.year,
+                  selectedMonth.month,
+                  dayOffset + 1,
+                );
               }
               final totals = _getDayTotals(cellDate);
               final dayTransactions = _getTransactionsForDay(cellDate);
@@ -177,17 +200,17 @@ class _CalendarDayCell extends StatelessWidget {
           color: isSelected
               ? AppColors.primary
               : isToday
-                  ? AppColors.primary.withOpacity(0.15)
-                  : AppColors.surface,
+              ? AppColors.primary.withOpacity(0.15)
+              : AppColors.surface,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected
                 ? AppColors.primary
                 : isToday
-                    ? AppColors.primary.withOpacity(0.4)
-                    : hasTransactions
-                        ? AppColors.surfaceVariant.withOpacity(0.5)
-                        : AppColors.surfaceVariant.withOpacity(0.2),
+                ? AppColors.primary.withOpacity(0.4)
+                : hasTransactions
+                ? AppColors.surfaceVariant.withOpacity(0.5)
+                : AppColors.surfaceVariant.withOpacity(0.2),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -200,12 +223,14 @@ class _CalendarDayCell extends StatelessWidget {
               '$day',
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: isToday || isSelected ? FontWeight.w700 : FontWeight.w600,
+                fontWeight: isToday || isSelected
+                    ? FontWeight.w700
+                    : FontWeight.w600,
                 color: isSelected
                     ? Colors.white
                     : !isCurrentMonth
-                        ? AppColors.textMuted.withOpacity(0.3)
-                        : AppColors.textPrimary,
+                    ? AppColors.textMuted.withOpacity(0.3)
+                    : AppColors.textPrimary,
               ),
             ),
             const Spacer(),
@@ -216,7 +241,9 @@ class _CalendarDayCell extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 7.5,
                     fontWeight: FontWeight.w500,
-                    color: isSelected ? Colors.white.withOpacity(0.95) : AppColors.income,
+                    color: isSelected
+                        ? Colors.white.withOpacity(0.95)
+                        : AppColors.income,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -227,7 +254,9 @@ class _CalendarDayCell extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 7.5,
                     fontWeight: FontWeight.w500,
-                    color: isSelected ? Colors.white.withOpacity(0.9) : AppColors.expense,
+                    color: isSelected
+                        ? Colors.white.withOpacity(0.9)
+                        : AppColors.expense,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -238,7 +267,9 @@ class _CalendarDayCell extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 7.5,
                     fontWeight: FontWeight.w500,
-                    color: isSelected ? Colors.white.withOpacity(0.85) : AppColors.transfer,
+                    color: isSelected
+                        ? Colors.white.withOpacity(0.85)
+                        : AppColors.transfer,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

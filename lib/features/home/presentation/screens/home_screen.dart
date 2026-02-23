@@ -67,7 +67,9 @@ class _HomeScreenState extends State<HomeScreen>
     final manual = StorageService.getAllTransactions();
     final sms = await _getSmsTransactionsAsTransactions();
     final unique = <String, Transaction>{};
-    for (var t in manual) unique[t.id] = t;
+    for (var t in manual) {
+      unique[t.id] = t;
+    }
     for (var t in sms) {
       if (!unique.containsKey(t.id)) unique[t.id] = t;
     }
@@ -77,18 +79,22 @@ class _HomeScreenState extends State<HomeScreen>
       case 0:
       case 2:
         list = list
-            .where((t) =>
-                t.date.year == _selectedMonth.year &&
-                t.date.month == _selectedMonth.month)
+            .where(
+              (t) =>
+                  t.date.year == _selectedMonth.year &&
+                  t.date.month == _selectedMonth.month,
+            )
             .toList();
         break;
       case 3:
         break;
       default:
         list = list
-            .where((t) =>
-                t.date.year == _selectedMonth.year &&
-                t.date.month == _selectedMonth.month)
+            .where(
+              (t) =>
+                  t.date.year == _selectedMonth.year &&
+                  t.date.month == _selectedMonth.month,
+            )
             .toList();
     }
 
@@ -98,10 +104,12 @@ class _HomeScreenState extends State<HomeScreen>
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toLowerCase();
       list = list
-          .where((t) =>
-              t.title.toLowerCase().contains(q) ||
-              (t.category?.toLowerCase().contains(q) ?? false) ||
-              (t.note?.toLowerCase().contains(q) ?? false))
+          .where(
+            (t) =>
+                t.title.toLowerCase().contains(q) ||
+                (t.category?.toLowerCase().contains(q) ?? false) ||
+                (t.note?.toLowerCase().contains(q) ?? false),
+          )
           .toList();
     }
     return list;
@@ -110,7 +118,9 @@ class _HomeScreenState extends State<HomeScreen>
   Future<List<Transaction>> _getSmsTransactionsAsTransactions() async {
     try {
       if (!await SmsService.hasSmsPermission()) return [];
-      final smsList = await SmsService.fetchAndParseSmsMessages(fetchAll: false);
+      final smsList = await SmsService.fetchAndParseSmsMessages(
+        fetchAll: false,
+      );
       return smsList.map((smsT) {
         final isTransfer = _isSmsTransactionTransfer(smsT);
         String? fromAccount, toAccount;
@@ -127,7 +137,8 @@ class _HomeScreenState extends State<HomeScreen>
                 upper.contains('RTGS') ||
                 upper.contains('IMPS') ||
                 upper.contains('UPI')) {
-              toAccount = _extractRecipientAccount(smsT.rawMessage) ?? 'Other Account';
+              toAccount =
+                  _extractRecipientAccount(smsT.rawMessage) ?? 'Other Account';
             } else {
               toAccount = 'Cash';
             }
@@ -136,14 +147,14 @@ class _HomeScreenState extends State<HomeScreen>
         final upper = smsT.rawMessage.toUpperCase();
         final title = isTransfer
             ? (smsT.isCredit
-                ? '${smsT.bankName} Deposit'
-                : (upper.contains('TO ACCOUNT') ||
-                        upper.contains('TRANSFERRED TO') ||
-                        upper.contains('NEFT') ||
-                        upper.contains('RTGS') ||
-                        upper.contains('IMPS')
-                    ? '${smsT.bankName} Transfer'
-                    : '${smsT.bankName} Withdrawal'))
+                  ? '${smsT.bankName} Deposit'
+                  : (upper.contains('TO ACCOUNT') ||
+                            upper.contains('TRANSFERRED TO') ||
+                            upper.contains('NEFT') ||
+                            upper.contains('RTGS') ||
+                            upper.contains('IMPS')
+                        ? '${smsT.bankName} Transfer'
+                        : '${smsT.bankName} Withdrawal'))
             : '${smsT.bankName} ${smsT.isCredit ? "Credit" : "Debit"}';
         return Transaction(
           id: 'sms_${smsT.id}',
@@ -151,10 +162,15 @@ class _HomeScreenState extends State<HomeScreen>
           amount: smsT.amount,
           type: isTransfer
               ? TransactionType.transfer
-              : (smsT.isCredit ? TransactionType.income : TransactionType.expense),
+              : (smsT.isCredit
+                    ? TransactionType.income
+                    : TransactionType.expense),
           date: smsT.date,
-          category: isTransfer ? 'Transfer' : (smsT.isCredit ? 'Bank Transfer' : 'Bank Transaction'),
-          note: 'From SMS: ${smsT.rawMessage.length > 50 ? "${smsT.rawMessage.substring(0, 50)}..." : smsT.rawMessage}',
+          category: isTransfer
+              ? 'Transfer'
+              : (smsT.isCredit ? 'Bank Transfer' : 'Bank Transaction'),
+          note:
+              'From SMS: ${smsT.rawMessage.length > 50 ? "${smsT.rawMessage.substring(0, 50)}..." : smsT.rawMessage}',
           accountType: AccountType.bank,
           fromAccount: fromAccount,
           toAccount: toAccount,
@@ -168,31 +184,99 @@ class _HomeScreenState extends State<HomeScreen>
   bool _isSmsTransactionTransfer(ParsedSmsTransaction smsT) {
     final upper = smsT.rawMessage.toUpperCase();
     if (smsT.isCredit) {
-      const keywords = ['CASH DEPOSIT', 'CASH DEPOSITED', 'DEPOSIT CASH', 'CASH DEPOSITED TO'];
+      const keywords = [
+        'CASH DEPOSIT',
+        'CASH DEPOSITED',
+        'DEPOSIT CASH',
+        'CASH DEPOSITED TO',
+      ];
       return keywords.any((k) => upper.contains(k));
     }
     const expenseKeywords = [
-      'PAYMENT', 'PAID', 'PURCHASE', 'PURCHASED', 'BILL', 'MERCHANT', 'POS',
-      'DEBIT CARD', 'CREDIT CARD', 'ONLINE', 'SHOPPING', 'RESTAURANT', 'FOOD',
-      'GROCERY', 'FUEL', 'PETROL', 'DIESEL', 'TAXI', 'UBER', 'OLA', 'RENT',
-      'SALARY', 'SERVICE', 'CHARGE', 'FEE', 'TAX',
+      'PAYMENT',
+      'PAID',
+      'PURCHASE',
+      'PURCHASED',
+      'BILL',
+      'MERCHANT',
+      'POS',
+      'DEBIT CARD',
+      'CREDIT CARD',
+      'ONLINE',
+      'SHOPPING',
+      'RESTAURANT',
+      'FOOD',
+      'GROCERY',
+      'FUEL',
+      'PETROL',
+      'DIESEL',
+      'TAXI',
+      'UBER',
+      'OLA',
+      'RENT',
+      'SALARY',
+      'SERVICE',
+      'CHARGE',
+      'FEE',
+      'TAX',
     ];
-    if (upper.contains('ATM') && (upper.contains('WITHDRAWAL') || upper.contains('WITHDRAWN'))) return true;
-    if (RegExp(r'ATM\s+WITHDRAW(?:AL|N)', caseSensitive: false).hasMatch(upper)) return true;
-    if (upper.contains('CASH WITHDRAWAL') || upper.contains('CASH WITHDRAWN')) return true;
+    if (upper.contains('ATM') &&
+        (upper.contains('WITHDRAWAL') || upper.contains('WITHDRAWN'))) {
+      return true;
+    }
+    if (RegExp(
+      r'ATM\s+WITHDRAW(?:AL|N)',
+      caseSensitive: false,
+    ).hasMatch(upper)) {
+      return true;
+    }
+    if (upper.contains('CASH WITHDRAWAL') || upper.contains('CASH WITHDRAWN')) {
+      return true;
+    }
     if ((upper.contains('WITHDRAWAL') || upper.contains('WITHDRAWN')) &&
-        (upper.contains('FROM ACCOUNT') || upper.contains('FROM A/C') || upper.contains('FROM AC') ||
-            RegExp(r'FROM\s+[A/C\s]*NO', caseSensitive: false).hasMatch(upper) ||
-            upper.contains('A/C NO') || upper.contains('ACCOUNT NO') || upper.contains('A/C:'))) return true;
-    if ((upper.contains('NEFT') || upper.contains('RTGS') || upper.contains('IMPS') || upper.contains('UPI')) &&
-        (upper.contains('TO ACCOUNT') || upper.contains('TO A/C') || upper.contains('TO AC') ||
-            RegExp(r'DEBITED\s+TO\s+(?:AC|ACCOUNT|A/C)', caseSensitive: false).hasMatch(upper) ||
-            RegExp(r'TO\s+(?:AC|ACCOUNT|A/C)\s+NO', caseSensitive: false).hasMatch(upper))) return true;
+        (upper.contains('FROM ACCOUNT') ||
+            upper.contains('FROM A/C') ||
+            upper.contains('FROM AC') ||
+            RegExp(
+              r'FROM\s+[A/C\s]*NO',
+              caseSensitive: false,
+            ).hasMatch(upper) ||
+            upper.contains('A/C NO') ||
+            upper.contains('ACCOUNT NO') ||
+            upper.contains('A/C:'))) {
+      return true;
+    }
+    if ((upper.contains('NEFT') ||
+            upper.contains('RTGS') ||
+            upper.contains('IMPS') ||
+            upper.contains('UPI')) &&
+        (upper.contains('TO ACCOUNT') ||
+            upper.contains('TO A/C') ||
+            upper.contains('TO AC') ||
+            RegExp(
+              r'DEBITED\s+TO\s+(?:AC|ACCOUNT|A/C)',
+              caseSensitive: false,
+            ).hasMatch(upper) ||
+            RegExp(
+              r'TO\s+(?:AC|ACCOUNT|A/C)\s+NO',
+              caseSensitive: false,
+            ).hasMatch(upper))) {
+      return true;
+    }
     if (upper.contains('TRANSFER') &&
-        (upper.contains('TO ACCOUNT') || upper.contains('TO A/C') || upper.contains('TO AC') ||
-            upper.contains('FROM ACCOUNT') || upper.contains('FROM A/C') || upper.contains('FROM AC') ||
+        (upper.contains('TO ACCOUNT') ||
+            upper.contains('TO A/C') ||
+            upper.contains('TO AC') ||
+            upper.contains('FROM ACCOUNT') ||
+            upper.contains('FROM A/C') ||
+            upper.contains('FROM AC') ||
             RegExp(r'TO\s+[A/C\s]*NO', caseSensitive: false).hasMatch(upper) ||
-            RegExp(r'FROM\s+[A/C\s]*NO', caseSensitive: false).hasMatch(upper))) return true;
+            RegExp(
+              r'FROM\s+[A/C\s]*NO',
+              caseSensitive: false,
+            ).hasMatch(upper))) {
+      return true;
+    }
     if (expenseKeywords.any((k) => upper.contains(k))) return false;
     return false;
   }
@@ -200,7 +284,10 @@ class _HomeScreenState extends State<HomeScreen>
   String? _extractRecipientAccount(String message) {
     final upper = message.toUpperCase();
     final patterns = [
-      RegExp(r'TO\s+(?:ACCOUNT|A/C|ACCT)[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
+      RegExp(
+        r'TO\s+(?:ACCOUNT|A/C|ACCT)[:\s]*[X*]*([0-9]{4,})',
+        caseSensitive: false,
+      ),
       RegExp(r'TRANSFERRED\s+TO[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
       RegExp(r'BEN(?:EFICIARY)?[:\s]*[X*]*([0-9]{4,})', caseSensitive: false),
       RegExp(r'TO\s+([A-Z0-9]+@[A-Z]+)', caseSensitive: false),
@@ -210,7 +297,9 @@ class _HomeScreenState extends State<HomeScreen>
       final m = p.firstMatch(upper);
       if (m != null && m.group(1) != null) {
         final account = m.group(1)!;
-        return account.contains('@') ? account : '****${account.length > 4 ? account.substring(account.length - 4) : account}';
+        return account.contains('@')
+            ? account
+            : '****${account.length > 4 ? account.substring(account.length - 4) : account}';
       }
     }
     return null;
@@ -226,17 +315,27 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Map<String, double> _getSummary(List<Transaction> list) {
-    final income = list.where((t) => t.type == TransactionType.income).fold(0.0, (s, t) => s + t.amount);
-    final expense = list.where((t) => t.type == TransactionType.expense).fold(0.0, (s, t) => s + t.amount);
+    final income = list
+        .where((t) => t.type == TransactionType.income)
+        .fold(0.0, (s, t) => s + t.amount);
+    final expense = list
+        .where((t) => t.type == TransactionType.expense)
+        .fold(0.0, (s, t) => s + t.amount);
     return {'income': income, 'expense': expense, 'total': income - expense};
   }
 
   void _previousMonth() {
     setState(() {
       if (_tabController.index == 2) {
-        _selectedMonth = DateTime(_selectedMonth.year - 1, _selectedMonth.month);
+        _selectedMonth = DateTime(
+          _selectedMonth.year - 1,
+          _selectedMonth.month,
+        );
       } else {
-        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
+        _selectedMonth = DateTime(
+          _selectedMonth.year,
+          _selectedMonth.month - 1,
+        );
       }
       _refreshKey++;
     });
@@ -245,9 +344,15 @@ class _HomeScreenState extends State<HomeScreen>
   void _nextMonth() {
     setState(() {
       if (_tabController.index == 2) {
-        _selectedMonth = DateTime(_selectedMonth.year + 1, _selectedMonth.month);
+        _selectedMonth = DateTime(
+          _selectedMonth.year + 1,
+          _selectedMonth.month,
+        );
       } else {
-        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+        _selectedMonth = DateTime(
+          _selectedMonth.year,
+          _selectedMonth.month + 1,
+        );
       }
       _refreshKey++;
     });
@@ -266,7 +371,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _showBookmarked() {
     final all = StorageService.getAllTransactions();
-    final bookmarked = all.where((t) => t.isBookmarked).toList()..sort((a, b) => b.date.compareTo(a.date));
+    final bookmarked = all.where((t) => t.isBookmarked).toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
@@ -275,7 +381,9 @@ class _HomeScreenState extends State<HomeScreen>
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => Container(
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.9),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -283,11 +391,19 @@ class _HomeScreenState extends State<HomeScreen>
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  const Icon(Icons.bookmark_rounded, color: AppColors.income, size: 24),
+                  const Icon(
+                    Icons.bookmark_rounded,
+                    color: AppColors.income,
+                    size: 24,
+                  ),
                   const SizedBox(width: 12),
                   Text(
                     'Bookmarked (${bookmarked.length})',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   const Spacer(),
                   IconButton(
@@ -301,7 +417,10 @@ class _HomeScreenState extends State<HomeScreen>
               child: bookmarked.isEmpty
                   ? const Padding(
                       padding: EdgeInsets.all(32),
-                      child: Text('No bookmarks', style: TextStyle(color: AppColors.textMuted)),
+                      child: Text(
+                        'No bookmarks',
+                        style: TextStyle(color: AppColors.textMuted),
+                      ),
                     )
                   : ListView.builder(
                       shrinkWrap: true,
@@ -309,18 +428,29 @@ class _HomeScreenState extends State<HomeScreen>
                       itemBuilder: (context, i) {
                         final t = bookmarked[i];
                         return ListTile(
-                          title: Text(t.title, style: const TextStyle(color: AppColors.textPrimary)),
-                          subtitle: Text(t.category ?? '', style: const TextStyle(color: AppColors.textMuted)),
+                          title: Text(
+                            t.title,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          subtitle: Text(
+                            t.category ?? '',
+                            style: const TextStyle(color: AppColors.textMuted),
+                          ),
                           trailing: Text(
                             'Rs. ${t.amount.toStringAsFixed(0)}',
                             style: TextStyle(
-                              color: t.type == TransactionType.income ? AppColors.income : AppColors.expense,
+                              color: t.type == TransactionType.income
+                                  ? AppColors.income
+                                  : AppColors.expense,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           onTap: () async {
                             Navigator.pop(context);
-                            final result = await context.goToEditTransaction<bool>(t);
+                            final result = await context
+                                .goToEditTransaction<bool>(t);
                             if (result == true) _refresh();
                           },
                         );
@@ -346,7 +476,9 @@ class _HomeScreenState extends State<HomeScreen>
     if (result != null) {
       setState(() {
         _activeFilter = result['filter'] as TransactionFilter?;
-        if (result['month'] != null) _selectedMonth = result['month'] as DateTime;
+        if (result['month'] != null) {
+          _selectedMonth = result['month'] as DateTime;
+        }
         _refreshKey++;
       });
     }
@@ -372,10 +504,13 @@ class _HomeScreenState extends State<HomeScreen>
           future: _getFilteredTransactions(),
           builder: (context, snapshot) {
             if (snapshot.hasData) _cachedTransactions = snapshot.data ?? [];
-            final transactions = _cachedTransactions.isNotEmpty ? _cachedTransactions : (snapshot.data ?? []);
+            final transactions = _cachedTransactions.isNotEmpty
+                ? _cachedTransactions
+                : (snapshot.data ?? []);
             final summary = _getSummary(transactions);
             final grouped = _groupByDate(transactions);
-            final sortedDates = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+            final sortedDates = grouped.keys.toList()
+              ..sort((a, b) => b.compareTo(a));
             final showYearOnly = _tabController.index == 2;
 
             return Column(
@@ -389,7 +524,11 @@ class _HomeScreenState extends State<HomeScreen>
                   onFilter: _showFilter,
                   onBookmark: _showBookmarked,
                   onNotes: () => context.goToNotes(),
-                  onClearFilters: (_searchQuery.isNotEmpty || _activeFilter?.hasActiveFilters == true) ? _clearFilters : null,
+                  onClearFilters:
+                      (_searchQuery.isNotEmpty ||
+                          _activeFilter?.hasActiveFilters == true)
+                      ? _clearFilters
+                      : null,
                   hasActiveFilters: _activeFilter?.hasActiveFilters ?? false,
                   hasSearchQuery: _searchQuery.isNotEmpty,
                 ),
@@ -411,8 +550,14 @@ class _HomeScreenState extends State<HomeScreen>
                     dividerColor: Colors.transparent,
                     labelColor: Colors.white,
                     unselectedLabelColor: AppColors.textMuted,
-                    labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-                    unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400, fontSize: 12),
+                    labelStyle: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontWeight: FontWeight.w400,
+                      fontSize: 12,
+                    ),
                     tabs: _tabs.map((t) => Tab(text: t)).toList(),
                   ),
                 ),

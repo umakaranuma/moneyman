@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../models/transaction.dart';
@@ -49,10 +51,14 @@ class _HomeSearchScreenState extends State<HomeSearchScreen> {
     setState(() {
       _filtered = q.isEmpty
           ? List.from(_all)
-          : _all.where((t) =>
-              t.title.toLowerCase().contains(q) ||
-              (t.category?.toLowerCase().contains(q) ?? false) ||
-              (t.note?.toLowerCase().contains(q) ?? false)).toList();
+          : _all
+                .where(
+                  (t) =>
+                      t.title.toLowerCase().contains(q) ||
+                      (t.category?.toLowerCase().contains(q) ?? false) ||
+                      (t.note?.toLowerCase().contains(q) ?? false),
+                )
+                .toList();
     });
   }
 
@@ -74,7 +80,10 @@ class _HomeSearchScreenState extends State<HomeSearchScreen> {
             border: InputBorder.none,
             suffixIcon: _controller.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.clear_rounded, color: AppColors.textMuted),
+                    icon: const Icon(
+                      Icons.clear_rounded,
+                      color: AppColors.textMuted,
+                    ),
                     onPressed: () => _controller.clear(),
                   )
                 : null,
@@ -84,63 +93,70 @@ class _HomeSearchScreenState extends State<HomeSearchScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _filtered.isEmpty
-              ? Center(
-                  child: Text(
-                    _controller.text.isEmpty ? 'No transactions' : 'No results',
-                    style: const TextStyle(color: AppColors.textMuted),
-                  ),
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  itemCount: _filtered.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 6),
-                  itemBuilder: (context, i) {
-                    final t = _filtered[i];
-                    final color = t.type == TransactionType.income
-                        ? AppColors.income
-                        : t.type == TransactionType.expense
-                            ? AppColors.expense
-                            : AppColors.transfer;
-                    return ListTile(
-                      onTap: () async {
-                        final result = await context.goToEditTransaction<bool>(t);
-                        if (result == true) _load();
-                      },
-                      leading: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: color.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          t.type == TransactionType.income
-                              ? Icons.arrow_downward_rounded
-                              : t.type == TransactionType.expense
-                                  ? Icons.arrow_upward_rounded
-                                  : Icons.swap_horiz_rounded,
-                          color: color,
-                        ),
-                      ),
-                      title: Text(
-                        t.title,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      subtitle: Text(
-                        t.category ?? 'Other',
-                        style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
-                      ),
-                      trailing: Text(
-                        'Rs. ${_fmt(t.amount)}',
-                        style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12),
-                      ),
-                    );
+          ? Center(
+              child: Text(
+                _controller.text.isEmpty ? 'No transactions' : 'No results',
+                style: const TextStyle(color: AppColors.textMuted),
+              ),
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              itemCount: _filtered.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 6),
+              itemBuilder: (context, i) {
+                final t = _filtered[i];
+                final color = t.type == TransactionType.income
+                    ? AppColors.income
+                    : t.type == TransactionType.expense
+                    ? AppColors.expense
+                    : AppColors.transfer;
+                return ListTile(
+                  onTap: () async {
+                    final result = await context.goToEditTransaction<bool>(t);
+                    if (result == true) _load();
                   },
-                ),
+                  leading: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      t.type == TransactionType.income
+                          ? Icons.arrow_downward_rounded
+                          : t.type == TransactionType.expense
+                          ? Icons.arrow_upward_rounded
+                          : Icons.swap_horiz_rounded,
+                      color: color,
+                    ),
+                  ),
+                  title: Text(
+                    t.title,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  subtitle: Text(
+                    t.category ?? 'Other',
+                    style: const TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 11,
+                    ),
+                  ),
+                  trailing: Text(
+                    'Rs. ${_fmt(t.amount)}',
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }

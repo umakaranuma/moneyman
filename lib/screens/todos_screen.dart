@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,25 +23,34 @@ class _TodosScreenState extends State<TodosScreen> {
   Widget build(BuildContext context) {
     final allTodos = StorageService.getAllTodos();
     final todosForSelectedDate = StorageService.getTodosByDate(_selectedDate);
-    
+
     // Group todos by date for summary
     final todosByDate = <DateTime, List<Todo>>{};
     for (var todo in allTodos) {
-      final date = DateTime(todo.scheduledDate.year, todo.scheduledDate.month, todo.scheduledDate.day);
+      final date = DateTime(
+        todo.scheduledDate.year,
+        todo.scheduledDate.month,
+        todo.scheduledDate.day,
+      );
       todosByDate.putIfAbsent(date, () => []).add(todo);
     }
 
     // Get today's date for comparison
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
-    final selectedDateOnly = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    final selectedDateOnly = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+    );
 
     // Calculate summary stats
     final todayTodos = todosByDate[todayDate] ?? [];
     final todayDone = todayTodos.where((t) => t.isDone).length;
     final todayPending = todayTodos.length - todayDone;
 
-    final isToday = selectedDateOnly.year == todayDate.year &&
+    final isToday =
+        selectedDateOnly.year == todayDate.year &&
         selectedDateOnly.month == todayDate.month &&
         selectedDateOnly.day == todayDate.day;
 
@@ -55,7 +66,10 @@ class _TodosScreenState extends State<TodosScreen> {
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+            child: const Icon(
+              Icons.arrow_back_rounded,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         title: Row(
@@ -68,7 +82,11 @@ class _TodosScreenState extends State<TodosScreen> {
                 ),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.checklist_rounded, color: Colors.white, size: 18),
+              child: const Icon(
+                Icons.checklist_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 10),
             Text(
@@ -86,10 +104,10 @@ class _TodosScreenState extends State<TodosScreen> {
         children: [
           // Summary Cards
           if (isToday) _buildSummaryCards(todayDone, todayPending),
-          
+
           // Date Picker Section
           _buildDatePicker(),
-          
+
           // Todos List
           Expanded(
             child: todosForSelectedDate.isEmpty
@@ -154,10 +172,7 @@ class _TodosScreenState extends State<TodosScreen> {
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,7 +243,11 @@ class _TodosScreenState extends State<TodosScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.calendar_today_rounded, color: AppColors.primary, size: 18),
+                  const Icon(
+                    Icons.calendar_today_rounded,
+                    color: AppColors.primary,
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     DateFormat('MMM dd, yyyy').format(_selectedDate),
@@ -249,7 +268,9 @@ class _TodosScreenState extends State<TodosScreen> {
                 icon: Icons.chevron_left_rounded,
                 onTap: () {
                   setState(() {
-                    _selectedDate = _selectedDate.subtract(const Duration(days: 1));
+                    _selectedDate = _selectedDate.subtract(
+                      const Duration(days: 1),
+                    );
                   });
                 },
               ),
@@ -261,7 +282,10 @@ class _TodosScreenState extends State<TodosScreen> {
                   });
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -292,7 +316,10 @@ class _TodosScreenState extends State<TodosScreen> {
     );
   }
 
-  Widget _buildDateNavButton({required IconData icon, required VoidCallback onTap}) {
+  Widget _buildDateNavButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -348,8 +375,8 @@ class _TodosScreenState extends State<TodosScreen> {
           color: todo.isDone
               ? AppColors.income.withValues(alpha: 0.3)
               : (isPast
-                  ? AppColors.expense.withValues(alpha: 0.3)
-                  : AppColors.surfaceVariant),
+                    ? AppColors.expense.withValues(alpha: 0.3)
+                    : AppColors.surfaceVariant),
           width: 1,
         ),
       ),
@@ -372,9 +399,7 @@ class _TodosScreenState extends State<TodosScreen> {
                     : AppColors.surfaceVariant,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: todo.isDone
-                      ? AppColors.income
-                      : AppColors.textMuted,
+                  color: todo.isDone ? AppColors.income : AppColors.textMuted,
                   width: 2,
                 ),
               ),
@@ -401,12 +426,11 @@ class _TodosScreenState extends State<TodosScreen> {
                         : AppColors.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    decoration: todo.isDone
-                        ? TextDecoration.lineThrough
-                        : null,
+                    decoration: todo.isDone ? TextDecoration.lineThrough : null,
                   ),
                 ),
-                if (todo.description != null && todo.description!.isNotEmpty) ...[
+                if (todo.description != null &&
+                    todo.description!.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
                     todo.description!,
@@ -444,7 +468,11 @@ class _TodosScreenState extends State<TodosScreen> {
           ),
           // Actions
           PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert_rounded, color: AppColors.textMuted, size: 20),
+            icon: Icon(
+              Icons.more_vert_rounded,
+              color: AppColors.textMuted,
+              size: 20,
+            ),
             color: AppColors.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -464,7 +492,11 @@ class _TodosScreenState extends State<TodosScreen> {
                   value: 'reschedule',
                   child: Row(
                     children: [
-                      Icon(Icons.schedule_rounded, color: AppColors.primary, size: 18),
+                      Icon(
+                        Icons.schedule_rounded,
+                        color: AppColors.primary,
+                        size: 18,
+                      ),
                       const SizedBox(width: 12),
                       Text(
                         'Reschedule',
@@ -480,7 +512,11 @@ class _TodosScreenState extends State<TodosScreen> {
                 value: 'edit',
                 child: Row(
                   children: [
-                    Icon(Icons.edit_rounded, color: AppColors.secondary, size: 18),
+                    Icon(
+                      Icons.edit_rounded,
+                      color: AppColors.secondary,
+                      size: 18,
+                    ),
                     const SizedBox(width: 12),
                     Text(
                       'Edit',
@@ -496,7 +532,11 @@ class _TodosScreenState extends State<TodosScreen> {
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(Icons.delete_rounded, color: AppColors.expense, size: 18),
+                    Icon(
+                      Icons.delete_rounded,
+                      color: AppColors.expense,
+                      size: 18,
+                    ),
                     const SizedBox(width: 12),
                     Text(
                       'Delete',
@@ -520,9 +560,7 @@ class _TodosScreenState extends State<TodosScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Row(
           children: [
             Container(
@@ -531,7 +569,11 @@ class _TodosScreenState extends State<TodosScreen> {
                 color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.schedule_rounded, color: AppColors.primary, size: 20),
+              child: const Icon(
+                Icons.schedule_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             Text(
@@ -577,7 +619,8 @@ class _TodosScreenState extends State<TodosScreen> {
                 },
               );
               if (picked != null) {
-                final originalDate = todo.originalScheduledDate ?? todo.scheduledDate;
+                final originalDate =
+                    todo.originalScheduledDate ?? todo.scheduledDate;
                 final updatedTodo = todo.copyWith(
                   scheduledDate: picked,
                   originalScheduledDate: originalDate,
@@ -589,7 +632,11 @@ class _TodosScreenState extends State<TodosScreen> {
                   SnackBar(
                     content: Row(
                       children: [
-                        const Icon(Icons.check_circle_rounded, color: AppColors.income, size: 18),
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppColors.income,
+                          size: 18,
+                        ),
                         const SizedBox(width: 10),
                         Text(
                           'Task rescheduled to ${DateFormat('MMM dd, yyyy').format(picked)}',
@@ -617,9 +664,7 @@ class _TodosScreenState extends State<TodosScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Row(
           children: [
             Container(
@@ -628,7 +673,11 @@ class _TodosScreenState extends State<TodosScreen> {
                 color: AppColors.expense.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.delete_rounded, color: AppColors.expense, size: 20),
+              child: const Icon(
+                Icons.delete_rounded,
+                color: AppColors.expense,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             Text(
@@ -661,7 +710,11 @@ class _TodosScreenState extends State<TodosScreen> {
                 SnackBar(
                   content: Row(
                     children: [
-                      const Icon(Icons.check_circle_rounded, color: AppColors.income, size: 18),
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        color: AppColors.income,
+                        size: 18,
+                      ),
                       const SizedBox(width: 10),
                       Text('Task deleted', style: GoogleFonts.inter()),
                     ],
@@ -719,10 +772,7 @@ class _TodosScreenState extends State<TodosScreen> {
           const SizedBox(height: 8),
           Text(
             'Tap + to add a new task',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              color: AppColors.textMuted,
-            ),
+            style: GoogleFonts.inter(fontSize: 14, color: AppColors.textMuted),
           ),
         ],
       ),
@@ -753,11 +803,7 @@ class _TodosScreenState extends State<TodosScreen> {
             ),
           ],
         ),
-        child: const Icon(
-          Icons.add_rounded,
-          color: Colors.white,
-          size: 26,
-        ),
+        child: const Icon(Icons.add_rounded, color: Colors.white, size: 26),
       ),
     );
   }
@@ -769,4 +815,3 @@ class _TodosScreenState extends State<TodosScreen> {
         date.day == now.day;
   }
 }
-

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../models/category.dart';
@@ -44,10 +46,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     if (_searchQuery.isEmpty) return _categories;
     final q = _searchQuery.toLowerCase();
     return _categories
-        .where((c) =>
-            c.name.toLowerCase().contains(q) ||
-            c.emoji.contains(_searchQuery) ||
-            c.subcategories.any((s) => s.toLowerCase().contains(q)))
+        .where(
+          (c) =>
+              c.name.toLowerCase().contains(q) ||
+              c.emoji.contains(_searchQuery) ||
+              c.subcategories.any((s) => s.toLowerCase().contains(q)),
+        )
         .toList();
   }
 
@@ -57,7 +61,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       final loadedCategories = CategoryService.getCategories(
         isIncome: !_isExpense,
       );
-      print('Loaded ${loadedCategories.length} categories from storage');
       if (mounted) {
         setState(() {
           _categories = loadedCategories
@@ -74,7 +77,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         });
       }
     } catch (e) {
-      print('Error loading categories: $e');
       // Fallback to defaults on error
       if (mounted) {
         final defaultCategories = _isExpense
@@ -125,8 +127,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       itemCount: _filteredCategories.length,
                       itemBuilder: (_, index) {
                         final category = _filteredCategories[index];
-                        final actualIndex = _categories
-                            .indexWhere((c) => c.id == category.id);
+                        final actualIndex = _categories.indexWhere(
+                          (c) => c.id == category.id,
+                        );
                         return _buildPremiumCategoryItem(
                           category,
                           actualIndex >= 0 ? actualIndex : index,
@@ -242,10 +245,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         onLongPress: () => _showEditCategoryDialog(category),
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 16,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(22),
@@ -254,7 +254,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 color: Colors.black.withOpacity(0.03),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
-              )
+              ),
             ],
           ),
           child: Row(
@@ -312,16 +312,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     return FloatingActionButton.extended(
       backgroundColor: _isExpense ? AppColors.expense : AppColors.income,
       elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       icon: const Icon(Icons.add, color: Colors.white),
       label: const Text(
         "Add Category",
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
-        ),
+        style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
       ),
       onPressed: _showAddCategoryDialog,
     );

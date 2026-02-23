@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_underscores
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -236,6 +238,7 @@ class _AccountsScreenState extends State<AccountsScreen>
                   ),
                 ),
                 const SizedBox(height: 8),
+
                 /// Cancel Button
                 Container(
                   width: double.infinity,
@@ -278,9 +281,7 @@ class _AccountsScreenState extends State<AccountsScreen>
             style: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: isDestructive
-                  ? AppColors.expense
-                  : AppColors.textPrimary,
+              color: isDestructive ? AppColors.expense : AppColors.textPrimary,
             ),
           ),
         ),
@@ -512,11 +513,7 @@ class _AccountsScreenState extends State<AccountsScreen>
                   outstanding: account.outstandingBalance ?? 0.0,
                 ),
                 if (!isLast)
-                  const Divider(
-                    height: 1,
-                    indent: 16,
-                    endIndent: 16,
-                  ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
               ],
             );
           }),
@@ -802,7 +799,11 @@ class _AccountsScreenState extends State<AccountsScreen>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _summaryMini('Assets', totalAssets, AppColors.income),
-                _summaryMini('Liabilities', totalLiabilities, AppColors.expense),
+                _summaryMini(
+                  'Liabilities',
+                  totalLiabilities,
+                  AppColors.expense,
+                ),
               ],
             ),
           ],
@@ -817,10 +818,7 @@ class _AccountsScreenState extends State<AccountsScreen>
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            color: AppColors.textMuted,
-          ),
+          style: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted),
         ),
         const SizedBox(height: 2),
         Text(
@@ -873,11 +871,16 @@ class _AccountsScreenState extends State<AccountsScreen>
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   child: Row(
                     children: [
-                      Icon(account.icon,
-                          size: 18, color: AppColors.textSecondary),
+                      Icon(
+                        account.icon,
+                        size: 18,
+                        color: AppColors.textSecondary,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -905,11 +908,7 @@ class _AccountsScreenState extends State<AccountsScreen>
                   ),
                 ),
                 if (!isLast)
-                  const Divider(
-                    height: 1,
-                    indent: 16,
-                    endIndent: 16,
-                  ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
               ],
             );
           }),
@@ -928,8 +927,11 @@ class _AccountsScreenState extends State<AccountsScreen>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
-          Icon(Icons.credit_card_rounded,
-              size: 18, color: AppColors.textSecondary),
+          Icon(
+            Icons.credit_card_rounded,
+            size: 18,
+            color: AppColors.textSecondary,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -1089,10 +1091,13 @@ class _HideAccountsSheetState extends State<_HideAccountsSheet> {
                     child: ListView.separated(
                       shrinkWrap: true,
                       itemCount: accounts.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1, indent: 20, endIndent: 20),
+                      separatorBuilder: (_, __) =>
+                          const Divider(height: 1, indent: 20, endIndent: 20),
                       itemBuilder: (context, index) {
                         final account = accounts[index];
-                        final isVisible = !_selectedHiddenIds.contains(account.id);
+                        final isVisible = !_selectedHiddenIds.contains(
+                          account.id,
+                        );
 
                         return CheckboxListTile(
                           value: isVisible,
@@ -1232,7 +1237,8 @@ class _DeleteAccountsSheetState extends State<_DeleteAccountsSheet> {
                     child: ListView.separated(
                       shrinkWrap: true,
                       itemCount: accounts.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1, indent: 20, endIndent: 20),
+                      separatorBuilder: (_, __) =>
+                          const Divider(height: 1, indent: 20, endIndent: 20),
                       itemBuilder: (context, index) {
                         final account = accounts[index];
                         final isSelected = _selectedIds.contains(account.id);

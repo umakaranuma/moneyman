@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -237,10 +239,7 @@ class _BackupScreenState extends State<BackupScreen> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: GoogleFonts.inter(
-            color: AppColors.textMuted,
-            fontSize: 11,
-          ),
+          style: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 11),
         ),
       ],
     );
@@ -270,10 +269,7 @@ class _BackupScreenState extends State<BackupScreen> {
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.surfaceVariant,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.surfaceVariant, width: 1),
       ),
       child: Column(children: children),
     );
@@ -438,28 +434,30 @@ class _BackupScreenState extends State<BackupScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [1, 3, 7, 14, 30]
-              .map((days) => RadioListTile<int>(
-                    title: Text(
-                      days == 1
-                          ? 'Daily'
-                          : days == 7
-                              ? 'Weekly'
-                              : days == 14
-                                  ? 'Bi-weekly'
-                                  : days == 30
-                                      ? 'Monthly'
-                                      : 'Every $days days',
-                      style: GoogleFonts.inter(color: AppColors.textPrimary),
-                    ),
-                    value: days,
-                    groupValue: _backupFrequency,
-                    onChanged: (value) {
-                      setState(() {
-                        _backupFrequency = value!;
-                      });
-                      Navigator.pop(context);
-                    },
-                  ))
+              .map(
+                (days) => RadioListTile<int>(
+                  title: Text(
+                    days == 1
+                        ? 'Daily'
+                        : days == 7
+                        ? 'Weekly'
+                        : days == 14
+                        ? 'Bi-weekly'
+                        : days == 30
+                        ? 'Monthly'
+                        : 'Every $days days',
+                    style: GoogleFonts.inter(color: AppColors.textPrimary),
+                  ),
+                  value: days,
+                  groupValue: _backupFrequency,
+                  onChanged: (value) {
+                    setState(() {
+                      _backupFrequency = value!;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+              )
               .toList(),
         ),
       ),
@@ -569,4 +567,3 @@ class _BackupScreenState extends State<BackupScreen> {
     );
   }
 }
-

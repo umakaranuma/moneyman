@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import '../../../../models/transaction.dart';
 import '../../../../models/category.dart';
@@ -26,8 +28,8 @@ class TransactionItem extends StatelessWidget {
     final color = isIncome
         ? AppColors.income
         : isExpense
-            ? AppColors.expense
-            : AppColors.transfer;
+        ? AppColors.expense
+        : AppColors.transfer;
 
     return InkWell(
       onTap: onTap,
@@ -43,9 +45,7 @@ class TransactionItem extends StatelessWidget {
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Center(
-                child: _buildIcon(isIncome, isExpense),
-              ),
+              child: Center(child: _buildIcon(isIncome, isExpense)),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -97,13 +97,13 @@ class TransactionItem extends StatelessWidget {
       isIncome
           ? Icons.arrow_downward_rounded
           : isExpense
-              ? Icons.arrow_upward_rounded
-              : Icons.swap_horiz_rounded,
+          ? Icons.arrow_upward_rounded
+          : Icons.swap_horiz_rounded,
       color: isIncome
           ? AppColors.income
           : isExpense
-              ? AppColors.expense
-              : AppColors.transfer,
+          ? AppColors.expense
+          : AppColors.transfer,
       size: 18,
     );
   }
