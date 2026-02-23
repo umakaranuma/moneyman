@@ -87,7 +87,7 @@ class _AccountsScreenState extends State<AccountsScreen>
                   pinned: true,
                   delegate: _FixedHeaderDelegate(
                     child: _buildHeader(),
-                    height: 80, // Header height: padding (16*2) + content (~48)
+                    height: 60, // padding 12+8 + row ~40
                   ),
                 ),
 
@@ -96,7 +96,7 @@ class _AccountsScreenState extends State<AccountsScreen>
                   pinned: true,
                   delegate: _FixedHeaderDelegate(
                     child: _buildSummaryCards(balances),
-                    height: 140, // Summary cards fixed height
+                    height: 200,
                   ),
                 ),
 
@@ -121,81 +121,61 @@ class _AccountsScreenState extends State<AccountsScreen>
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
         children: [
-          AppIconBox(
-            icon: Icons.account_balance_wallet_rounded,
-            gradient: const [AppColors.primary, AppColors.primaryLight],
-            size: 24,
-            padding: 12,
-            borderRadius: 16,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          const SizedBox(width: 14),
           Text(
             'Accounts',
             style: GoogleFonts.inter(
-              color: AppColors.textPrimary,
-              fontSize: 24,
+              fontSize: 28,
               fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
             ),
           ),
           const Spacer(),
-          _buildHeaderButton(
-            Icons.bar_chart_rounded,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const StatsScreen(showGraphsView: true),
-                ),
-              );
-            },
-          ),
+          _appleIconButton(Icons.bar_chart_rounded, () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const StatsScreen(showGraphsView: true),
+              ),
+            );
+          }),
           const SizedBox(width: 8),
-          _buildPopupMenuButton(),
+          _modernPopupButton(),
         ],
       ),
     );
   }
 
-  Widget _buildHeaderButton(IconData icon, {VoidCallback? onTap}) {
+  Widget _appleIconButton(IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 44,
-        height: 44,
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.surfaceVariant, width: 1),
+          borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: AppColors.textSecondary, size: 20),
+        child: Icon(icon, size: 18, color: AppColors.textSecondary),
       ),
     );
   }
 
-  Widget _buildPopupMenuButton() {
+  Widget _modernPopupButton() {
     return PopupMenuButton<String>(
       child: Container(
-        width: 44,
-        height: 44,
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.surfaceVariant, width: 1),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
           Icons.more_vert_rounded,
           color: AppColors.textSecondary,
-          size: 20,
+          size: 18,
         ),
       ),
       color: AppColors.surface,
@@ -493,60 +473,28 @@ class _AccountsScreenState extends State<AccountsScreen>
     Map<String, double> balances,
   ) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.surface,
-            AppColors.surfaceVariant.withValues(alpha: 0.5),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppColors.secondary.withValues(alpha: 0.15),
-          width: 1,
-        ),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
         children: [
-          // Header
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
             child: Row(
               children: [
-                AppIconBox(
-                  icon: Icons.credit_card_rounded,
-                  gradient: const [AppColors.secondary, AppColors.primary],
-                  size: 20,
-                  padding: 12,
-                  borderRadius: 14,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.secondary.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 14),
                 Text(
                   'Credit Cards',
                   style: GoogleFonts.inter(
-                    fontSize: 17,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
             ),
           ),
-          Container(
-            height: 1,
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            color: AppColors.surfaceVariant,
-          ),
-          // Card Items
+          const Divider(height: 1),
           ...cardAccounts.asMap().entries.map((entry) {
             final index = entry.key;
             final account = entry.value;
@@ -561,10 +509,10 @@ class _AccountsScreenState extends State<AccountsScreen>
                   outstanding: account.outstandingBalance ?? 0.0,
                 ),
                 if (!isLast)
-                  Container(
+                  const Divider(
                     height: 1,
-                    margin: const EdgeInsets.symmetric(horizontal: 20),
-                    color: AppColors.surfaceVariant.withValues(alpha: 0.5),
+                    indent: 16,
+                    endIndent: 16,
                   ),
               ],
             );
@@ -815,120 +763,72 @@ class _AccountsScreenState extends State<AccountsScreen>
   }
 
   Widget _buildSummaryCards(Map<String, double> balances) {
-    // Use the calculated assets and liabilities from balances
     final totalAssets = balances['total_assets'] ?? 0.0;
     final totalLiabilities = balances['total_liabilities'] ?? 0.0;
     final total = totalAssets - totalLiabilities;
 
-    return Container(
-      padding: const EdgeInsets.only(bottom: 16),
-      height: 140,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildSummaryCard(
-              title: 'Assets',
-              amount: totalAssets,
-              icon: Icons.trending_up_rounded,
-              gradient: [
-                AppColors.income,
-                AppColors.income.withValues(alpha: 0.7),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Net Worth',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: AppColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _formatCurrency(total, prefix: 'Rs. '),
+              style: GoogleFonts.inter(
+                fontSize: 26,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _summaryMini('Assets', totalAssets, AppColors.income),
+                _summaryMini('Liabilities', totalLiabilities, AppColors.expense),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildSummaryCard(
-              title: 'Liabilities',
-              amount: totalLiabilities,
-              icon: Icons.trending_down_rounded,
-              gradient: [
-                AppColors.expense,
-                AppColors.expense.withValues(alpha: 0.7),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildSummaryCard(
-              title: 'Net Worth',
-              amount: total,
-              icon: Icons.account_balance_rounded,
-              gradient: [
-                AppColors.textPrimary,
-                AppColors.textSecondary,
-              ], // White for balance
-              isHighlighted: true,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSummaryCard({
-    required String title,
-    required double amount,
-    required IconData icon,
-    required List<Color> gradient,
-    bool isHighlighted = false,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.surface,
-            AppColors.surfaceVariant.withValues(alpha: 0.5),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isHighlighted
-              ? gradient[0].withValues(alpha: 0.2)
-              : gradient[0].withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          AppIconBox(
-            icon: icon,
-            gradient: gradient,
-            size: 18,
-            padding: 8,
-            borderRadius: 10,
+  Widget _summaryMini(String label, double value, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: AppColors.textMuted,
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.inter(
-                  color: AppColors.textMuted,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 2),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  _formatCurrency(amount, prefix: 'Rs. '),
-                  style: GoogleFonts.inter(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          _formatCurrency(value, prefix: 'Rs. '),
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: color,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -939,183 +839,75 @@ class _AccountsScreenState extends State<AccountsScreen>
     required List<_AccountItem> accounts,
   }) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.surface,
-            AppColors.surfaceVariant.withValues(alpha: 0.5),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: gradient[0].withValues(alpha: 0.15),
-          width: 1,
-        ),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
         children: [
-          // Header
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
             child: Row(
               children: [
-                AppIconBox(
-                  icon: icon,
-                  gradient: gradient,
-                  size: 20,
-                  padding: 12,
-                  borderRadius: 14,
-                  boxShadow: [
-                    BoxShadow(
-                      color: gradient[0].withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 14),
                 Text(
                   title,
                   style: GoogleFonts.inter(
-                    fontSize: 17,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: gradient[0].withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${accounts.length} accounts',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: gradient[0],
-                      fontWeight: FontWeight.w600,
-                    ),
                   ),
                 ),
               ],
             ),
           ),
-
-          Container(
-            height: 1,
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            color: AppColors.surfaceVariant,
-          ),
-
-          // Accounts
+          const Divider(height: 1),
           ...accounts.asMap().entries.map((entry) {
             final index = entry.key;
             final account = entry.value;
             final isLast = index == accounts.length - 1;
 
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              decoration: BoxDecoration(
-                border: !isLast
-                    ? Border(
-                        bottom: BorderSide(
-                          color: AppColors.surfaceVariant.withValues(
-                            alpha: 0.5,
-                          ),
-                          width: 1,
-                        ),
-                      )
-                    : null,
-              ),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: Center(
-                      child: AppIconBox(
-                        icon: account.icon,
-                        gradient: gradient,
-                        size: 20,
-                        padding: 10,
-                        borderRadius: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 14),
+                  child: Row(
+                    children: [
+                      Icon(account.icon,
+                          size: 18, color: AppColors.textSecondary),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
                           account.name,
                           style: GoogleFonts.inter(
-                            color: AppColors.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        Text(
-                          account.currency,
-                          style: GoogleFonts.inter(
-                            color: AppColors.textMuted,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
+                      ),
                       Text(
                         _formatCurrency(
                           account.balance,
                           prefix: '${account.currency} ',
                         ),
                         style: GoogleFonts.inter(
-                          color: account.balance >= 0
-                              ? AppColors.income
-                              : AppColors.expense,
-                          fontSize: 15,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(top: 4),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color:
-                              (account.balance >= 0
-                                      ? AppColors.income
-                                      : AppColors.expense)
-                                  .withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          account.balance >= 0 ? 'Active' : 'Overdrawn',
-                          style: GoogleFonts.inter(
-                            color: account.balance >= 0
-                                ? AppColors.income
-                                : AppColors.expense,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          color: account.balance >= 0
+                              ? AppColors.textPrimary
+                              : AppColors.expense,
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                if (!isLast)
+                  const Divider(
+                    height: 1,
+                    indent: 16,
+                    endIndent: 16,
+                  ),
+              ],
             );
           }),
         ],
@@ -1129,80 +921,59 @@ class _AccountsScreenState extends State<AccountsScreen>
     required double payable,
     required double outstanding,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
-          AppIconBox(
-            icon: Icons.credit_card_rounded,
-            gradient: const [
-              AppColors.secondary,
-              AppColors.secondaryLight,
-            ],
-            size: 20,
-            padding: 10,
-            borderRadius: 12,
-          ),
-          const SizedBox(width: 14),
+          Icon(Icons.credit_card_rounded,
+              size: 18, color: AppColors.textSecondary),
+          const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: GoogleFonts.inter(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  currency,
-                  style: GoogleFonts.inter(
-                    color: AppColors.textMuted,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+            child: Text(
+              name,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'Balance Payable',
+                'Payable',
                 style: GoogleFonts.inter(
+                  fontSize: 12,
                   color: AppColors.textMuted,
-                  fontSize: 10,
                 ),
               ),
               Text(
                 _formatCurrency(payable, prefix: '$currency '),
                 style: GoogleFonts.inter(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
                 'Outstanding',
                 style: GoogleFonts.inter(
+                  fontSize: 12,
                   color: AppColors.textMuted,
-                  fontSize: 10,
                 ),
               ),
               Text(
                 _formatCurrency(outstanding, prefix: '$currency '),
                 style: GoogleFonts.inter(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
