@@ -47,50 +47,55 @@ class AccountPickerSheet extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Select Account',
-            style: GoogleFonts.inter(
-              color: AppColors.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ...AccountType.values.map((type) {
-            final isSelected = selected == type;
-            return ListTile(
-              leading: Icon(_icon(type), color: AppColors.primary, size: 22),
-              title: Text(
-                _label(type),
-                style: GoogleFonts.inter(
-                  color: AppColors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              trailing: isSelected
-                  ? const Icon(Icons.check_rounded, color: AppColors.primary, size: 22)
-                  : null,
-              onTap: () {
-                onSelected(type);
-                Navigator.pop(context);
-              },
-            );
-          }),
-        ],
+              const SizedBox(height: 20),
+              Text(
+                'Select Account',
+                style: GoogleFonts.inter(
+                  color: AppColors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...AccountType.values.map((type) {
+                final isSelected = selected == type;
+                return ListTile(
+                  leading: Icon(_icon(type), color: AppColors.primary, size: 22),
+                  title: Text(
+                    _label(type),
+                    style: GoogleFonts.inter(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? const Icon(Icons.check_rounded, color: AppColors.primary, size: 22)
+                      : null,
+                  onTap: () {
+                    onSelected(type);
+                    Navigator.pop(context);
+                  },
+                );
+              }),
+            ],
+          ),
+        ),
       ),
     );
   }

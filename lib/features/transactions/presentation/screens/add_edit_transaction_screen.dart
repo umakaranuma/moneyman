@@ -26,6 +26,7 @@ import '../widgets/attachment_section.dart';
 import '../widgets/save_buttons.dart';
 import '../bottom_sheets/account_picker_sheet.dart';
 import '../bottom_sheets/category_picker_sheet.dart';
+import '../bottom_sheets/date_time_picker_sheet.dart';
 
 class AddEditTransactionScreen extends StatefulWidget {
   final Transaction? transaction;
@@ -54,7 +55,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   String? _selectedCategory;
   String? _selectedSubcategory;
   DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = TimeOfDay.now();
   String? _fromAccount;
   String? _toAccount;
   List<String> _imagePaths = [];
@@ -84,7 +84,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       _accountType = t.accountType;
       _selectedCategory = t.category;
       _selectedDate = t.date;
-      _selectedTime = TimeOfDay.fromDateTime(t.date);
       _fromAccount = t.fromAccount;
       _toAccount = t.toAccount;
       _imagePaths = List<String>.from(t.imagePaths);
@@ -180,43 +179,17 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
     );
   }
 
-  Future<void> _selectDate() async {
-    final picked = await showDatePicker(
+  void _showDateTimeSheet() {
+    showModalBottomSheet(
       context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now().add(const Duration(days: 3650)),
+      backgroundColor: Colors.transparent,
+      builder: (context) => DateTimePickerSheet(
+        initialDateTime: _selectedDate,
+        onSelected: (dateTime) {
+          setState(() => _selectedDate = dateTime);
+        },
+      ),
     );
-    if (picked != null) {
-      setState(() {
-        _selectedDate = DateTime(
-          picked.year,
-          picked.month,
-          picked.day,
-          _selectedTime.hour,
-          _selectedTime.minute,
-        );
-      });
-    }
-  }
-
-  Future<void> _selectTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime,
-    );
-    if (picked != null) {
-      setState(() {
-        _selectedTime = picked;
-        _selectedDate = DateTime(
-          _selectedDate.year,
-          _selectedDate.month,
-          _selectedDate.day,
-          picked.hour,
-          picked.minute,
-        );
-      });
-    }
   }
 
   void _showImageSourceSheet() {
@@ -434,10 +407,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                         categoryError: _categoryError && _hasAttemptedSave,
                         onCategoryTap: _showCategoryPicker,
                         onAccountTap: _showAccountPicker,
-                        onDateTap: () async {
-                          await _selectDate();
-                          await _selectTime();
-                        },
+                        onDateTap: _showDateTimeSheet,
                         getAccountLabel: _getAccountLabel,
                       ),
                       if (_type == TransactionType.transfer) ...[
