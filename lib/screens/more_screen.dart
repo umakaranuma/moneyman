@@ -23,7 +23,7 @@ class MoreScreen extends StatelessWidget {
                 pinned: true,
                 delegate: _FixedHeaderDelegate(
                   child: _buildHeader(),
-                  height: 100, // Header height: padding (16*2) + content (~68)
+                  height: 96,
                 ),
               ),
 
@@ -36,9 +36,9 @@ class MoreScreen extends StatelessWidget {
                 sliver: SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 0.85,
+                    mainAxisSpacing: 18,
+                    crossAxisSpacing: 18,
+                    childAspectRatio: 1,
                   ),
                   delegate: SliverChildListDelegate([
                     _buildSettingsItem(
@@ -132,83 +132,31 @@ class MoreScreen extends StatelessWidget {
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary.withOpacity(0.12), Colors.transparent],
-        ),
-      ),
-      child: Row(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: AppColors.primary.withOpacity(.2),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.dashboard_customize_rounded,
-              color: AppColors.primary,
-              size: 26,
+          Text(
+            "More",
+            style: GoogleFonts.inter(
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Settings",
-                  style: GoogleFonts.inter(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                Text(
-                  "Manage your Finzo experience",
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 6),
           FutureBuilder<PackageInfo>(
             future: PackageInfo.fromPlatform(),
             builder: (context, snapshot) {
               final version = snapshot.hasData
-                  ? "v${snapshot.data!.version}"
-                  : "v1.0.0";
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
-                  color: AppColors.primary.withOpacity(.12),
-                ),
-                child: Text(
-                  version,
-                  style: GoogleFonts.inter(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11,
-                  ),
+                  ? "Version ${snapshot.data!.version}"
+                  : "Version 1.0.0";
+              return Text(
+                version,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.textMuted,
                 ),
               );
             },
@@ -408,34 +356,20 @@ class MoreScreen extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return InkWell(
-      borderRadius: BorderRadius.circular(26),
+      borderRadius: BorderRadius.circular(20),
       onTap: onTap,
-      child: Ink(
+      child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(26),
           color: AppColors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: AppColors.primary.withOpacity(.2),
-                  width: 1,
-                ),
-              ),
-              child: Icon(icon, color: AppColors.primary, size: 26),
+            Icon(
+              icon,
+              size: 28,
+              color: AppColors.textPrimary,
             ),
             const SizedBox(height: 14),
             Text(
@@ -443,7 +377,7 @@ class MoreScreen extends StatelessWidget {
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 13,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -454,118 +388,73 @@ class MoreScreen extends StatelessWidget {
   }
 
   Widget _buildAboutSection(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        color: AppColors.background,
-        border: Border.all(
-          color: AppColors.surfaceVariant.withOpacity(.15),
-          width: 1,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
         ),
-      ),
-      child: Column(
-        children: [
-          _buildAboutItem(
-            icon: Icons.star_rounded,
-            title: "Rate Finzo",
-            subtitle: "Support us with a review",
-            onTap: () => AppUtils.rateApp(),
-          ),
-          const SizedBox(height: 12),
-          _buildAboutItem(
-            icon: Icons.share_rounded,
-            title: "Share App",
-            subtitle: "Invite your friends",
-            onTap: () => AppUtils.shareApp(),
-          ),
-          const SizedBox(height: 12),
-          _buildAboutItem(
-            icon: Icons.privacy_tip_rounded,
-            title: "Privacy Policy",
-            subtitle: "Your data protection info",
-            onTap: () => context.goToPrivacyPolicy(),
-          ),
-          const SizedBox(height: 12),
-          _buildAboutItem(
-            icon: Icons.description_rounded,
-            title: "Terms of Service",
-            subtitle: "App usage terms",
-            onTap: () => context.goToTermsOfService(),
-          ),
-        ],
+        child: Column(
+          children: [
+            _buildAboutRow(
+              title: "Rate Finzo",
+              onTap: () => AppUtils.rateApp(),
+            ),
+            _divider(),
+            _buildAboutRow(
+              title: "Share App",
+              onTap: () => AppUtils.shareApp(),
+            ),
+            _divider(),
+            _buildAboutRow(
+              title: "Privacy Policy",
+              onTap: () => context.goToPrivacyPolicy(),
+            ),
+            _divider(),
+            _buildAboutRow(
+              title: "Terms of Service",
+              onTap: () => context.goToTermsOfService(),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildAboutItem({
-    required IconData icon,
+  Widget _buildAboutRow({
     required String title,
-    required String subtitle,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Ink(
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.surface.withOpacity(.3),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: AppColors.surfaceVariant.withOpacity(.1),
-              width: 1,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+              ),
             ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppColors.primary.withOpacity(.2),
-                    width: 1,
-                  ),
-                ),
-                child: Icon(icon, color: AppColors.primary, size: 18),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.inter(
-                        color: AppColors.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.inter(
-                        color: AppColors.textMuted,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textMuted,
-                size: 20,
-              ),
-            ],
-          ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: AppColors.textMuted,
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Widget _divider() {
+    return const Divider(height: 1, indent: 16);
   }
 }
 

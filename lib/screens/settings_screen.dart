@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../models/account.dart';
 import '../services/storage_service.dart';
-import '../widgets/app_icon_box.dart';
 import '../core/router/app_router.dart';
 import '../utils/app_utils.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -45,26 +44,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.arrow_back_rounded,
-              color: AppColors.textPrimary,
-            ),
-          ),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Settings',
           style: GoogleFonts.inter(
+            fontSize: 26,
+            fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -80,21 +70,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildSettingsCard(
                   children: [
                     _buildSettingTile(
-                      icon: Icons.language_rounded,
                       title: 'Language',
                       subtitle: _language,
                       onTap: () => _showLanguageDialog(),
                     ),
                     _buildDivider(),
                     _buildSettingTile(
-                      icon: Icons.attach_money_rounded,
                       title: 'Default currency',
                       subtitle: _defaultCurrency.displayLabel,
                       onTap: () => _showCurrencyDialog(),
                     ),
                     _buildDivider(),
                     _buildSettingTile(
-                      icon: Icons.palette_rounded,
                       title: 'Theme',
                       subtitle: _darkModeEnabled ? 'Dark' : 'Light',
                       trailing: Switch(
@@ -117,7 +104,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildSettingsCard(
                   children: [
                     _buildSettingTile(
-                      icon: Icons.notifications_rounded,
                       title: 'Enable Notifications',
                       subtitle: 'Get alerts for important updates',
                       trailing: Switch(
@@ -169,7 +155,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ? 'v${snapshot.data!.version}'
                             : 'v1.0.0';
                         return _buildSettingTile(
-                          icon: Icons.info_rounded,
                           title: 'App Version',
                           subtitle: version,
                         );
@@ -177,33 +162,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     _buildDivider(),
                     _buildSettingTile(
-                      icon: Icons.description_rounded,
                       title: 'Terms of Service',
                       onTap: () => context.goToTermsOfService(),
                     ),
                     _buildDivider(),
                     _buildSettingTile(
-                      icon: Icons.privacy_tip_rounded,
                       title: 'Privacy Policy',
                       onTap: () => context.goToPrivacyPolicy(),
                     ),
                     _buildDivider(),
                     _buildSettingTile(
-                      icon: Icons.star_rounded,
                       title: 'Rate Us',
                       subtitle: 'Love the app? Rate us 5 stars!',
                       onTap: () => AppUtils.rateApp(),
                     ),
                     _buildDivider(),
                     _buildSettingTile(
-                      icon: Icons.share_rounded,
                       title: 'Share App',
                       subtitle: 'Share with friends and family',
                       onTap: () => AppUtils.shareApp(),
                     ),
                     _buildDivider(),
                     _buildSettingTile(
-                      icon: Icons.chat_bubble_rounded,
                       title: 'Feedback',
                       subtitle: 'Help us improve the app',
                       onTap: () => context.goToFeedback(),
@@ -221,13 +201,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: GoogleFonts.inter(
-        color: AppColors.textSecondary,
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.5,
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 6),
+      child: Text(
+        title.toUpperCase(),
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textMuted,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
@@ -235,23 +218,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildSettingsCard({required List<Widget> children}) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.surface,
-            AppColors.surfaceVariant.withValues(alpha: 0.5),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.surfaceVariant, width: 1),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(children: children),
     );
   }
 
   Widget _buildSettingTile({
-    required IconData icon,
     required String title,
     String? subtitle,
     Widget? trailing,
@@ -259,19 +233,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Row(
           children: [
-            AppIconBox(
-              icon: icon,
-              gradient: const [AppColors.primary, AppColors.primaryLight],
-              size: 20,
-              padding: 10,
-              borderRadius: 12,
-            ),
-            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,9 +244,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     title,
                     style: GoogleFonts.inter(
-                      color: AppColors.textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   if (subtitle != null) ...[
@@ -289,8 +254,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       subtitle,
                       style: GoogleFonts.inter(
-                        color: AppColors.textMuted,
                         fontSize: 12,
+                        color: AppColors.textMuted,
                       ),
                     ),
                   ],
@@ -301,8 +266,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             if (trailing == null && onTap != null)
               Icon(
                 Icons.chevron_right_rounded,
+                size: 18,
                 color: AppColors.textMuted,
-                size: 20,
               ),
           ],
         ),
@@ -311,84 +276,121 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildDivider() {
-    return Divider(
+    return const Divider(
       height: 1,
-      thickness: 1,
-      color: AppColors.surfaceVariant,
-      indent: 60,
+      indent: 16,
+      endIndent: 0,
     );
   }
 
   void _showLanguageDialog() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text(
-          'Select Language',
-          style: GoogleFonts.inter(color: AppColors.textPrimary),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: ['English', 'Spanish', 'French', 'German']
-              .map(
-                (lang) => RadioListTile<String>(
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...['English', 'Spanish', 'French', 'German'].map(
+                (lang) => ListTile(
                   title: Text(
                     lang,
-                    style: GoogleFonts.inter(color: AppColors.textPrimary),
+                    style: GoogleFonts.inter(
+                      fontWeight:
+                          _language == lang ? FontWeight.w600 : FontWeight.w400,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                  value: lang,
-                  groupValue: _language,
-                  onChanged: (value) {
-                    setState(() {
-                      _language = value!;
-                    });
+                  trailing: _language == lang
+                      ? Icon(Icons.check_rounded, color: AppColors.textSecondary, size: 20)
+                      : null,
+                  onTap: () {
+                    setState(() => _language = lang);
                     Navigator.pop(context);
                   },
                 ),
-              )
-              .toList(),
-        ),
-      ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
     );
   }
 
   void _showCurrencyDialog() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text(
-          'Default currency',
-          style: GoogleFonts.inter(color: AppColors.textPrimary),
-        ),
-        content: SingleChildScrollView(
+      backgroundColor: AppColors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: CurrencyType.values
-                .map(
-                  (currency) => RadioListTile<CurrencyType>(
-                    title: Text(
-                      currency.displayLabel,
-                      style: GoogleFonts.inter(color: AppColors.textPrimary),
-                    ),
-                    value: currency,
-                    groupValue: _defaultCurrency,
-                    onChanged: (value) async {
-                      if (value != null) {
-                        await StorageService.setDefaultCurrencyCode(value.name);
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.5,
+                ),
+                child: ListView(
+                  shrinkWrap: true,
+                  children: CurrencyType.values.map(
+                    (currency) => ListTile(
+                      title: Text(
+                        currency.displayLabel,
+                        style: GoogleFonts.inter(
+                          fontWeight: _defaultCurrency == currency
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      trailing: _defaultCurrency == currency
+                          ? Icon(Icons.check_rounded, color: AppColors.textSecondary, size: 20)
+                          : null,
+                      onTap: () async {
+                        await StorageService.setDefaultCurrencyCode(currency.name);
                         if (mounted) {
-                          setState(() => _defaultCurrency = value);
+                          setState(() => _defaultCurrency = currency);
                           Navigator.pop(context);
                         }
-                      }
-                    },
-                  ),
-                )
-                .toList(),
+                      },
+                    ),
+                  ).toList(),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
