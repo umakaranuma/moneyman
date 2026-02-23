@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_icon_box.dart';
 import '../services/storage_service.dart';
 import '../services/sms_service.dart';
 import '../services/account_service.dart';
@@ -123,26 +124,19 @@ class _AccountsScreenState extends State<AccountsScreen>
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryLight],
+          AppIconBox(
+            icon: Icons.account_balance_wallet_rounded,
+            gradient: const [AppColors.primary, AppColors.primaryLight],
+            size: 24,
+            padding: 12,
+            borderRadius: 16,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.account_balance_wallet_rounded,
-              color: Colors.white,
-              size: 24,
-            ),
+            ],
           ),
           const SizedBox(width: 14),
           Text(
@@ -227,7 +221,13 @@ class _AccountsScreenState extends State<AccountsScreen>
           value: 'add',
           child: Row(
             children: [
-              Icon(Icons.add_rounded, color: AppColors.primary, size: 18),
+              AppIconBox(
+                icon: Icons.add_rounded,
+                gradient: const [AppColors.primary, AppColors.primaryLight],
+                size: 18,
+                padding: 8,
+                borderRadius: 10,
+              ),
               const SizedBox(width: 12),
               Text(
                 'Add',
@@ -243,10 +243,12 @@ class _AccountsScreenState extends State<AccountsScreen>
           value: 'show_hide',
           child: Row(
             children: [
-              Icon(
-                Icons.visibility_rounded,
-                color: AppColors.secondary,
+              AppIconBox(
+                icon: Icons.visibility_rounded,
+                gradient: const [AppColors.secondary, AppColors.secondaryLight],
                 size: 18,
+                padding: 8,
+                borderRadius: 10,
               ),
               const SizedBox(width: 12),
               Text(
@@ -263,7 +265,13 @@ class _AccountsScreenState extends State<AccountsScreen>
           value: 'delete',
           child: Row(
             children: [
-              Icon(Icons.delete_rounded, color: AppColors.expense, size: 18),
+              AppIconBox(
+                icon: Icons.delete_rounded,
+                color: AppColors.expense,
+                size: 18,
+                padding: 8,
+                borderRadius: 10,
+              ),
               const SizedBox(width: 12),
               Text(
                 'Delete',
@@ -279,10 +287,12 @@ class _AccountsScreenState extends State<AccountsScreen>
           value: 'modify_orders',
           child: Row(
             children: [
-              Icon(
-                Icons.swap_vert_rounded,
+              AppIconBox(
+                icon: Icons.swap_vert_rounded,
                 color: AppColors.textSecondary,
                 size: 18,
+                padding: 8,
+                borderRadius: 10,
               ),
               const SizedBox(width: 12),
               Text(
@@ -450,7 +460,7 @@ class _AccountsScreenState extends State<AccountsScreen>
     }
 
     // Map account to balance key
-    final currencyKey = account.currency == CurrencyType.inr ? 'inr' : 'usd';
+    final currencyKey = account.currency.name;
     final categoryKey = account.category.name;
     final balanceKey = '${categoryKey}_$currencyKey';
 
@@ -505,26 +515,19 @@ class _AccountsScreenState extends State<AccountsScreen>
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.secondary, AppColors.primary],
+                AppIconBox(
+                  icon: Icons.credit_card_rounded,
+                  gradient: const [AppColors.secondary, AppColors.primary],
+                  size: 20,
+                  padding: 12,
+                  borderRadius: 14,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.secondary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.secondary.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.credit_card_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                  ],
                 ),
                 const SizedBox(width: 14),
                 Text(
@@ -892,17 +895,12 @@ class _AccountsScreenState extends State<AccountsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: gradient[0].withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              icon,
-              color: isHighlighted ? gradient[0] : gradient[0],
-              size: 18,
-            ),
+          AppIconBox(
+            icon: icon,
+            gradient: gradient,
+            size: 18,
+            padding: 8,
+            borderRadius: 10,
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -963,20 +961,19 @@ class _AccountsScreenState extends State<AccountsScreen>
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: gradient),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: gradient[0].withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Icon(icon, color: Colors.white, size: 20),
+                AppIconBox(
+                  icon: icon,
+                  gradient: gradient,
+                  size: 20,
+                  padding: 12,
+                  borderRadius: 14,
+                  boxShadow: [
+                    BoxShadow(
+                      color: gradient[0].withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 const SizedBox(width: 14),
                 Text(
@@ -1038,14 +1035,18 @@ class _AccountsScreenState extends State<AccountsScreen>
               ),
               child: Row(
                 children: [
-                  Container(
+                  SizedBox(
                     width: 44,
                     height: 44,
-                    decoration: BoxDecoration(
-                      color: gradient[0].withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
+                    child: Center(
+                      child: AppIconBox(
+                        icon: account.icon,
+                        gradient: gradient,
+                        size: 20,
+                        padding: 10,
+                        borderRadius: 12,
+                      ),
                     ),
-                    child: Icon(account.icon, color: gradient[0], size: 20),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -1132,23 +1133,15 @@ class _AccountsScreenState extends State<AccountsScreen>
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.secondary.withValues(alpha: 0.15),
-                  AppColors.primary.withValues(alpha: 0.1),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.credit_card_rounded,
-              color: AppColors.secondary,
-              size: 20,
-            ),
+          AppIconBox(
+            icon: Icons.credit_card_rounded,
+            gradient: const [
+              AppColors.secondary,
+              AppColors.secondaryLight,
+            ],
+            size: 20,
+            padding: 10,
+            borderRadius: 12,
           ),
           const SizedBox(width: 14),
           Expanded(

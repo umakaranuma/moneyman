@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../models/account.dart';
+import '../services/storage_service.dart';
+import '../widgets/app_icon_box.dart';
 import '../core/router/app_router.dart';
 import '../utils/app_utils.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -16,8 +19,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = true;
   // bool _autoBackupEnabled = false; // Commented out as Auto Backup is not implemented yet
-  String _currency = 'USD';
+  CurrencyType _defaultCurrency = CurrencyType.lkr;
   String _language = 'English';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDefaultCurrency();
+  }
+
+  void _loadDefaultCurrency() {
+    final code = StorageService.getDefaultCurrencyCode();
+    if (code != null) {
+      final type = CurrencyType.values.firstWhere(
+        (e) => e.name == code,
+        orElse: () => CurrencyType.lkr,
+      );
+      if (mounted) setState(() => _defaultCurrency = type);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,8 +88,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildDivider(),
                     _buildSettingTile(
                       icon: Icons.attach_money_rounded,
-                      title: 'Currency',
-                      subtitle: _currency,
+                      title: 'Default currency',
+                      subtitle: _defaultCurrency.displayLabel,
                       onTap: () => _showCurrencyDialog(),
                     ),
                     _buildDivider(),
@@ -244,15 +264,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.primary, AppColors.primaryLight],
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: Colors.white, size: 20),
+            AppIconBox(
+              icon: icon,
+              gradient: const [AppColors.primary, AppColors.primaryLight],
+              size: 20,
+              padding: 10,
+              borderRadius: 12,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -342,29 +359,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: Text(
-          'Select Currency',
+          'Default currency',
           style: GoogleFonts.inter(color: AppColors.textPrimary),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: ['USD', 'EUR', 'GBP', 'INR', 'JPY']
-              .map(
-                (curr) => RadioListTile<String>(
-                  title: Text(
-                    curr,
-                    style: GoogleFonts.inter(color: AppColors.textPrimary),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: CurrencyType.values
+                .map(
+                  (currency) => RadioListTile<CurrencyType>(
+                    title: Text(
+                      currency.displayLabel,
+                      style: GoogleFonts.inter(color: AppColors.textPrimary),
+                    ),
+                    value: currency,
+                    groupValue: _defaultCurrency,
+                    onChanged: (value) async {
+                      if (value != null) {
+                        await StorageService.setDefaultCurrencyCode(value.name);
+                        if (mounted) {
+                          setState(() => _defaultCurrency = value);
+                          Navigator.pop(context);
+                        }
+                      }
+                    },
                   ),
-                  value: curr,
-                  groupValue: _currency,
-                  onChanged: (value) {
-                    setState(() {
-                      _currency = value!;
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-              )
-              .toList(),
+                )
+                .toList(),
+          ),
         ),
       ),
     );

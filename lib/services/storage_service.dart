@@ -7,6 +7,8 @@ class StorageService {
   static const String _transactionBoxName = 'transactions';
   static const String _noteBoxName = 'notes';
   static const String _todoBoxName = 'todos';
+  static const String _settingsBoxName = 'settings';
+  static const String _keyDefaultCurrency = 'default_currency';
 
   static Future<void> init() async {
     await Hive.initFlutter();
@@ -15,6 +17,18 @@ class StorageService {
     await Hive.openBox(_transactionBoxName);
     await Hive.openBox(_noteBoxName);
     await Hive.openBox(_todoBoxName);
+    await Hive.openBox(_settingsBoxName);
+  }
+
+  static Box get _settingsBox => Hive.box(_settingsBoxName);
+
+  /// Default currency for new accounts (e.g. 'lkr', 'usd'). Returns null if not set.
+  static String? getDefaultCurrencyCode() {
+    return _settingsBox.get(_keyDefaultCurrency) as String?;
+  }
+
+  static Future<void> setDefaultCurrencyCode(String currencyCode) async {
+    await _settingsBox.put(_keyDefaultCurrency, currencyCode);
   }
 
   // Transaction methods

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../models/account.dart';
 import '../services/account_service.dart';
+import '../services/storage_service.dart';
 
 class AddAccountScreen extends StatefulWidget {
   final Account? account; // For editing existing account
@@ -20,7 +21,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
   final _descriptionController = TextEditingController();
 
   AccountCategory _selectedCategory = AccountCategory.cash;
-  CurrencyType _selectedCurrency = CurrencyType.inr;
+  CurrencyType _selectedCurrency = CurrencyType.lkr;
 
   @override
   void initState() {
@@ -34,6 +35,14 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
       _selectedCurrency = widget.account!.currency;
     } else {
       _amountController.text = '0.00';
+      // Use default currency from settings for new accounts
+      final code = StorageService.getDefaultCurrencyCode();
+      if (code != null) {
+        _selectedCurrency = CurrencyType.values.firstWhere(
+          (e) => e.name == code,
+          orElse: () => CurrencyType.lkr,
+        );
+      }
     }
   }
 
@@ -80,39 +89,122 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
     }
   }
 
-  void _showAccountGroupModal() {
+  void _showCurrencyModal() {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 20),
+              width: 36,
+              height: 3,
+              margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 color: AppColors.surfaceVariant,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                'Account Group',
+                'Currency',
                 style: GoogleFonts.inter(
                   color: AppColors.textPrimary,
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: CurrencyType.values.length,
+                separatorBuilder: (context, index) => Divider(
+                  color: AppColors.surfaceVariant,
+                  height: 1,
+                ),
+                itemBuilder: (context, index) {
+                  final currency = CurrencyType.values[index];
+                  final isSelected = _selectedCurrency == currency;
+
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    dense: true,
+                    title: Text(
+                      currency.displayLabel,
+                      style: GoogleFonts.inter(
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.textPrimary,
+                        fontSize: 15,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                    ),
+                    trailing: isSelected
+                        ? Icon(
+                            Icons.check_rounded,
+                            color: AppColors.primary,
+                            size: 20,
+                          )
+                        : null,
+                    onTap: () {
+                      setState(() => _selectedCurrency = currency);
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAccountGroupModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36,
+              height: 3,
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                'Account Group',
+                style: GoogleFonts.inter(
+                  color: AppColors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
             Flexible(
               child: ListView.separated(
                 shrinkWrap: true,
@@ -132,16 +224,17 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
 
                   return ListTile(
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
+                      horizontal: 12,
+                      vertical: 4,
                     ),
+                    dense: true,
                     title: Text(
                       account.categoryLabel,
                       style: GoogleFonts.inter(
                         color: isSelected
                             ? AppColors.primary
                             : AppColors.textPrimary,
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                       ),
                     ),
@@ -149,7 +242,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                         ? Icon(
                             Icons.check_rounded,
                             color: AppColors.primary,
-                            size: 24,
+                            size: 20,
                           )
                         : null,
                     onTap: () {
@@ -199,19 +292,19 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Group Field
                 _buildLabel('Group'),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 GestureDetector(
                   onTap: _showAccountGroupModal,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
+                      horizontal: 14,
+                      vertical: 12,
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
@@ -240,11 +333,11 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 14),
 
                 // Name Field
                 _buildLabel('Name'),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 TextFormField(
                   controller: _nameController,
                   style: GoogleFonts.inter(
@@ -264,11 +357,11 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 14),
 
                 // Amount Field
                 _buildLabel('Amount'),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 TextFormField(
                   controller: _amountController,
                   style: GoogleFonts.inter(
@@ -300,53 +393,50 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 14),
 
-                // Currency Field
+                // Currency Field (all supported currencies)
                 _buildLabel('Currency'),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildCurrencyButton(
-                        'Rs.',
-                        CurrencyType.inr,
-                        Icons.currency_rupee_rounded,
+                const SizedBox(height: 4),
+                GestureDetector(
+                  onTap: _showCurrencyModal,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.surfaceVariant,
+                        width: 1,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildCurrencyButton(
-                        '\$',
-                        CurrencyType.usd,
-                        Icons.attach_money_rounded,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.surfaceVariant,
-                          width: 1,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _selectedCurrency.displayLabel,
+                            style: GoogleFonts.inter(
+                              color: AppColors.textPrimary,
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
-                      ),
-                      child: Icon(
-                        Icons.add_rounded,
-                        color: AppColors.textSecondary,
-                        size: 24,
-                      ),
+                        Icon(
+                          Icons.arrow_drop_down_rounded,
+                          color: AppColors.textSecondary,
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 14),
 
                 // Description Field
                 _buildLabel('Description'),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 TextFormField(
                   controller: _descriptionController,
                   style: GoogleFonts.inter(
@@ -361,7 +451,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 20),
 
                 // Save Button
                 ElevatedButton(
@@ -369,7 +459,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -401,64 +491,5 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
     );
   }
 
-  Widget _buildCurrencyButton(
-    String symbol,
-    CurrencyType currency,
-    IconData icon,
-  ) {
-    final isSelected = _selectedCurrency == currency;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedCurrency = currency;
-        });
-      },
-      child: Container(
-        height: 56,
-        decoration: BoxDecoration(
-          gradient: isSelected
-              ? LinearGradient(
-                  colors: [
-                    AppColors.primary,
-                    AppColors.primaryLight,
-                  ],
-                )
-              : null,
-          color: isSelected ? null : AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? AppColors.primary
-                : AppColors.surfaceVariant,
-            width: 1,
-          ),
-        ),
-        child: Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                color: isSelected ? Colors.white : AppColors.textSecondary,
-                size: 20,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                symbol,
-                style: GoogleFonts.inter(
-                  color: isSelected
-                      ? Colors.white
-                      : AppColors.textSecondary,
-                  fontSize: 16,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 

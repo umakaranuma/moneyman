@@ -13,8 +13,32 @@ enum AccountCategory {
 }
 
 enum CurrencyType {
-  inr,
-  usd,
+  lkr, // Sri Lankan Rupees - Rs.
+  inr, // Indian Rupees - Rs.
+  usd, // US Dollar - $
+  eur, // Euro - €
+  gbp, // British Pound - £
+  jpy, // Japanese Yen - ¥
+}
+
+extension CurrencyTypeExtension on CurrencyType {
+  /// Display label for settings and selectors (e.g. "LKR (Rs.)")
+  String get displayLabel {
+    switch (this) {
+      case CurrencyType.lkr:
+        return 'LKR (Rs.)';
+      case CurrencyType.inr:
+        return 'INR (Rs.)';
+      case CurrencyType.usd:
+        return 'USD (\$)';
+      case CurrencyType.eur:
+        return 'EUR (€)';
+      case CurrencyType.gbp:
+        return 'GBP (£)';
+      case CurrencyType.jpy:
+        return 'JPY (¥)';
+    }
+  }
 }
 
 class Account {
@@ -33,7 +57,7 @@ class Account {
     required this.id,
     required this.name,
     required this.category,
-    this.currency = CurrencyType.inr,
+    this.currency = CurrencyType.lkr,
     this.balance = 0.0,
     this.balancePayable,
     this.outstandingBalance,
@@ -45,10 +69,17 @@ class Account {
 
   String get currencySymbol {
     switch (currency) {
+      case CurrencyType.lkr:
       case CurrencyType.inr:
         return 'Rs.';
       case CurrencyType.usd:
         return '\$';
+      case CurrencyType.eur:
+        return '€';
+      case CurrencyType.gbp:
+        return '£';
+      case CurrencyType.jpy:
+        return '¥';
     }
   }
 
@@ -104,7 +135,7 @@ class Account {
       ),
       currency: CurrencyType.values.firstWhere(
         (e) => e.name == json['currency'],
-        orElse: () => CurrencyType.inr,
+        orElse: () => CurrencyType.lkr,
       ),
       balance: (json['balance'] ?? 0.0).toDouble(),
       balancePayable: json['balancePayable']?.toDouble(),
