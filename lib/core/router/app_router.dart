@@ -20,6 +20,7 @@ import '../../screens/help_screen.dart';
 import '../../screens/upgrade_screen.dart';
 import '../../screens/privacy_policy_screen.dart';
 import '../../screens/terms_of_service_screen.dart';
+import '../../screens/budget_setting_screen.dart';
 import '../../models/transaction.dart';
 import '../../models/note.dart';
 import '../../models/todo.dart';
@@ -163,6 +164,35 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: AddEditNoteScreen(note: note),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
+          );
+        },
+      ),
+
+      // Budget setting route
+      GoRoute(
+        path: '/budget',
+        name: 'budget',
+        pageBuilder: (context, state) {
+          final initialMonth = state.extra as DateTime?;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: BudgetSettingScreen(initialMonth: initialMonth),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
                   return SlideTransition(
@@ -656,6 +686,11 @@ extension GoRouterExtension on BuildContext {
 
   Future<T?> goToEditNote<T>(Note note) async {
     final result = await GoRouter.of(this).pushNamed('editNote', extra: note);
+    return result as T?;
+  }
+
+  Future<T?> goToBudgetSetting<T>({DateTime? initialMonth}) async {
+    final result = await GoRouter.of(this).pushNamed('budget', extra: initialMonth);
     return result as T?;
   }
 

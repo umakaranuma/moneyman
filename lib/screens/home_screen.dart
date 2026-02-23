@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/storage_service.dart';
 import '../services/sms_service.dart';
+import '../services/budget_service.dart';
 import '../models/transaction.dart';
 import '../models/category.dart';
 import '../theme/app_theme.dart';
@@ -1685,6 +1686,16 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildBudgetSection() {
+    final budgetsForMonth = BudgetService.getBudgetsForMonth(
+      _selectedMonth.year,
+      _selectedMonth.month,
+    );
+    final statuses = BudgetService.getBudgetStatuses(
+      _selectedMonth.year,
+      _selectedMonth.month,
+    );
+    final overCount = statuses.values.where((s) => s.isOverBudget).length;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1722,21 +1733,36 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                'Budget',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Budget',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  if (budgetsForMonth.isNotEmpty)
+                    Text(
+                      overCount > 0
+                          ? '${budgetsForMonth.length} set · $overCount over'
+                          : '${budgetsForMonth.length} set for this month',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
           TextButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Budget settings coming soon!')),
-              );
+            onPressed: () async {
+              await context.goToBudgetSetting(initialMonth: _selectedMonth);
+              if (mounted) setState(() => _refreshKey++);
             },
             child: Row(
               children: [
