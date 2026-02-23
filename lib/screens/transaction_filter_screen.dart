@@ -186,49 +186,10 @@ class _TransactionFilterScreenState extends State<TransactionFilterScreen>
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-              child: Row(
-                children: [
-                  if (hasFilters)
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _filter = TransactionFilter();
-                        });
-                      },
-                      child: Text(
-                        'Clear',
-                        style: GoogleFonts.inter(
-                          color: AppColors.textMuted,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  const Spacer(),
-                ],
-              ),
-            ),
+            _buildBottomActions(hasFilters),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
-        label: Text(
-          "Apply Filters",
-          style: GoogleFonts.inter(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        icon: const Icon(Icons.check, color: Colors.white),
-        onPressed: _applyFilter,
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
@@ -445,7 +406,7 @@ class _TransactionFilterScreenState extends State<TransactionFilterScreen>
     final categories = CategoryService.getCategories(isIncome: true);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       child: Wrap(
         spacing: 10,
         runSpacing: 10,
@@ -475,7 +436,7 @@ class _TransactionFilterScreenState extends State<TransactionFilterScreen>
     final categories = CategoryService.getCategories(isIncome: false);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       child: Wrap(
         spacing: 10,
         runSpacing: 10,
@@ -597,7 +558,7 @@ class _TransactionFilterScreenState extends State<TransactionFilterScreen>
               ),
             ],
           ),
-          const SizedBox(height: 80),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -619,6 +580,88 @@ class _TransactionFilterScreenState extends State<TransactionFilterScreen>
       'filter': filterToReturn,
       'month': _selectedMonth,
     });
+  }
+
+  Widget _buildBottomActions(bool hasFilters) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        12 + MediaQuery.paddingOf(context).bottom,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          if (hasFilters) ...[
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () {
+                  setState(() {
+                    _filter = TransactionFilter();
+                  });
+                },
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  side: BorderSide(
+                    color: AppColors.textMuted.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Text(
+                  'Clear',
+                  style: GoogleFonts.inter(
+                    color: AppColors.textMuted,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: ElevatedButton(
+              onPressed: _applyFilter,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.check_rounded, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Apply Filters',
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   String _formatAmount(double amount) {
