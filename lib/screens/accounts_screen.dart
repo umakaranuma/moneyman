@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
-import '../widgets/app_icon_box.dart';
 import '../services/storage_service.dart';
 import '../services/sms_service.dart';
 import '../services/account_service.dart';
@@ -142,7 +141,7 @@ class _AccountsScreenState extends State<AccountsScreen>
             );
           }),
           const SizedBox(width: 8),
-          _modernPopupButton(),
+          _appleMoreButton(),
         ],
       ),
     );
@@ -163,8 +162,9 @@ class _AccountsScreenState extends State<AccountsScreen>
     );
   }
 
-  Widget _modernPopupButton() {
-    return PopupMenuButton<String>(
+  Widget _appleMoreButton() {
+    return GestureDetector(
+      onTap: _showActionSheet,
       child: Container(
         width: 36,
         height: 36,
@@ -173,119 +173,118 @@ class _AccountsScreenState extends State<AccountsScreen>
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
-          Icons.more_vert_rounded,
+          Icons.more_horiz_rounded,
           color: AppColors.textSecondary,
           size: 18,
         ),
       ),
-      color: AppColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      onSelected: (value) {
-        switch (value) {
-          case 'add':
-            _navigateToAddAccount();
-            break;
-          case 'show_hide':
-            _showHideAccountsDialog();
-            break;
-          case 'delete':
-            _showDeleteAccountsDialog();
-            break;
-          case 'modify_orders':
-            _showModifyOrdersDialog();
-            break;
-        }
+    );
+  }
+
+  void _showActionSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                /// Main Action Card
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildActionTile(
+                        title: 'Add Account',
+                        onTap: () {
+                          Navigator.pop(context);
+                          _navigateToAddAccount();
+                        },
+                      ),
+                      const Divider(height: 1),
+                      _buildActionTile(
+                        title: 'Show / Hide Accounts',
+                        onTap: () {
+                          Navigator.pop(context);
+                          _showHideAccountsDialog();
+                        },
+                      ),
+                      const Divider(height: 1),
+                      _buildActionTile(
+                        title: 'Modify Orders',
+                        onTap: () {
+                          Navigator.pop(context);
+                          _showModifyOrdersDialog();
+                        },
+                      ),
+                      const Divider(height: 1),
+                      _buildActionTile(
+                        title: 'Delete Accounts',
+                        isDestructive: true,
+                        onTap: () {
+                          Navigator.pop(context);
+                          _showDeleteAccountsDialog();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                /// Cancel Button
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       },
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 'add',
-          child: Row(
-            children: [
-              AppIconBox(
-                icon: Icons.add_rounded,
-                gradient: const [AppColors.primary, AppColors.primaryLight],
-                size: 18,
-                padding: 8,
-                borderRadius: 10,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Add',
-                style: GoogleFonts.inter(
-                  color: AppColors.textPrimary,
-                  fontSize: 14,
-                ),
-              ),
-            ],
+    );
+  }
+
+  Widget _buildActionTile({
+    required String title,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Center(
+          child: Text(
+            title,
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: isDestructive
+                  ? AppColors.expense
+                  : AppColors.textPrimary,
+            ),
           ),
         ),
-        PopupMenuItem(
-          value: 'show_hide',
-          child: Row(
-            children: [
-              AppIconBox(
-                icon: Icons.visibility_rounded,
-                gradient: const [AppColors.secondary, AppColors.secondaryLight],
-                size: 18,
-                padding: 8,
-                borderRadius: 10,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Show/Hide',
-                style: GoogleFonts.inter(
-                  color: AppColors.textPrimary,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 'delete',
-          child: Row(
-            children: [
-              AppIconBox(
-                icon: Icons.delete_rounded,
-                color: AppColors.expense,
-                size: 18,
-                padding: 8,
-                borderRadius: 10,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Delete',
-                style: GoogleFonts.inter(
-                  color: AppColors.expense,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 'modify_orders',
-          child: Row(
-            children: [
-              AppIconBox(
-                icon: Icons.swap_vert_rounded,
-                color: AppColors.textSecondary,
-                size: 18,
-                padding: 8,
-                borderRadius: 10,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Modify Orders',
-                style: GoogleFonts.inter(
-                  color: AppColors.textPrimary,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -308,9 +307,11 @@ class _AccountsScreenState extends State<AccountsScreen>
   }
 
   void _showHideAccountsDialog() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => _HideAccountsDialog(
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _HideAccountsSheet(
         hiddenAccountIds: _hiddenAccountIds,
         onChanged: (hiddenIds) {
           setState(() {
@@ -322,9 +323,11 @@ class _AccountsScreenState extends State<AccountsScreen>
   }
 
   void _showDeleteAccountsDialog() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => _DeleteAccountsDialog(
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _DeleteAccountsSheet(
         onDeleted: () {
           setState(() {
             _refreshKey++;
@@ -1027,21 +1030,21 @@ class _FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-// Dialog for hiding/showing accounts
-class _HideAccountsDialog extends StatefulWidget {
+// Bottom sheet for hiding/showing accounts
+class _HideAccountsSheet extends StatefulWidget {
   final Set<String> hiddenAccountIds;
   final Function(Set<String>) onChanged;
 
-  const _HideAccountsDialog({
+  const _HideAccountsSheet({
     required this.hiddenAccountIds,
     required this.onChanged,
   });
 
   @override
-  State<_HideAccountsDialog> createState() => _HideAccountsDialogState();
+  State<_HideAccountsSheet> createState() => _HideAccountsSheetState();
 }
 
-class _HideAccountsDialogState extends State<_HideAccountsDialog> {
+class _HideAccountsSheetState extends State<_HideAccountsSheet> {
   late Set<String> _selectedHiddenIds;
 
   @override
@@ -1054,158 +1057,279 @@ class _HideAccountsDialogState extends State<_HideAccountsDialog> {
   Widget build(BuildContext context) {
     final accounts = AccountService.getAllAccounts();
 
-    return AlertDialog(
-      backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: Text(
-        'Show/Hide Accounts',
-        style: GoogleFonts.inter(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: ListView.builder(
-          shrinkWrap: true,
-          itemCount: accounts.length,
-          itemBuilder: (context, index) {
-            final account = accounts[index];
-            final isHidden = _selectedHiddenIds.contains(account.id);
-
-            return CheckboxListTile(
-              value: !isHidden,
-              onChanged: (value) {
-                setState(() {
-                  if (value == true) {
-                    _selectedHiddenIds.remove(account.id);
-                  } else {
-                    _selectedHiddenIds.add(account.id);
-                  }
-                });
-              },
-              title: Text(
-                account.name,
-                style: GoogleFonts.inter(color: AppColors.textPrimary),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(18),
               ),
-              subtitle: Text(
-                '${account.categoryLabel} • ${account.currencySymbol}',
-                style: GoogleFonts.inter(
-                  color: AppColors.textMuted,
-                  fontSize: 12,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                    child: Text(
+                      'Show / Hide Accounts',
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.4,
+                    ),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: accounts.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1, indent: 20, endIndent: 20),
+                      itemBuilder: (context, index) {
+                        final account = accounts[index];
+                        final isVisible = !_selectedHiddenIds.contains(account.id);
+
+                        return CheckboxListTile(
+                          value: isVisible,
+                          onChanged: (value) {
+                            setState(() {
+                              if (value == true) {
+                                _selectedHiddenIds.remove(account.id);
+                              } else {
+                                _selectedHiddenIds.add(account.id);
+                              }
+                            });
+                          },
+                          title: Text(
+                            account.name,
+                            style: GoogleFonts.inter(
+                              fontSize: 15,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          subtitle: Text(
+                            '${account.categoryLabel} • ${account.currencySymbol}',
+                            style: GoogleFonts.inter(
+                              color: AppColors.textMuted,
+                              fontSize: 12,
+                            ),
+                          ),
+                          controlAffinity: ListTileControlAffinity.leading,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: ElevatedButton(
+                onPressed: () {
+                  widget.onChanged(_selectedHiddenIds);
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Save',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            );
-          },
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Cancel',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            'Cancel',
-            style: GoogleFonts.inter(color: AppColors.textSecondary),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            widget.onChanged(_selectedHiddenIds);
-            Navigator.pop(context);
-          },
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-          child: Text('Save', style: GoogleFonts.inter(color: Colors.white)),
-        ),
-      ],
     );
   }
 }
 
-// Dialog for deleting accounts
-class _DeleteAccountsDialog extends StatefulWidget {
+// Bottom sheet for deleting accounts
+class _DeleteAccountsSheet extends StatefulWidget {
   final VoidCallback onDeleted;
 
-  const _DeleteAccountsDialog({required this.onDeleted});
+  const _DeleteAccountsSheet({required this.onDeleted});
 
   @override
-  State<_DeleteAccountsDialog> createState() => _DeleteAccountsDialogState();
+  State<_DeleteAccountsSheet> createState() => _DeleteAccountsSheetState();
 }
 
-class _DeleteAccountsDialogState extends State<_DeleteAccountsDialog> {
+class _DeleteAccountsSheetState extends State<_DeleteAccountsSheet> {
   final Set<String> _selectedIds = {};
 
   @override
   Widget build(BuildContext context) {
     final accounts = AccountService.getAllAccounts();
 
-    return AlertDialog(
-      backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: Text(
-        'Delete Accounts',
-        style: GoogleFonts.inter(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: ListView.builder(
-          shrinkWrap: true,
-          itemCount: accounts.length,
-          itemBuilder: (context, index) {
-            final account = accounts[index];
-            final isSelected = _selectedIds.contains(account.id);
-
-            return CheckboxListTile(
-              value: isSelected,
-              onChanged: (value) {
-                setState(() {
-                  if (value == true) {
-                    _selectedIds.add(account.id);
-                  } else {
-                    _selectedIds.remove(account.id);
-                  }
-                });
-              },
-              title: Text(
-                account.name,
-                style: GoogleFonts.inter(color: AppColors.textPrimary),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(18),
               ),
-              subtitle: Text(
-                '${account.categoryLabel} • ${account.currencySymbol}',
-                style: GoogleFonts.inter(
-                  color: AppColors.textMuted,
-                  fontSize: 12,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                    child: Text(
+                      'Delete Accounts',
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.4,
+                    ),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: accounts.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1, indent: 20, endIndent: 20),
+                      itemBuilder: (context, index) {
+                        final account = accounts[index];
+                        final isSelected = _selectedIds.contains(account.id);
+
+                        return CheckboxListTile(
+                          value: isSelected,
+                          onChanged: (value) {
+                            setState(() {
+                              if (value == true) {
+                                _selectedIds.add(account.id);
+                              } else {
+                                _selectedIds.remove(account.id);
+                              }
+                            });
+                          },
+                          title: Text(
+                            account.name,
+                            style: GoogleFonts.inter(
+                              fontSize: 15,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          subtitle: Text(
+                            '${account.categoryLabel} • ${account.currencySymbol}',
+                            style: GoogleFonts.inter(
+                              color: AppColors.textMuted,
+                              fontSize: 12,
+                            ),
+                          ),
+                          controlAffinity: ListTileControlAffinity.leading,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: ElevatedButton(
+                onPressed: _selectedIds.isEmpty
+                    ? null
+                    : () async {
+                        for (var id in _selectedIds) {
+                          await AccountService.deleteAccount(id);
+                        }
+                        widget.onDeleted();
+                        if (mounted) {
+                          Navigator.pop(context);
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.expense,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppColors.surfaceVariant,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Delete',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            );
-          },
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Cancel',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            'Cancel',
-            style: GoogleFonts.inter(color: AppColors.textSecondary),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: _selectedIds.isEmpty
-              ? null
-              : () async {
-                  for (var id in _selectedIds) {
-                    await AccountService.deleteAccount(id);
-                  }
-                  widget.onDeleted();
-                  if (mounted) {
-                    Navigator.pop(context);
-                  }
-                },
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.expense),
-          child: Text('Delete', style: GoogleFonts.inter(color: Colors.white)),
-        ),
-      ],
     );
   }
 }
