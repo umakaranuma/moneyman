@@ -324,8 +324,8 @@ class NotificationService {
   }
 
   /// Schedule default notifications:
-  /// - 9:15 PM daily (Sri Lankan time): Todo list reminder
-  /// - 9:15 PM daily (Sri Lankan time): Expenses and todo completion reminder
+  /// - 5:30 AM daily (local time): Todo list reminder
+  /// - 9:00 PM daily (local time): Check todo and add expenses reminder
   static Future<void> scheduleDefaultNotifications() async {
     try {
       developer.log(
@@ -357,21 +357,21 @@ class NotificationService {
     }
   }
 
-  /// Schedule daily notification at 9:15 PM (Sri Lankan time) for todo list planning
+  /// Schedule daily notification at 5:30 AM (local time) for todo list planning
   static Future<void> scheduleMorningTodoReminder() async {
     try {
       // Use the current local timezone (set during init)
       final localLocation = tz.local;
       final now = tz.TZDateTime.now(localLocation);
 
-      // Schedule for 9:15 PM local time
+      // Schedule for 5:30 AM local time
       var scheduledDate = tz.TZDateTime(
         localLocation,
         now.year,
         now.month,
         now.day,
-        21, // 9 PM (21:00)
-        15, // 15 minutes
+        5, // 5 AM
+        30, // 30 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -475,21 +475,21 @@ class NotificationService {
     }
   }
 
-  /// Schedule daily notification at 9:15 PM (Sri Lankan time) for expenses and todo completion
+  /// Schedule daily notification at 9:00 PM (local time) for expenses and todo completion
   static Future<void> scheduleEveningExpensesReminder() async {
     try {
       // Use the current local timezone (set during init)
       final localLocation = tz.local;
       final now = tz.TZDateTime.now(localLocation);
 
-      // Schedule for 9:15 PM local time
+      // Schedule for 9:00 PM local time
       var scheduledDate = tz.TZDateTime(
         localLocation,
         now.year,
         now.month,
         now.day,
         21, // 9 PM (21:00)
-        15, // 15 minutes
+        0, // 0 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -661,24 +661,24 @@ class NotificationService {
       final localLocation = tz.local;
       final now = tz.TZDateTime.now(localLocation);
 
-      // Check if it's past 9:15 PM today (todo list notification)
+      // Check if it's past 5:30 AM today (todo list notification)
       final morningTargetTime = tz.TZDateTime(
         localLocation,
         now.year,
         now.month,
         now.day,
-        21, // 9 PM (21:00)
-        15, // 15 minutes
+        5, // 5 AM
+        30, // 30 minutes
       );
 
-      // Check if it's past 9:15 PM today (expenses notification)
+      // Check if it's past 9:00 PM today (expenses notification)
       final eveningTargetTime = tz.TZDateTime(
         localLocation,
         now.year,
         now.month,
         now.day,
         21, // 9 PM (21:00)
-        15, // 15 minutes
+        0, // 0 minutes
       );
 
       // If current time is within 5 minutes of notification time
