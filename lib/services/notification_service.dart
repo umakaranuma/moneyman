@@ -409,8 +409,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        22, // 5 AM
-        48, // 30 minutes
+        5, // 5 AM
+        30, // 30 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -523,8 +523,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        22, // 10 PM (22:00)
-        47, // 0 minutes
+        21, // 10 PM (22:00)
+        0, // 0 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
