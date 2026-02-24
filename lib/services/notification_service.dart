@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'package:flutter/material.dart' show Color;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -357,6 +358,44 @@ class NotificationService {
     }
   }
 
+  /// Premium Android notification details: BigText style, subText, optional large icon.
+  static AndroidNotificationDetails _premiumAndroidDetails({
+    required String channelId,
+    required String channelName,
+    required String channelDescription,
+    required String title,
+    required String body,
+    String? bigText,
+    String? subText,
+    String? largeIconDrawable,
+  }) {
+    return AndroidNotificationDetails(
+      channelId,
+      channelName,
+      channelDescription: channelDescription,
+      importance: Importance.max,
+      priority: Priority.max,
+      category: AndroidNotificationCategory.reminder,
+      icon: '@drawable/ic_notification_white',
+      color: const Color(0xFFFFFFFF),
+      showWhen: true,
+      enableVibration: true,
+      playSound: true,
+      channelShowBadge: true,
+      autoCancel: true,
+      ongoing: false,
+      styleInformation: BigTextStyleInformation(
+        bigText ?? body,
+        contentTitle: title,
+        summaryText: subText ?? 'Finzo • Reminder',
+      ),
+      largeIcon: largeIconDrawable == null
+          ? null
+          : DrawableResourceAndroidBitmap(largeIconDrawable),
+      subText: subText ?? 'Finzo • Reminder',
+    );
+  }
+
   /// Schedule daily notification at 5:30 AM (local time) for todo list planning
   static Future<void> scheduleMorningTodoReminder() async {
     try {
@@ -370,8 +409,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        5, // 5 AM
-        30, // 30 minutes
+        22, // 5 AM
+        48, // 30 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -379,31 +418,28 @@ class NotificationService {
         scheduledDate = scheduledDate.add(const Duration(days: 1));
       }
 
-      final androidDetails = AndroidNotificationDetails(
-        todoListChannelId,
-        'Todo List Reminder',
+      const morningTitle = 'Daily Plan Reminder';
+      const morningBody =
+          'Plan your day by creating a simple to-do list and setting priorities.';
+
+      final androidDetails = _premiumAndroidDetails(
+        channelId: todoListChannelId,
+        channelName: 'Todo List Reminder',
         channelDescription: 'Daily reminder to create your todo list',
-        importance: Importance.max,
-        priority: Priority.max,
-        showWhen: true,
-        enableVibration: true,
-        playSound: true,
-        channelShowBadge: true,
-        ongoing: false,
-        autoCancel: true,
-        fullScreenIntent: false,
-        category: AndroidNotificationCategory.reminder,
-        icon:
-            '@drawable/ic_notification_white', // top-left small icon (monochrome)
-        largeIcon: const DrawableResourceAndroidBitmap(
-          '@drawable/ic_notification_256',
-        ), // big icon on the right (wallet, can be colored)
+        title: morningTitle,
+        body: morningBody,
+        bigText:
+            'Plan your day by creating a simple to-do list and setting priorities.\n\n'
+            'Tip: Start with 3 key tasks. Keep it realistic and focused.',
+        subText: 'Finzo • Morning',
+        largeIconDrawable: '@drawable/ic_notification_256',
       );
 
       const iosDetails = DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        interruptionLevel: InterruptionLevel.active,
       );
 
       final notificationDetails = NotificationDetails(
@@ -412,13 +448,12 @@ class NotificationService {
       );
 
       // Use inexactAllowWhileIdle (no special alarm permissions needed)
-      // This ensures notifications work even when device is in doze mode
       bool scheduled = false;
       try {
         await _notifications.zonedSchedule(
           todoListReminderId,
-          '🌅 Good Morning! Plan Your Day',
-          'Start your day right! Create your todo list and set your goals for today. ✨',
+          morningTitle,
+          morningBody,
           scheduledDate,
           notificationDetails,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -436,12 +471,11 @@ class NotificationService {
           'Error scheduling morning notification with inexactAllowWhileIdle: $e',
           name: 'NotificationService',
         );
-        // Fallback: try inexact (most compatible, no special permissions needed)
         try {
           await _notifications.zonedSchedule(
             todoListReminderId,
-            '🌅 Good Morning! Plan Your Day',
-            'Start your day right! Create your todo list and set your goals for today. ✨',
+            morningTitle,
+            morningBody,
             scheduledDate,
             notificationDetails,
             androidScheduleMode: AndroidScheduleMode.inexact,
@@ -490,7 +524,7 @@ class NotificationService {
         now.month,
         now.day,
         22, // 10 PM (22:00)
-        34, // 0 minutes
+        47, // 0 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -498,31 +532,28 @@ class NotificationService {
         scheduledDate = scheduledDate.add(const Duration(days: 1));
       }
 
-      final androidDetails = AndroidNotificationDetails(
-        moneyManagerChannelId,
-        'Money Manager Reminder',
+      const eveningTitle = 'Daily Review Reminder';
+      const eveningBody =
+          'Review today\'s spending and update your transactions to keep records accurate.';
+
+      final androidDetails = _premiumAndroidDetails(
+        channelId: moneyManagerChannelId,
+        channelName: 'Money Manager Reminder',
         channelDescription: 'Daily reminder to update your money manager',
-        importance: Importance.max,
-        priority: Priority.max,
-        showWhen: true,
-        enableVibration: true,
-        playSound: true,
-        channelShowBadge: true,
-        ongoing: false,
-        autoCancel: true,
-        fullScreenIntent: false,
-        category: AndroidNotificationCategory.reminder,
-        icon:
-            '@drawable/ic_notification_white', // top-left small icon (monochrome)
-        largeIcon: const DrawableResourceAndroidBitmap(
-          '@drawable/ic_notification_256',
-        ), // big icon on the right (wallet, can be colored)
+        title: eveningTitle,
+        body: eveningBody,
+        bigText:
+            'Review today\'s spending and update your transactions to keep records accurate.\n\n'
+            'Update expenses, add missing entries, and prepare for tomorrow.',
+        subText: 'Finzo • Evening',
+        largeIconDrawable: '@drawable/ic_notification_256',
       );
 
       const iosDetails = DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        interruptionLevel: InterruptionLevel.active,
       );
 
       final notificationDetails = NotificationDetails(
@@ -531,13 +562,12 @@ class NotificationService {
       );
 
       // Use inexactAllowWhileIdle (no special alarm permissions needed)
-      // This ensures notifications work even when device is in doze mode
       bool scheduled = false;
       try {
         await _notifications.zonedSchedule(
           moneyManagerReminderId,
-          '🌙 Evening Review Time',
-          'Mark your expenses, update transactions, and check off completed todos! 📊✅',
+          eveningTitle,
+          eveningBody,
           scheduledDate,
           notificationDetails,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -555,12 +585,11 @@ class NotificationService {
           'Error scheduling evening notification with inexactAllowWhileIdle: $e',
           name: 'NotificationService',
         );
-        // Fallback: try inexact (most compatible, no special permissions needed)
         try {
           await _notifications.zonedSchedule(
             moneyManagerReminderId,
-            '🌙 Evening Review Time',
-            'Mark your expenses, update transactions, and check off completed todos! 📊✅',
+            eveningTitle,
+            eveningBody,
             scheduledDate,
             notificationDetails,
             androidScheduleMode: AndroidScheduleMode.inexact,
@@ -613,28 +642,21 @@ class NotificationService {
 
   /// Show a test notification immediately (for testing)
   static Future<void> showTestNotification() async {
-    final androidDetails = AndroidNotificationDetails(
-      moneyManagerChannelId,
-      'Money Manager Reminder',
+    final androidDetails = _premiumAndroidDetails(
+      channelId: moneyManagerChannelId,
+      channelName: 'Money Manager Reminder',
       channelDescription: 'Daily reminder to update your money manager',
-      importance: Importance.high,
-      priority: Priority.high,
-      showWhen: true,
-      enableVibration: true,
-      playSound: true,
-      channelShowBadge: true,
-      ongoing: false,
-      autoCancel: true,
-      icon: '@drawable/ic_notification_white',
-      largeIcon: const DrawableResourceAndroidBitmap(
-        '@drawable/ic_notification_256',
-      ),
+      title: 'Finzo',
+      body: 'Notifications are set up correctly.',
+      subText: 'Finzo • Test',
+      largeIconDrawable: '@drawable/ic_notification_256',
     );
 
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
+      interruptionLevel: InterruptionLevel.active,
     );
 
     final notificationDetails = NotificationDetails(
@@ -644,8 +666,8 @@ class NotificationService {
 
     await _notifications.show(
       999,
-      'Test Notification',
-      'If you see this, notifications are working!',
+      'Finzo',
+      'Notifications are set up correctly.',
       notificationDetails,
     );
   }
@@ -705,49 +727,64 @@ class NotificationService {
         bool shouldTriggerEvening = isEveningWindow && hasMoneyManager;
 
         if (shouldTriggerMorning && hasTodoList) {
+          const morningTitle = 'Daily Plan Reminder';
+          const morningBody =
+              'Plan your day by creating a simple to-do list and setting priorities.';
+          final androidDetails = _premiumAndroidDetails(
+            channelId: todoListChannelId,
+            channelName: 'Todo List Reminder',
+            channelDescription: 'Daily reminder to create your todo list',
+            title: morningTitle,
+            body: morningBody,
+            bigText:
+                'Plan your day by creating a simple to-do list and setting priorities.\n\n'
+                'Tip: Start with 3 key tasks. Keep it realistic and focused.',
+            subText: 'Finzo • Morning',
+            largeIconDrawable: '@drawable/ic_notification_256',
+          );
           await _notifications.show(
             todoListReminderId,
-            '🌅 Good Morning! Plan Your Day',
-            'Start your day right! Create your todo list and set your goals for today. ✨',
+            morningTitle,
+            morningBody,
             NotificationDetails(
-              android: AndroidNotificationDetails(
-                todoListChannelId,
-                'Todo List Reminder',
-                channelDescription: 'Daily reminder to create your todo list',
-                importance: Importance.max,
-                priority: Priority.max,
-                showWhen: true,
-                enableVibration: true,
-                playSound: true,
-                icon: '@drawable/ic_notification_white',
-                largeIcon: const DrawableResourceAndroidBitmap(
-                  '@drawable/ic_notification_256',
-                ),
+              android: androidDetails,
+              iOS: const DarwinNotificationDetails(
+                presentAlert: true,
+                presentBadge: true,
+                presentSound: true,
+                interruptionLevel: InterruptionLevel.active,
               ),
             ),
           );
         }
 
         if (shouldTriggerEvening && hasMoneyManager) {
+          const eveningTitle = 'Daily Review Reminder';
+          const eveningBody =
+              'Review today\'s spending and update your transactions to keep records accurate.';
+          final androidDetails = _premiumAndroidDetails(
+            channelId: moneyManagerChannelId,
+            channelName: 'Money Manager Reminder',
+            channelDescription: 'Daily reminder to update your money manager',
+            title: eveningTitle,
+            body: eveningBody,
+            bigText:
+                'Review today\'s spending and update your transactions to keep records accurate.\n\n'
+                'Update expenses, add missing entries, and prepare for tomorrow.',
+            subText: 'Finzo • Evening',
+            largeIconDrawable: '@drawable/ic_notification_256',
+          );
           await _notifications.show(
             moneyManagerReminderId,
-            '🌙 Evening Review Time',
-            'Mark your expenses, update transactions, and check off completed todos! 📊✅',
+            eveningTitle,
+            eveningBody,
             NotificationDetails(
-              android: AndroidNotificationDetails(
-                moneyManagerChannelId,
-                'Money Manager Reminder',
-                channelDescription:
-                    'Daily reminder to update your money manager',
-                importance: Importance.max,
-                priority: Priority.max,
-                showWhen: true,
-                enableVibration: true,
-                playSound: true,
-                icon: '@drawable/ic_notification_white',
-                largeIcon: const DrawableResourceAndroidBitmap(
-                  '@drawable/ic_notification_256',
-                ),
+              android: androidDetails,
+              iOS: const DarwinNotificationDetails(
+                presentAlert: true,
+                presentBadge: true,
+                presentSound: true,
+                interruptionLevel: InterruptionLevel.active,
               ),
             ),
           );
