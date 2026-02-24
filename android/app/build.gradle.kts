@@ -61,16 +61,13 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
-            // ProGuard rules to preserve notification classes in release builds
+            // R8/ProGuard: shrinks code, obfuscates, and produces mapping file for crash reports
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Temporarily disable minify to test if ProGuard is causing issues
-            // If notifications work after this, then ProGuard was the problem
-            // You can re-enable minify after confirming notifications work
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
         }
     }
 }
