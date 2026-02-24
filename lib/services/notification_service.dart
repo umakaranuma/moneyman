@@ -55,9 +55,9 @@ class NotificationService {
       }
 
       // Android initialization settings
-      // Use proper notification icon (monochrome drawable)
+      // Small icon: monochrome white (status bar / notification header)
       const androidSettings = AndroidInitializationSettings(
-        '@drawable/ic_notification',
+        '@drawable/ic_notification_white',
       );
 
       // iOS initialization settings
@@ -325,7 +325,7 @@ class NotificationService {
 
   /// Schedule default notifications:
   /// - 5:30 AM daily (local time): Todo list reminder
-  /// - 9:00 PM daily (local time): Check todo and add expenses reminder
+  /// - 10:00 PM daily (local time): Check todo and add expenses reminder
   static Future<void> scheduleDefaultNotifications() async {
     try {
       developer.log(
@@ -393,10 +393,11 @@ class NotificationService {
         autoCancel: true,
         fullScreenIntent: false,
         category: AndroidNotificationCategory.reminder,
-        icon: '@drawable/ic_notification',
+        icon:
+            '@drawable/ic_notification_white', // top-left small icon (monochrome)
         largeIcon: const DrawableResourceAndroidBitmap(
-          '@drawable/ic_notification',
-        ),
+          '@drawable/ic_notification_256',
+        ), // big icon on the right (wallet, can be colored)
       );
 
       const iosDetails = DarwinNotificationDetails(
@@ -475,21 +476,21 @@ class NotificationService {
     }
   }
 
-  /// Schedule daily notification at 9:00 PM (local time) for expenses and todo completion
+  /// Schedule daily notification at 10:00 PM (local time) for expenses and todo completion
   static Future<void> scheduleEveningExpensesReminder() async {
     try {
       // Use the current local timezone (set during init)
       final localLocation = tz.local;
       final now = tz.TZDateTime.now(localLocation);
 
-      // Schedule for 9:00 PM local time
+      // Schedule for 10:00 PM local time
       var scheduledDate = tz.TZDateTime(
         localLocation,
         now.year,
         now.month,
         now.day,
-        21, // 9 PM (21:00)
-        0, // 0 minutes
+        22, // 10 PM (22:00)
+        34, // 0 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -511,10 +512,11 @@ class NotificationService {
         autoCancel: true,
         fullScreenIntent: false,
         category: AndroidNotificationCategory.reminder,
-        icon: '@drawable/ic_notification',
+        icon:
+            '@drawable/ic_notification_white', // top-left small icon (monochrome)
         largeIcon: const DrawableResourceAndroidBitmap(
-          '@drawable/ic_notification',
-        ),
+          '@drawable/ic_notification_256',
+        ), // big icon on the right (wallet, can be colored)
       );
 
       const iosDetails = DarwinNotificationDetails(
@@ -623,9 +625,9 @@ class NotificationService {
       channelShowBadge: true,
       ongoing: false,
       autoCancel: true,
-      icon: '@drawable/ic_notification',
+      icon: '@drawable/ic_notification_white',
       largeIcon: const DrawableResourceAndroidBitmap(
-        '@drawable/ic_notification',
+        '@drawable/ic_notification_256',
       ),
     );
 
@@ -671,13 +673,13 @@ class NotificationService {
         30, // 30 minutes
       );
 
-      // Check if it's past 9:00 PM today (expenses notification)
+      // Check if it's past 10:00 PM today (expenses notification)
       final eveningTargetTime = tz.TZDateTime(
         localLocation,
         now.year,
         now.month,
         now.day,
-        21, // 9 PM (21:00)
+        22, // 10 PM (22:00)
         0, // 0 minutes
       );
 
@@ -717,9 +719,9 @@ class NotificationService {
                 showWhen: true,
                 enableVibration: true,
                 playSound: true,
-                icon: '@drawable/ic_notification',
+                icon: '@drawable/ic_notification_white',
                 largeIcon: const DrawableResourceAndroidBitmap(
-                  '@drawable/ic_notification',
+                  '@drawable/ic_notification_256',
                 ),
               ),
             ),
@@ -742,9 +744,9 @@ class NotificationService {
                 showWhen: true,
                 enableVibration: true,
                 playSound: true,
-                icon: '@drawable/ic_notification',
+                icon: '@drawable/ic_notification_white',
                 largeIcon: const DrawableResourceAndroidBitmap(
-                  '@drawable/ic_notification',
+                  '@drawable/ic_notification_256',
                 ),
               ),
             ),

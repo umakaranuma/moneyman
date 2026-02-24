@@ -48,6 +48,10 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Default notification icon (small icon) for flutter_local_notifications -->
+        <meta-data
+            android:name="com.dexterous.flutterlocalnotifications.default_notification_icon"
+            android:resource="@drawable/ic_notification_white" />
         
         <!-- Required receivers for scheduled notifications -->
         <receiver
