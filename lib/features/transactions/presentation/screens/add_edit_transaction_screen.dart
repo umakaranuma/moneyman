@@ -180,16 +180,43 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   }
 
   void _showDateTimeSheet() {
+    DateTime temp = _selectedDate;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DateTimePickerSheet(
         initialDateTime: _selectedDate,
-        onSelected: (dateTime) {
-          setState(() => _selectedDate = dateTime);
+        onSelected: (date) {
+          temp = DateTime(
+            date.year,
+            date.month,
+            date.day,
+            temp.hour,
+            temp.minute,
+          );
         },
       ),
-    );
+    ).then((_) {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (context) => TimePickerSheet(
+          initialDateTime: temp,
+          onSelected: (dateTime) {
+            setState(() {
+              _selectedDate = DateTime(
+                temp.year,
+                temp.month,
+                temp.day,
+                dateTime.hour,
+                dateTime.minute,
+              );
+            });
+          },
+        ),
+      );
+    });
   }
 
   void _showImageSourceSheet() {
