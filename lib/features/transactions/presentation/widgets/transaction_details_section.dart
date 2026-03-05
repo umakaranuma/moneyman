@@ -52,7 +52,7 @@ class TransactionDetailsSection extends StatelessWidget {
         children: [
           if (type != TransactionType.transfer) ...[
             _DetailRow(
-              title: 'Category',
+              title: 'Category *',
               value: selectedCategory != null
                   ? (selectedSubcategory != null
                       ? '$selectedCategory • $selectedSubcategory'
