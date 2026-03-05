@@ -34,7 +34,7 @@ class DescriptionSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Description',
+            'Description *',
             style: GoogleFonts.inter(
               fontSize: 13,
               color: AppColors.textMuted,

@@ -76,8 +76,8 @@ class _HomeScreenState extends State<HomeScreen>
     var list = unique.values.toList();
 
     switch (_tabController.index) {
-      case 0:
-      case 2:
+      case 0: // Daily tab -> current month
+      case 1: // Calendar tab -> current month
         list = list
             .where(
               (t) =>
@@ -86,16 +86,16 @@ class _HomeScreenState extends State<HomeScreen>
             )
             .toList();
         break;
-      case 3:
+      case 2: // Monthly tab -> whole selected year
+        list = list
+            .where(
+              (t) => t.date.year == _selectedMonth.year,
+            )
+            .toList();
         break;
+      case 3: // Total tab -> all time
       default:
-        list = list
-            .where(
-              (t) =>
-                  t.date.year == _selectedMonth.year &&
-                  t.date.month == _selectedMonth.month,
-            )
-            .toList();
+        break;
     }
 
     if (_activeFilter != null && _activeFilter!.hasActiveFilters) {

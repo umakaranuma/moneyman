@@ -119,14 +119,19 @@ class _HomeScreenState extends State<HomeScreen>
     // Apply date filter based on tab
     switch (_tabController.index) {
       case 0: // Daily - show all transactions for current month grouped by date
-      case 2: // Monthly - same as daily but for selected month
+      case 1: // Calendar - current month
         combinedTransactions = combinedTransactions.where((t) {
           return t.date.year == _selectedMonth.year &&
               t.date.month == _selectedMonth.month;
         }).toList();
         break;
+      case 2: // Monthly - use whole selected year
+        combinedTransactions = combinedTransactions.where((t) {
+          return t.date.year == _selectedMonth.year;
+        }).toList();
+        break;
       case 3: // Total
-        // No date filter for total
+        // No date filter for total (all time)
         break;
       default:
         combinedTransactions = combinedTransactions.where((t) {
