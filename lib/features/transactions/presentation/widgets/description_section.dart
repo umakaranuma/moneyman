@@ -56,7 +56,8 @@ class DescriptionSection extends StatelessWidget {
                 color: AppColors.textMuted,
               ),
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
             ),
             validator: (v) =>
                 (v == null || v.trim().isEmpty) ? 'Description is required' : null,
@@ -84,7 +85,8 @@ class DescriptionSection extends StatelessWidget {
                 color: AppColors.textMuted,
               ),
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
             ),
             maxLines: 3,
             minLines: 1,

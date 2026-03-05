@@ -590,6 +590,7 @@ class _HomeScreenState extends State<HomeScreen>
                       MonthlyView(
                         selectedMonth: _selectedMonth,
                         transactions: transactions,
+                        onWeekSelected: _onWeekSelected,
                       ),
                       TotalView(
                         selectedMonth: _selectedMonth,
@@ -605,6 +606,15 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
     );
+  }
+
+  void _onWeekSelected(DateTime weekDate) {
+    setState(() {
+      _selectedMonth = DateTime(weekDate.year, weekDate.month);
+      _selectedDay = DateTime(weekDate.year, weekDate.month, weekDate.day);
+      _tabController.animateTo(0);
+      _refreshKey++;
+    });
   }
 
   void _onTransactionTap(Transaction t) async {
