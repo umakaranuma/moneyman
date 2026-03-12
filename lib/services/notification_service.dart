@@ -58,7 +58,7 @@ class NotificationService {
       // Android initialization settings
       // Small icon: monochrome white (status bar / notification header)
       const androidSettings = AndroidInitializationSettings(
-        '@drawable/ic_notification_white',
+        'ic_notification_white',
       );
 
       // iOS initialization settings
@@ -376,7 +376,7 @@ class NotificationService {
       importance: Importance.max,
       priority: Priority.max,
       category: AndroidNotificationCategory.reminder,
-      icon: '@drawable/ic_notification_white',
+      icon: 'ic_notification_white',
       color: const Color(0xFFFFFFFF),
       showWhen: true,
       enableVibration: true,
@@ -409,8 +409,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        5, // 5 AM
-        30, // 30 minutes
+        2, // 5 AM
+        10, // 30 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -432,7 +432,7 @@ class NotificationService {
             'Plan your day by creating a simple to-do list and setting priorities.\n\n'
             'Tip: Start with 3 key tasks. Keep it realistic and focused.',
         subText: 'Finzo • Morning',
-        largeIconDrawable: '@drawable/ic_notification_256',
+        largeIconDrawable: 'ic_notification_256',
       );
 
       const iosDetails = DarwinNotificationDetails(
@@ -523,8 +523,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        21, // 10 PM (22:00)
-        0, // 0 minutes
+        2, // 10 PM (22:00)
+        10, // 0 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -546,7 +546,7 @@ class NotificationService {
             'Review today\'s spending and update your transactions to keep records accurate.\n\n'
             'Update expenses, add missing entries, and prepare for tomorrow.',
         subText: 'Finzo • Evening',
-        largeIconDrawable: '@drawable/ic_notification_256',
+        largeIconDrawable: 'ic_notification_256',
       );
 
       const iosDetails = DarwinNotificationDetails(
@@ -649,7 +649,7 @@ class NotificationService {
       title: 'Finzo',
       body: 'Notifications are set up correctly.',
       subText: 'Finzo • Test',
-      largeIconDrawable: '@drawable/ic_notification_256',
+      largeIconDrawable: 'ic_notification_256',
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -691,8 +691,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        5, // 5 AM
-        30, // 30 minutes
+        2, // 5 AM
+        08, // 30 minutes
       );
 
       // Check if it's past 10:00 PM today (expenses notification)
@@ -701,8 +701,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        22, // 10 PM (22:00)
-        0, // 0 minutes
+        2, // 10 PM (22:00)
+        10, // 0 minutes
       );
 
       // If current time is within 5 minutes of notification time
