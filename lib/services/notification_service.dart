@@ -403,14 +403,14 @@ class NotificationService {
       final localLocation = tz.local;
       final now = tz.TZDateTime.now(localLocation);
 
-      // Schedule for 5:30 AM local time
+      // Schedule for 3:05 AM local time (hour 3, min 5; adjust for production)
       var scheduledDate = tz.TZDateTime(
         localLocation,
         now.year,
         now.month,
         now.day,
-        2, // 5 AM
-        10, // 30 minutes
+        3, // hour (3 = 3 AM; use for testing)
+        5, // minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -517,14 +517,14 @@ class NotificationService {
       final localLocation = tz.local;
       final now = tz.TZDateTime.now(localLocation);
 
-      // Schedule for 10:00 PM local time
+      // Schedule for 3:10 AM local time (hour 3, min 10; adjust for production)
       var scheduledDate = tz.TZDateTime(
         localLocation,
         now.year,
         now.month,
         now.day,
-        2, // 10 PM (22:00)
-        10, // 0 minutes
+        3, // hour (testing)
+        10, // minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -685,24 +685,24 @@ class NotificationService {
       final localLocation = tz.local;
       final now = tz.TZDateTime.now(localLocation);
 
-      // Check if it's past 5:30 AM today (todo list notification)
+      // Check if it's past morning reminder time today (match schedule times)
       final morningTargetTime = tz.TZDateTime(
         localLocation,
         now.year,
         now.month,
         now.day,
-        2, // 5 AM
-        08, // 30 minutes
+        3, // hour (match scheduleMorningTodoReminder)
+        5, // minutes
       );
 
-      // Check if it's past 10:00 PM today (expenses notification)
+      // Check if it's past evening reminder time today (match schedule times)
       final eveningTargetTime = tz.TZDateTime(
         localLocation,
         now.year,
         now.month,
         now.day,
-        2, // 10 PM (22:00)
-        10, // 0 minutes
+        3, // hour (match scheduleEveningExpensesReminder)
+        10, // minutes
       );
 
       // If current time is within 5 minutes of notification time
@@ -740,7 +740,7 @@ class NotificationService {
                 'Plan your day by creating a simple to-do list and setting priorities.\n\n'
                 'Tip: Start with 3 key tasks. Keep it realistic and focused.',
             subText: 'Finzo • Morning',
-            largeIconDrawable: '@drawable/ic_notification_256',
+            largeIconDrawable: 'ic_notification_256',
           );
           await _notifications.show(
             todoListReminderId,
@@ -772,7 +772,7 @@ class NotificationService {
                 'Review today\'s spending and update your transactions to keep records accurate.\n\n'
                 'Update expenses, add missing entries, and prepare for tomorrow.',
             subText: 'Finzo • Evening',
-            largeIconDrawable: '@drawable/ic_notification_256',
+            largeIconDrawable: 'ic_notification_256',
           );
           await _notifications.show(
             moneyManagerReminderId,

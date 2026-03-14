@@ -4,21 +4,25 @@
 
 # flutter_local_notifications
 -keep class com.dexterous.flutterlocalnotifications.** { *; }
--keep class androidx.work.** { *; }
+
+# Notification receivers (must not be removed by R8)
+-keep class com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver { *; }
+-keep class com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver { *; }
+-keep class com.dexterous.flutterlocalnotifications.FlutterLocalNotificationsReceiver { *; }
+
+# Alarm manager & PendingIntent used for scheduling
 -keep class android.app.AlarmManager { *; }
+-keep class android.app.AlarmManager$AlarmClockInfo { *; }
 -keep class android.app.PendingIntent { *; }
 
 # Permission handler
 -keep class com.baseflow.permissionhandler.** { *; }
 
-# Timezone - Keep all timezone related classes
--keep class org.threeten.bp.** { *; }
--keep class java.time.** { *; }
--keep class timezone.** { *; }
--keep class com.beyondeye.kbloc.** { *; }
+# Timezone plugin
+-keep class com.bossylobster.** { *; }
 
-# Play Core tasks (Flutter deferred components not used)
--dontwarn com.google.android.play.core.tasks.OnFailureListener
--dontwarn com.google.android.play.core.tasks.OnSuccessListener
--dontwarn com.google.android.play.core.tasks.Task
+# Work manager (used by some plugins)
+-keep class androidx.work.** { *; }
 
+# Play Core warnings
+-dontwarn com.google.android.play.core.tasks.**
