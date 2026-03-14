@@ -1,5 +1,6 @@
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart' show Color;
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -22,6 +23,7 @@ class NotificationService {
   // Notification Channel IDs
   static const String moneyManagerChannelId = 'money_manager_reminder';
   static const String todoListChannelId = 'todo_list_reminder';
+  static const String remindersChannelId = 'reminders';
 
   static Future<void> init() async {
     try {
@@ -183,6 +185,16 @@ class NotificationService {
         showBadge: true,
       );
 
+      const remindersChannel = AndroidNotificationChannel(
+        remindersChannelId,
+        'Reminders',
+        description: 'Loan due dates and package expiry reminders',
+        importance: Importance.max,
+        playSound: true,
+        enableVibration: true,
+        showBadge: true,
+      );
+
       final androidImplementation = _notifications
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
@@ -200,6 +212,11 @@ class NotificationService {
         await androidImplementation.createNotificationChannel(todoListChannel);
         developer.log(
           'Created todo list notification channel',
+          name: 'NotificationService',
+        );
+        await androidImplementation.createNotificationChannel(remindersChannel);
+        developer.log(
+          'Created reminders notification channel',
           name: 'NotificationService',
         );
       } else {
@@ -409,7 +426,7 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        2, // 5 AM
+        1, // 5 AM
         10, // 30 minutes
       );
 
@@ -447,30 +464,13 @@ class NotificationService {
         iOS: iosDetails,
       );
 
-      // Use inexactAllowWhileIdle (no special alarm permissions needed)
+      // Prefer exact alarm for reliable delivery; fallback to inexact
       bool scheduled = false;
-      try {
-        await _notifications.zonedSchedule(
-          todoListReminderId,
-          morningTitle,
-          morningBody,
-          scheduledDate,
-          notificationDetails,
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
-          matchDateTimeComponents: DateTimeComponents.time,
-        );
-        developer.log(
-          'Morning notification scheduled (inexactAllowWhileIdle) for ${scheduledDate.hour}:${scheduledDate.minute.toString().padLeft(2, '0')}',
-          name: 'NotificationService',
-        );
-        scheduled = true;
-      } catch (e) {
-        developer.log(
-          'Error scheduling morning notification with inexactAllowWhileIdle: $e',
-          name: 'NotificationService',
-        );
+      for (final mode in [
+        AndroidScheduleMode.exactAllowWhileIdle,
+        AndroidScheduleMode.inexactAllowWhileIdle,
+        AndroidScheduleMode.inexact,
+      ]) {
         try {
           await _notifications.zonedSchedule(
             todoListReminderId,
@@ -478,21 +478,29 @@ class NotificationService {
             morningBody,
             scheduledDate,
             notificationDetails,
-            androidScheduleMode: AndroidScheduleMode.inexact,
+            androidScheduleMode: mode,
             uiLocalNotificationDateInterpretation:
                 UILocalNotificationDateInterpretation.absoluteTime,
             matchDateTimeComponents: DateTimeComponents.time,
           );
           developer.log(
-            'Morning notification scheduled (inexact fallback) for ${scheduledDate.hour}:${scheduledDate.minute.toString().padLeft(2, '0')}',
+            'Morning notification scheduled ($mode) for ${scheduledDate.hour}:${scheduledDate.minute.toString().padLeft(2, '0')}',
             name: 'NotificationService',
           );
           scheduled = true;
-        } catch (e2) {
-          developer.log(
-            'Failed to schedule morning notification: $e2',
-            name: 'NotificationService',
-          );
+          break;
+        } catch (e) {
+          // exact_alarms_not_permitted is expected when user hasn't granted exact alarm; fallback to inexact
+          final isExactNotPermitted =
+              e is PlatformException &&
+              (e.code == 'exact_alarms_not_permitted' ||
+                  e.code == 'Exact alarms are not permitted');
+          if (!isExactNotPermitted) {
+            developer.log(
+              'Morning schedule $mode failed: $e',
+              name: 'NotificationService',
+            );
+          }
         }
       }
 
@@ -517,14 +525,14 @@ class NotificationService {
       final localLocation = tz.local;
       final now = tz.TZDateTime.now(localLocation);
 
-      // Schedule for 10:00 PM local time
+      // Schedule for 10:00 PM (22:00) local time
       var scheduledDate = tz.TZDateTime(
         localLocation,
         now.year,
         now.month,
         now.day,
-        2, // 10 PM (22:00)
-        10, // 0 minutes
+        1, // 10 PM
+        20, // 0 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -561,30 +569,13 @@ class NotificationService {
         iOS: iosDetails,
       );
 
-      // Use inexactAllowWhileIdle (no special alarm permissions needed)
+      // Prefer exact alarm for reliable delivery; fallback to inexact
       bool scheduled = false;
-      try {
-        await _notifications.zonedSchedule(
-          moneyManagerReminderId,
-          eveningTitle,
-          eveningBody,
-          scheduledDate,
-          notificationDetails,
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
-          matchDateTimeComponents: DateTimeComponents.time,
-        );
-        developer.log(
-          'Evening notification scheduled (inexactAllowWhileIdle) for ${scheduledDate.hour}:${scheduledDate.minute.toString().padLeft(2, '0')}',
-          name: 'NotificationService',
-        );
-        scheduled = true;
-      } catch (e) {
-        developer.log(
-          'Error scheduling evening notification with inexactAllowWhileIdle: $e',
-          name: 'NotificationService',
-        );
+      for (final mode in [
+        AndroidScheduleMode.exactAllowWhileIdle,
+        AndroidScheduleMode.inexactAllowWhileIdle,
+        AndroidScheduleMode.inexact,
+      ]) {
         try {
           await _notifications.zonedSchedule(
             moneyManagerReminderId,
@@ -592,21 +583,28 @@ class NotificationService {
             eveningBody,
             scheduledDate,
             notificationDetails,
-            androidScheduleMode: AndroidScheduleMode.inexact,
+            androidScheduleMode: mode,
             uiLocalNotificationDateInterpretation:
                 UILocalNotificationDateInterpretation.absoluteTime,
             matchDateTimeComponents: DateTimeComponents.time,
           );
           developer.log(
-            'Evening notification scheduled (inexact fallback) for ${scheduledDate.hour}:${scheduledDate.minute.toString().padLeft(2, '0')}',
+            'Evening notification scheduled ($mode) for ${scheduledDate.hour}:${scheduledDate.minute.toString().padLeft(2, '0')}',
             name: 'NotificationService',
           );
           scheduled = true;
-        } catch (e2) {
-          developer.log(
-            'Failed to schedule evening notification: $e2',
-            name: 'NotificationService',
-          );
+          break;
+        } catch (e) {
+          final isExactNotPermitted =
+              e is PlatformException &&
+              (e.code == 'exact_alarms_not_permitted' ||
+                  e.code == 'Exact alarms are not permitted');
+          if (!isExactNotPermitted) {
+            developer.log(
+              'Evening schedule $mode failed: $e',
+              name: 'NotificationService',
+            );
+          }
         }
       }
 
@@ -638,6 +636,92 @@ class NotificationService {
   /// Cancel todo list reminder
   static Future<void> cancelTodoListReminder() async {
     await _notifications.cancel(todoListReminderId);
+  }
+
+  /// Schedule a one-time reminder notification at the given date/time.
+  /// [notificationId] must be unique (e.g. from ReminderService).
+  static Future<bool> scheduleReminderNotification({
+    required int notificationId,
+    required String title,
+    required String body,
+    required DateTime scheduledDate,
+  }) async {
+    try {
+      final localLocation = tz.local;
+      final tzScheduled = tz.TZDateTime.from(scheduledDate, localLocation);
+      if (tzScheduled.isBefore(tz.TZDateTime.now(localLocation))) {
+        developer.log(
+          'Reminder $notificationId is in the past, skipping',
+          name: 'NotificationService',
+        );
+        return false;
+      }
+      final androidDetails = _premiumAndroidDetails(
+        channelId: remindersChannelId,
+        channelName: 'Reminders',
+        channelDescription: 'Loan due dates and package expiry reminders',
+        title: title,
+        body: body,
+        bigText: body,
+        subText: 'Finzo • Reminder',
+      );
+      const iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        interruptionLevel: InterruptionLevel.timeSensitive,
+      );
+      final notificationDetails = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+      for (final mode in [
+        AndroidScheduleMode.exactAllowWhileIdle,
+        AndroidScheduleMode.inexactAllowWhileIdle,
+        AndroidScheduleMode.inexact,
+      ]) {
+        try {
+          await _notifications.zonedSchedule(
+            notificationId,
+            title,
+            body,
+            tzScheduled,
+            notificationDetails,
+            androidScheduleMode: mode,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
+          );
+          developer.log(
+            'Scheduled reminder $notificationId at $scheduledDate',
+            name: 'NotificationService',
+          );
+          return true;
+        } catch (e) {
+          final isExactNotPermitted =
+              e is PlatformException &&
+              (e.code == 'exact_alarms_not_permitted' ||
+                  e.code == 'Exact alarms are not permitted');
+          if (!isExactNotPermitted) {
+            developer.log(
+              'Reminder schedule $mode failed: $e',
+              name: 'NotificationService',
+            );
+          }
+        }
+      }
+      return false;
+    } catch (e) {
+      developer.log(
+        'Error scheduling reminder: $e',
+        name: 'NotificationService',
+      );
+      return false;
+    }
+  }
+
+  /// Cancel a scheduled reminder by its notification ID.
+  static Future<void> cancelReminderNotification(int notificationId) async {
+    await _notifications.cancel(notificationId);
   }
 
   /// Show a test notification immediately (for testing)
@@ -691,8 +775,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        2, // 5 AM
-        08, // 30 minutes
+        5, // 5 AM
+        30, // 30 minutes
       );
 
       // Check if it's past 10:00 PM today (expenses notification)
@@ -701,8 +785,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        2, // 10 PM (22:00)
-        10, // 0 minutes
+        22, // 10 PM
+        0, // 0 minutes
       );
 
       // If current time is within 5 minutes of notification time

@@ -2,11 +2,13 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/transaction.dart';
 import '../models/note.dart';
 import '../models/todo.dart';
+import '../models/reminder.dart';
 
 class StorageService {
   static const String _transactionBoxName = 'transactions';
   static const String _noteBoxName = 'notes';
   static const String _todoBoxName = 'todos';
+  static const String _reminderBoxName = 'reminders';
   static const String _settingsBoxName = 'settings';
   static const String _keyDefaultCurrency = 'default_currency';
 
@@ -17,6 +19,7 @@ class StorageService {
     await Hive.openBox(_transactionBoxName);
     await Hive.openBox(_noteBoxName);
     await Hive.openBox(_todoBoxName);
+    await Hive.openBox(_reminderBoxName);
     await Hive.openBox(_settingsBoxName);
   }
 
@@ -153,9 +156,43 @@ class StorageService {
     return Todo.fromJson(Map<String, dynamic>.from(json));
   }
 
+  // Reminder methods
+  static Box get _reminderBox => Hive.box(_reminderBoxName);
+
+  static Future<void> addReminder(Reminder reminder) async {
+    await _reminderBox.put(reminder.id, reminder.toJson());
+  }
+
+  static Future<void> updateReminder(Reminder reminder) async {
+    await _reminderBox.put(reminder.id, reminder.toJson());
+  }
+
+  static Future<void> deleteReminder(String id) async {
+    await _reminderBox.delete(id);
+  }
+
+  static List<Reminder> getAllReminders() {
+    final reminders = _reminderBox.values
+        .map((json) => Reminder.fromJson(Map<String, dynamic>.from(json)))
+        .toList();
+    reminders.sort((a, b) {
+      final aDate = a.effectiveDate ?? DateTime(0);
+      final bDate = b.effectiveDate ?? DateTime(0);
+      return aDate.compareTo(bDate);
+    });
+    return reminders;
+  }
+
+  static Reminder? getReminder(String id) {
+    final json = _reminderBox.get(id);
+    if (json == null) return null;
+    return Reminder.fromJson(Map<String, dynamic>.from(json));
+  }
+
   static Future<void> clearAllData() async {
     await _transactionBox.clear();
     await _noteBox.clear();
     await _todoBox.clear();
+    await _reminderBox.clear();
   }
 }

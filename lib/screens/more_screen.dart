@@ -49,6 +49,12 @@ class MoreScreen extends StatelessWidget {
                     ),
                     _buildSettingsItem(
                       context,
+                      icon: Icons.notifications_active_rounded,
+                      label: 'Reminders',
+                      onTap: () => context.goToReminders(),
+                    ),
+                    _buildSettingsItem(
+                      context,
                       icon: Icons.note_alt_rounded,
                       label: 'Notes',
                       onTap: () => context.goToNotes(),

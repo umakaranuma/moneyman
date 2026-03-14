@@ -21,9 +21,12 @@ import '../../screens/upgrade_screen.dart';
 import '../../screens/privacy_policy_screen.dart';
 import '../../screens/terms_of_service_screen.dart';
 import '../../screens/budget_setting_screen.dart';
+import '../../screens/reminders_screen.dart';
+import '../../screens/add_edit_reminder_screen.dart';
 import '../../models/transaction.dart';
 import '../../models/note.dart';
 import '../../models/todo.dart';
+import '../../models/reminder.dart';
 import '../../models/category.dart';
 
 class AppRouter {
@@ -180,6 +183,87 @@ class AppRouter {
                     child: child,
                   );
                 },
+          );
+        },
+      ),
+
+      // Reminders routes
+      GoRoute(
+        path: '/reminders',
+        name: 'reminders',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const RemindersScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              return SlideTransition(
+                position:
+                    Tween<Offset>(
+                      begin: const Offset(1, 0),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
+                child: child,
+              );
+            },
+          );
+        },
+      ),
+      GoRoute(
+        path: '/reminders/add',
+        name: 'addReminder',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const AddEditReminderScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              return SlideTransition(
+                position:
+                    Tween<Offset>(
+                      begin: const Offset(0, 1),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
+                child: child,
+              );
+            },
+          );
+        },
+      ),
+      GoRoute(
+        path: '/reminders/edit',
+        name: 'editReminder',
+        pageBuilder: (context, state) {
+          final reminder = state.extra as Reminder;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: AddEditReminderScreen(reminder: reminder),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              return SlideTransition(
+                position:
+                    Tween<Offset>(
+                      begin: const Offset(1, 0),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
+                child: child,
+              );
+            },
           );
         },
       ),
@@ -722,6 +806,20 @@ extension GoRouterExtension on BuildContext {
 
   void goToTodos() {
     GoRouter.of(this).pushNamed('todos');
+  }
+
+  void goToReminders() {
+    GoRouter.of(this).pushNamed('reminders');
+  }
+
+  Future<T?> goToAddReminder<T>() async {
+    final result = await GoRouter.of(this).pushNamed('addReminder');
+    return result as T?;
+  }
+
+  Future<T?> goToEditReminder<T>(Reminder reminder) async {
+    final result = await GoRouter.of(this).pushNamed('editReminder', extra: reminder);
+    return result as T?;
   }
 
   void goToSettings() {
