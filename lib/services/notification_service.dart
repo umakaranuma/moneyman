@@ -446,11 +446,13 @@ class NotificationService {
   }
 
   /// Alarm/call-style notification details for reminders. Uses dedicated channel so sound/vibration ring like alarm.
+  /// Supports optional large icon and rich bigText for a user-friendly look.
   static AndroidNotificationDetails _reminderAlarmStyleDetails({
     required String title,
     required String body,
     String? bigText,
     String? subText,
+    String? largeIconDrawable,
   }) {
     return AndroidNotificationDetails(
       remindersAlarmChannelId,
@@ -475,6 +477,9 @@ class NotificationService {
         summaryText: subText ?? 'Finzo • Reminder',
       ),
       subText: subText ?? 'Finzo • Reminder',
+      largeIcon: largeIconDrawable == null
+          ? null
+          : DrawableResourceAndroidBitmap(largeIconDrawable),
     );
   }
 
@@ -705,11 +710,15 @@ class NotificationService {
 
   /// Schedule a one-time reminder notification at the given date/time.
   /// [notificationId] must be unique (e.g. from ReminderService).
+  /// Use [bigText] for expanded notification content; [subText] and [largeIconDrawable] for a richer look.
   static Future<bool> scheduleReminderNotification({
     required int notificationId,
     required String title,
     required String body,
     required DateTime scheduledDate,
+    String? bigText,
+    String? subText,
+    String? largeIconDrawable,
   }) async {
     try {
       final localLocation = tz.local;
@@ -724,8 +733,9 @@ class NotificationService {
       final androidDetails = _reminderAlarmStyleDetails(
         title: title,
         body: body,
-        bigText: body,
-        subText: 'Finzo • Reminder',
+        bigText: bigText ?? body,
+        subText: subText ?? 'Finzo • Reminder',
+        largeIconDrawable: largeIconDrawable,
       );
       const iosDetails = DarwinNotificationDetails(
         presentAlert: true,

@@ -14,7 +14,8 @@ class ReminderService {
       _idInitialized = true;
       int maxId = _reminderNotificationIdBase - 1;
       for (final r in StorageService.getAllReminders()) {
-        if (r.notificationIdDayBefore != null && r.notificationIdDayBefore! > maxId) {
+        if (r.notificationIdDayBefore != null &&
+            r.notificationIdDayBefore! > maxId) {
           maxId = r.notificationIdDayBefore!;
         }
         if (r.notificationIdOnDay != null && r.notificationIdOnDay! > maxId) {
@@ -48,7 +49,9 @@ class ReminderService {
   }
 
   /// Schedules notifications: for general = one at date+time; for loan = day-before + on-day; for package = day-before expiry.
-  static Future<Reminder> scheduleNotificationsForReminder(Reminder reminder) async {
+  static Future<Reminder> scheduleNotificationsForReminder(
+    Reminder reminder,
+  ) async {
     await _cancelReminderNotifications(reminder);
 
     // General reminder: single notification at the chosen date and time
@@ -59,15 +62,29 @@ class ReminderService {
       final minute = reminder.dueTimeMinute ?? 0;
       final scheduled = DateTime(due.year, due.month, due.day, hour, minute);
       final id = _nextId();
+      final dateStr = _formatDate(due);
+      final timeStr = _formatTime(hour, minute);
       final body = (reminder.note ?? reminder.title).trim().isNotEmpty
           ? (reminder.note ?? reminder.title)
           : 'Reminder: ${reminder.title}';
-      final scheduledOk = await NotificationService.scheduleReminderNotification(
-        notificationId: id,
-        title: reminder.title,
-        body: body,
-        scheduledDate: scheduled,
-      );
+      final bigText = StringBuffer()
+        ..writeln('When: $dateStr at $timeStr')
+        ..writeln()
+        ..write(
+          reminder.note?.trim().isNotEmpty == true
+              ? 'Note: ${reminder.note}'
+              : 'Reminder: ${reminder.title}',
+        );
+      final scheduledOk =
+          await NotificationService.scheduleReminderNotification(
+            notificationId: id,
+            title: '🔔 ${reminder.title}',
+            body: body,
+            scheduledDate: scheduled,
+            bigText: bigText.toString(),
+            subText: 'Finzo • Reminder',
+            largeIconDrawable: 'ic_notification_256',
+          );
       return reminder.copyWith(
         notificationIdDayBefore: scheduledOk ? id : null,
         notificationIdOnDay: null,
@@ -77,7 +94,11 @@ class ReminderService {
     final effectiveDate = reminder.effectiveDate;
     if (effectiveDate == null) return reminder;
 
-    final localDate = DateTime(effectiveDate.year, effectiveDate.month, effectiveDate.day);
+    final localDate = DateTime(
+      effectiveDate.year,
+      effectiveDate.month,
+      effectiveDate.day,
+    );
     int hour = 9;
     int minute = 0;
     if (reminder.type == ReminderType.loan &&
@@ -102,31 +123,46 @@ class ReminderService {
 
     String titleDayBefore;
     String bodyDayBefore;
+    String bigTextDayBefore;
     if (reminder.type == ReminderType.loan) {
-      final amountStr = reminder.loanAmount != null
-          ? ' Amount: Rs. ${reminder.loanAmount!.toStringAsFixed(0)}.'
-          : '';
-      titleDayBefore = 'Loan reminder tomorrow';
+      titleDayBefore = '💰 Loan due tomorrow';
       bodyDayBefore =
-          '${reminder.title} is due tomorrow (${_formatDate(reminder.dueDate!)}) at ${_formatTime(hour, minute)}.$amountStr '
-          'Don\'t forget to repay.';
+          '${reminder.title} is due tomorrow at ${_formatTime(hour, minute)}. Don\'t forget to repay.';
+      final amountLine = reminder.loanAmount != null
+          ? 'Amount: Rs. ${reminder.loanAmount!.toStringAsFixed(0)}\n\n'
+          : '';
+      bigTextDayBefore =
+          'Loan: ${reminder.title}\n'
+          'Due: ${_formatDate(reminder.dueDate!)} at ${_formatTime(hour, minute)}\n\n'
+          '$amountLine'
+          'Don\'t forget to repay on time.';
     } else {
-      final activated = reminder.activationDate != null
-          ? ' Activated on ${_formatDate(reminder.activationDate!)}.'
-          : '';
-      titleDayBefore = '${reminder.title} expires tomorrow';
+      titleDayBefore = '📦 ${reminder.title} expires tomorrow';
       bodyDayBefore =
-          'Your ${reminder.title} will expire tomorrow (${_formatDate(reminder.expiryDate!)}).$activated '
+          'Your ${reminder.title} will expire tomorrow. Renew or activate to avoid interruption.';
+      final activatedLine = reminder.activationDate != null
+          ? 'Activated on ${_formatDate(reminder.activationDate!)}.\n\n'
+          : '';
+      bigTextDayBefore =
+          'Package: ${reminder.title}\n'
+          'Expires: ${_formatDate(reminder.expiryDate!)}\n\n'
+          '$activatedLine'
           'Renew or activate to avoid interruption.';
     }
 
     idDayBefore = _nextId();
-    final scheduledDayBefore = await NotificationService.scheduleReminderNotification(
-      notificationId: idDayBefore,
-      title: titleDayBefore,
-      body: bodyDayBefore,
-      scheduledDate: dayBeforeScheduled,
-    );
+    final scheduledDayBefore =
+        await NotificationService.scheduleReminderNotification(
+          notificationId: idDayBefore,
+          title: titleDayBefore,
+          body: bodyDayBefore,
+          scheduledDate: dayBeforeScheduled,
+          bigText: bigTextDayBefore,
+          subText: reminder.type == ReminderType.loan
+              ? 'Finzo • Loan'
+              : 'Finzo • Package',
+          largeIconDrawable: 'ic_notification_256',
+        );
     if (!scheduledDayBefore) idDayBefore = null;
 
     // On the day: only for loan (full reminder + alarm-like)
@@ -138,17 +174,24 @@ class ReminderService {
         hour,
         minute,
       );
-      final amountStr = reminder.loanAmount != null
-          ? ' Amount: Rs. ${reminder.loanAmount!.toStringAsFixed(0)}.'
+      final amountLineOnDay = reminder.loanAmount != null
+          ? 'Amount: Rs. ${reminder.loanAmount!.toStringAsFixed(0)}\n\n'
           : '';
+      final bigTextOnDay =
+          'Loan: ${reminder.title}\n'
+          'Due today at ${_formatTime(hour, minute)}\n\n'
+          '$amountLineOnDay'
+          'Please repay as scheduled.';
       idOnDay = _nextId();
       final scheduledOnDay = await NotificationService.scheduleReminderNotification(
         notificationId: idOnDay,
-        title: 'Loan due today – ${reminder.title}',
+        title: '⚠️ Loan due today – ${reminder.title}',
         body:
-            '${reminder.title} is due today at ${_formatTime(hour, minute)}.$amountStr '
-            'Please repay as scheduled.',
+            '${reminder.title} is due today at ${_formatTime(hour, minute)}. Please repay as scheduled.',
         scheduledDate: onDayScheduled,
+        bigText: bigTextOnDay,
+        subText: 'Finzo • Loan',
+        largeIconDrawable: 'ic_notification_256',
       );
       if (!scheduledOnDay) idOnDay = null;
     }
@@ -179,10 +222,7 @@ class ReminderService {
   static Future<void> updateReminder(Reminder reminder) async {
     final withNotifications = await scheduleNotificationsForReminder(reminder);
     await StorageService.updateReminder(withNotifications);
-    developer.log(
-      'Updated reminder ${reminder.id}',
-      name: 'ReminderService',
-    );
+    developer.log('Updated reminder ${reminder.id}', name: 'ReminderService');
   }
 
   static Future<void> deleteReminder(String id) async {
