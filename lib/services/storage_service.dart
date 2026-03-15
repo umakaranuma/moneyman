@@ -12,6 +12,10 @@ class StorageService {
   static const String _settingsBoxName = 'settings';
   static const String _keyDefaultCurrency = 'default_currency';
 
+  /// Key and box for pending notification route (used by NotificationNavigationHandler; box name for background isolate).
+  static const String pendingNotificationRouteKey = 'pending_notification_route';
+  static const String settingsBoxName = 'settings';
+
   static Future<void> init() async {
     await Hive.initFlutter();
     
@@ -32,6 +36,24 @@ class StorageService {
 
   static Future<void> setDefaultCurrencyCode(String currencyCode) async {
     await _settingsBox.put(_keyDefaultCurrency, currencyCode);
+  }
+
+  /// Pending notification route (e.g. 'todos', 'home', 'reminders|123'). Used when app is opened from a notification tap.
+  static Future<void> setPendingNotificationRoute(String? route) async {
+    if (route == null || route.isEmpty) {
+      await _settingsBox.delete(pendingNotificationRouteKey);
+    } else {
+      await _settingsBox.put(pendingNotificationRouteKey, route);
+    }
+  }
+
+  /// Read and clear the pending notification route. Returns null if none.
+  static Future<String?> getAndClearPendingNotificationRoute() async {
+    final v = _settingsBox.get(pendingNotificationRouteKey) as String?;
+    if (v != null && v.toString().isNotEmpty) {
+      await _settingsBox.delete(pendingNotificationRouteKey);
+    }
+    return v != null && v.toString().isNotEmpty ? v.toString() : null;
   }
 
   // Transaction methods

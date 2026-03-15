@@ -1,9 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/stats/presentation/screens/stats_screen.dart';
+import '../services/notification_navigation_handler.dart';
 import 'accounts_screen.dart';
 import 'more_screen.dart';
 
@@ -15,7 +17,7 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   int _currentIndex = 0;
   late AnimationController _fabAnimationController;
   late final PageController _pageController;
@@ -53,15 +55,58 @@ class _MainNavigationState extends State<MainNavigation>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _fabAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 200),
     );
     _pageController = PageController(initialPage: _currentIndex);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _applyPendingNotificationRoute());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      _applyPendingNotificationRoute();
+    }
+  }
+
+  /// When app was opened from a notification tap, navigate to the right screen.
+  /// Ensures we're at home first so that back from the target screen returns to home.
+  Future<void> _applyPendingNotificationRoute() async {
+    if (!mounted) return;
+    final router = GoRouter.of(context);
+    final route = await NotificationNavigationHandler.takePendingRoute();
+    if (route == null || route.isEmpty || !mounted) return;
+    // Go to home first so that back from the target screen returns to home.
+    router.go('/');
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (route == NotificationNavigationHandler.routeTodos) {
+        router.push('/todos');
+      } else if (route == NotificationNavigationHandler.routeHome) {
+        // Already on home
+      } else if (route.startsWith('reminders|')) {
+        final parts = route.split('|');
+        if (parts.length == 2) {
+          final notificationId = int.tryParse(parts[1]);
+          if (notificationId != null) {
+            router.push('/reminders', extra: {'highlightNotificationId': notificationId});
+          } else {
+            router.push('/reminders');
+          }
+        } else {
+          router.push('/reminders');
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _fabAnimationController.dispose();
     _pageController.dispose();
     super.dispose();

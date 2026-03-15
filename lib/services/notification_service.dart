@@ -6,11 +6,18 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
+import 'notification_navigation_handler.dart';
 
-// Top-level function for background notification handler
+// Top-level function for background notification handler (runs in background isolate)
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse response) {
-  // Background notification tap handler
+  final route = NotificationNavigationHandler.routeFromNotification(
+    response.id ?? 0,
+    response.payload,
+  );
+  if (route != null && route.isNotEmpty) {
+    NotificationNavigationHandler.setPendingRouteFromBackground(route);
+  }
 }
 
 class NotificationService {
@@ -99,6 +106,20 @@ class NotificationService {
         'Notification plugin initialized successfully',
         name: 'NotificationService',
       );
+
+      // If app was launched by tapping a notification (e.g. from terminated state), set pending route
+      final launchDetails = await _notifications.getNotificationAppLaunchDetails();
+      if (launchDetails?.didNotificationLaunchApp == true &&
+          launchDetails?.notificationResponse != null) {
+        final response = launchDetails!.notificationResponse!;
+        final route = NotificationNavigationHandler.routeFromNotification(
+          response.id ?? 0,
+          response.payload,
+        );
+        if (route != null && route.isNotEmpty) {
+          NotificationNavigationHandler.setPendingRoute(route);
+        }
+      }
 
       // Create notification channels AFTER initialization
       await _createNotificationChannels();
@@ -370,7 +391,13 @@ class NotificationService {
   }
 
   static void _onNotificationTapped(NotificationResponse response) {
-    // Handle notification tap if needed
+    final route = NotificationNavigationHandler.routeFromNotification(
+      response.id ?? 0,
+      response.payload,
+    );
+    if (route != null && route.isNotEmpty) {
+      NotificationNavigationHandler.setPendingRoute(route);
+    }
   }
 
   /// Schedule default notifications:

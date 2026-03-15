@@ -192,9 +192,13 @@ class AppRouter {
         path: '/reminders',
         name: 'reminders',
         pageBuilder: (context, state) {
+          final extra = state.extra is Map<String, dynamic>
+              ? state.extra as Map<String, dynamic>
+              : null;
+          final highlightNotificationId = extra?['highlightNotificationId'] as int?;
           return CustomTransitionPage(
             key: state.pageKey,
-            child: const RemindersScreen(),
+            child: RemindersScreen(highlightNotificationId: highlightNotificationId),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
               return SlideTransition(

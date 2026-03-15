@@ -10,7 +10,10 @@ import '../theme/app_theme.dart';
 import '../core/router/app_router.dart';
 
 class RemindersScreen extends StatefulWidget {
-  const RemindersScreen({super.key});
+  /// When opened from a reminder notification tap, highlight this notification's reminder in the list.
+  final int? highlightNotificationId;
+
+  const RemindersScreen({super.key, this.highlightNotificationId});
 
   @override
   State<RemindersScreen> createState() => _RemindersScreenState();
@@ -29,6 +32,12 @@ class _RemindersScreenState extends State<RemindersScreen> {
     setState(() {
       _reminders = ReminderService.getAllReminders();
     });
+  }
+
+  bool _isHighlighted(Reminder r) {
+    final id = widget.highlightNotificationId;
+    if (id == null) return false;
+    return r.notificationIdDayBefore == id || r.notificationIdOnDay == id;
   }
 
   Future<void> _deleteReminder(Reminder reminder) async {
@@ -124,17 +133,17 @@ class _RemindersScreenState extends State<RemindersScreen> {
                 children: [
                   if (generalReminders.isNotEmpty) ...[
                     _sectionHeader('Reminders', Icons.notifications_active_rounded),
-                    ...generalReminders.map((r) => _buildReminderCard(r)),
+                    ...generalReminders.map((r) => _buildReminderCard(r, _isHighlighted(r))),
                   ],
                   if (loanReminders.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     _sectionHeader('Loan reminders', Icons.account_balance_wallet_rounded),
-                    ...loanReminders.map((r) => _buildReminderCard(r)),
+                    ...loanReminders.map((r) => _buildReminderCard(r, _isHighlighted(r))),
                   ],
                   if (packageReminders.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     _sectionHeader('Package / subscription', Icons.card_membership_rounded),
-                    ...packageReminders.map((r) => _buildReminderCard(r)),
+                    ...packageReminders.map((r) => _buildReminderCard(r, _isHighlighted(r))),
                   ],
                 ],
               ),
@@ -199,7 +208,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
     );
   }
 
-  Widget _buildReminderCard(Reminder reminder) {
+  Widget _buildReminderCard(Reminder reminder, bool isHighlighted) {
     final isGeneral = reminder.type == ReminderType.general;
     final isLoan = reminder.type == ReminderType.loan;
     final effectiveDate = reminder.effectiveDate;
@@ -207,7 +216,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
         (effectiveDate.day != DateTime.now().day || effectiveDate.month != DateTime.now().month || effectiveDate.year != DateTime.now().year);
 
     Color borderColor = AppColors.surfaceVariant;
-    if (isPast) {
+    if (isHighlighted) {
+      borderColor = AppColors.primary;
+    } else if (isPast) {
       borderColor = AppColors.textMuted.withValues(alpha: 0.3);
     } else if (isGeneral) {
       borderColor = AppColors.primary.withValues(alpha: 0.3);
@@ -230,9 +241,23 @@ class _RemindersScreenState extends State<RemindersScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: isHighlighted
+            ? AppColors.primary.withValues(alpha: 0.08)
+            : AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor, width: 1),
+        border: Border.all(
+          color: borderColor,
+          width: isHighlighted ? 2 : 1,
+        ),
+        boxShadow: isHighlighted
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -261,6 +286,31 @@ class _RemindersScreenState extends State<RemindersScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (isHighlighted) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          margin: const EdgeInsets.only(bottom: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.notifications_active_rounded, size: 14, color: AppColors.primary),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Just notified',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       Text(
                         reminder.title,
                         style: GoogleFonts.inter(
