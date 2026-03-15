@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'dart:typed_data' show Int64List;
 import 'package:flutter/material.dart' show Color;
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -24,6 +25,8 @@ class NotificationService {
   static const String moneyManagerChannelId = 'money_manager_reminder';
   static const String todoListChannelId = 'todo_list_reminder';
   static const String remindersChannelId = 'reminders';
+  /// Dedicated channel for alarm-style reminder sound & vibration (Android 8+ ties these to the channel).
+  static const String remindersAlarmChannelId = 'reminders_alarm';
 
   static Future<void> init() async {
     try {
@@ -188,11 +191,25 @@ class NotificationService {
       const remindersChannel = AndroidNotificationChannel(
         remindersChannelId,
         'Reminders',
-        description: 'Loan due dates and package expiry reminders',
+        description: 'Alarm-style reminders – full screen, sound & vibration',
         importance: Importance.max,
         playSound: true,
         enableVibration: true,
         showBadge: true,
+      );
+
+      // Alarm-style channel: sound and vibration are set at channel level on Android 8+.
+      final alarmVibrationPattern = Int64List.fromList([0, 1000, 500, 1000, 500, 1000]);
+      final remindersAlarmChannel = AndroidNotificationChannel(
+        remindersAlarmChannelId,
+        'Reminder alarms',
+        description: 'Rings like an alarm – use for important reminders',
+        importance: Importance.max,
+        playSound: true,
+        enableVibration: true,
+        showBadge: true,
+        vibrationPattern: alarmVibrationPattern,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
       );
 
       final androidImplementation = _notifications
@@ -217,6 +234,11 @@ class NotificationService {
         await androidImplementation.createNotificationChannel(remindersChannel);
         developer.log(
           'Created reminders notification channel',
+          name: 'NotificationService',
+        );
+        await androidImplementation.createNotificationChannel(remindersAlarmChannel);
+        developer.log(
+          'Created reminders alarm channel (alarm sound & vibration)',
           name: 'NotificationService',
         );
       } else {
@@ -409,6 +431,39 @@ class NotificationService {
       largeIcon: largeIconDrawable == null
           ? null
           : DrawableResourceAndroidBitmap(largeIconDrawable),
+      subText: subText ?? 'Finzo • Reminder',
+    );
+  }
+
+  /// Alarm/call-style notification details for reminders. Uses dedicated channel so sound/vibration ring like alarm.
+  static AndroidNotificationDetails _reminderAlarmStyleDetails({
+    required String title,
+    required String body,
+    String? bigText,
+    String? subText,
+  }) {
+    return AndroidNotificationDetails(
+      remindersAlarmChannelId,
+      'Reminder alarms',
+      channelDescription: 'Rings like an alarm – use for important reminders',
+      importance: Importance.max,
+      priority: Priority.max,
+      category: AndroidNotificationCategory.alarm,
+      icon: 'ic_notification_white',
+      color: const Color(0xFFFFFFFF),
+      showWhen: true,
+      enableVibration: true,
+      playSound: true,
+      channelShowBadge: true,
+      autoCancel: true,
+      ongoing: false,
+      fullScreenIntent: true,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
+      styleInformation: BigTextStyleInformation(
+        bigText ?? body,
+        contentTitle: title,
+        summaryText: subText ?? 'Finzo • Reminder',
+      ),
       subText: subText ?? 'Finzo • Reminder',
     );
   }
@@ -656,10 +711,7 @@ class NotificationService {
         );
         return false;
       }
-      final androidDetails = _premiumAndroidDetails(
-        channelId: remindersChannelId,
-        channelName: 'Reminders',
-        channelDescription: 'Loan due dates and package expiry reminders',
+      final androidDetails = _reminderAlarmStyleDetails(
         title: title,
         body: body,
         bigText: body,
