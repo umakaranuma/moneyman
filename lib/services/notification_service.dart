@@ -25,6 +25,7 @@ class NotificationService {
   static const String moneyManagerChannelId = 'money_manager_reminder';
   static const String todoListChannelId = 'todo_list_reminder';
   static const String remindersChannelId = 'reminders';
+
   /// Dedicated channel for alarm-style reminder sound & vibration (Android 8+ ties these to the channel).
   static const String remindersAlarmChannelId = 'reminders_alarm';
 
@@ -199,7 +200,14 @@ class NotificationService {
       );
 
       // Alarm-style channel: sound and vibration are set at channel level on Android 8+.
-      final alarmVibrationPattern = Int64List.fromList([0, 1000, 500, 1000, 500, 1000]);
+      final alarmVibrationPattern = Int64List.fromList([
+        0,
+        1000,
+        500,
+        1000,
+        500,
+        1000,
+      ]);
       final remindersAlarmChannel = AndroidNotificationChannel(
         remindersAlarmChannelId,
         'Reminder alarms',
@@ -236,7 +244,9 @@ class NotificationService {
           'Created reminders notification channel',
           name: 'NotificationService',
         );
-        await androidImplementation.createNotificationChannel(remindersAlarmChannel);
+        await androidImplementation.createNotificationChannel(
+          remindersAlarmChannel,
+        );
         developer.log(
           'Created reminders alarm channel (alarm sound & vibration)',
           name: 'NotificationService',
@@ -481,8 +491,8 @@ class NotificationService {
         now.year,
         now.month,
         now.day,
-        1, // 5 AM
-        10, // 30 minutes
+        11, // 5 AM
+        20, // 30 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -573,21 +583,21 @@ class NotificationService {
     }
   }
 
-  /// Schedule daily notification at 10:00 PM (local time) for expenses and todo completion
+  /// Schedule daily notification at 9:00 PM (local time) for expenses and todo completion
   static Future<void> scheduleEveningExpensesReminder() async {
     try {
       // Use the current local timezone (set during init)
       final localLocation = tz.local;
       final now = tz.TZDateTime.now(localLocation);
 
-      // Schedule for 10:00 PM (22:00) local time
+      // Schedule for 9:00 PM (21:00) local time
       var scheduledDate = tz.TZDateTime(
         localLocation,
         now.year,
         now.month,
         now.day,
-        1, // 10 PM
-        20, // 0 minutes
+        11, // 9 PM
+        30, // 0 minutes
       );
 
       // If the time has already passed today, schedule for tomorrow
@@ -831,13 +841,13 @@ class NotificationService {
         30, // 30 minutes
       );
 
-      // Check if it's past 10:00 PM today (expenses notification)
+      // Check if it's past 9:00 PM today (expenses notification)
       final eveningTargetTime = tz.TZDateTime(
         localLocation,
         now.year,
         now.month,
         now.day,
-        22, // 10 PM
+        21, // 9 PM
         0, // 0 minutes
       );
 
