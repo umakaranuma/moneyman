@@ -113,7 +113,9 @@ class ReminderService {
         onDayScheduled.subtract(const Duration(days: 1)),
         recurrence,
       );
-      final repeatType = recurrence == ReminderRecurrence.monthly ? 'Monthly' : 'Annual';
+      final repeatType = recurrence == ReminderRecurrence.monthly
+          ? 'Monthly'
+          : 'Annual';
       final repeatComponents = recurrence == ReminderRecurrence.monthly
           ? DateTimeComponents.dayOfMonthAndTime
           : DateTimeComponents.dateAndTime;
@@ -137,21 +139,20 @@ class ReminderService {
       if (!scheduledDayBefore) idDayBefore = null;
 
       idOnDay = _nextId();
-      final scheduledOnDay =
-          await NotificationService.scheduleReminderNotification(
-            notificationId: idOnDay,
-            title: '🔔 ${reminder.title}',
-            body:
-                '${reminder.title} reminder is now (${_formatTime(hour, minute)}).',
-            scheduledDate: onDayScheduled,
-            bigText:
-                'Reminder: ${reminder.title}\n'
-                'Repeats: $repeatType\n'
-                'Time: ${_formatTime(hour, minute)}',
-            subText: 'Finzo • $repeatType',
-            largeIconDrawable: 'ic_notification_256',
-            matchDateTimeComponents: repeatComponents,
-          );
+      final scheduledOnDay = await NotificationService.scheduleReminderNotification(
+        notificationId: idOnDay,
+        title: '🔔 ${reminder.title}',
+        body:
+            '${reminder.title} reminder is now (${_formatTime(hour, minute)}).',
+        scheduledDate: onDayScheduled,
+        bigText:
+            'Reminder: ${reminder.title}\n'
+            'Repeats: $repeatType\n'
+            'Time: ${_formatTime(hour, minute)}',
+        subText: 'Finzo • $repeatType',
+        largeIconDrawable: 'ic_notification_256',
+        matchDateTimeComponents: repeatComponents,
+      );
       if (!scheduledOnDay) idOnDay = null;
 
       return reminder.copyWith(
