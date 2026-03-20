@@ -35,6 +35,8 @@ class TotalExportService {
     'finzo/downloads',
   );
   static bool _notificationsInitialized = false;
+  static const int _maxNotificationId = 2147483647;
+  static int _lastNotificationId = 0;
 
   static Future<String> exportExcel({
     required DateTime selectedMonth,
@@ -492,6 +494,11 @@ class TotalExportService {
     required String filePath,
   }) async {
     await _ensureNotificationsInitialized();
+    final canNotify = await _ensureNotificationPermission();
+    if (!canNotify) {
+      debugPrint('Notification permission not granted. Skipping notification.');
+      return;
+    }
 
     final androidDetails = AndroidNotificationDetails(
       'finzo_downloads',
@@ -515,12 +522,28 @@ class TotalExportService {
     );
 
     await _notifications.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      _nextNotificationId(),
       'Download complete',
       fileName,
       NotificationDetails(android: androidDetails, iOS: iosDetails),
       payload: filePath,
     );
+  }
+
+  static int _nextNotificationId() {
+    var now = DateTime.now().millisecondsSinceEpoch % _maxNotificationId;
+    if (now <= 0) {
+      now = 1;
+    }
+    if (now <= _lastNotificationId) {
+      _lastNotificationId += 1;
+      if (_lastNotificationId > _maxNotificationId) {
+        _lastNotificationId = 1;
+      }
+    } else {
+      _lastNotificationId = now;
+    }
+    return _lastNotificationId;
   }
 
   static Future<void> _tryShowDownloadNotification({
@@ -563,6 +586,29 @@ class TotalExportService {
       },
     );
     _notificationsInitialized = true;
+  }
+
+  static Future<bool> _ensureNotificationPermission() async {
+    if (!Platform.isAndroid) return true;
+    try {
+      final androidImpl = _notifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      if (androidImpl == null) return true;
+
+      final enabled = await androidImpl.areNotificationsEnabled();
+      if (enabled == true) return true;
+
+      final requested = await androidImpl.requestNotificationsPermission();
+      if (requested == true) return true;
+
+      final recheck = await androidImpl.areNotificationsEnabled();
+      return recheck == true;
+    } catch (error) {
+      debugPrint('Failed to request notification permission: $error');
+      return false;
+    }
   }
 }
 

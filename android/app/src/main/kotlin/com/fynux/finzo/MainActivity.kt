@@ -85,7 +85,10 @@ class MainActivity : FlutterActivity() {
                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             }
-                            startActivity(intent)
+                            val chooser = Intent.createChooser(intent, "Open with").apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            startActivity(chooser)
                             result.success(true)
                         } catch (e: ActivityNotFoundException) {
                             result.error("NO_APP", "No app found to open this file type", null)

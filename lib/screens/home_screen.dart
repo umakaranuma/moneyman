@@ -1697,21 +1697,13 @@ class _HomeScreenState extends State<HomeScreen>
                             onTap: () async {
                               Navigator.of(sheetContext).pop();
                               try {
-                                final filePath = await TotalExportService.exportExcel(
+                                await TotalExportService.exportExcel(
                                   selectedMonth: _selectedMonth,
                                   comparisonPercent: comparisonPercent,
                                   cashExpenses: cashExpenses,
                                   cardExpenses: cardExpenses,
                                   transfers: transfers,
                                   monthTransactions: monthTransactions,
-                                );
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Excel exported to: $filePath',
-                                    ),
-                                  ),
                                 );
                               } catch (error) {
                                 if (!mounted) return;
@@ -1732,19 +1724,13 @@ class _HomeScreenState extends State<HomeScreen>
                             onTap: () async {
                               Navigator.of(sheetContext).pop();
                               try {
-                                final filePath = await TotalExportService.exportPdf(
+                                await TotalExportService.exportPdf(
                                   selectedMonth: _selectedMonth,
                                   comparisonPercent: comparisonPercent,
                                   cashExpenses: cashExpenses,
                                   cardExpenses: cardExpenses,
                                   transfers: transfers,
                                   monthTransactions: monthTransactions,
-                                );
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('PDF exported to: $filePath'),
-                                  ),
                                 );
                               } catch (error) {
                                 if (!mounted) return;
