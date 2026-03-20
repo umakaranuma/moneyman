@@ -119,10 +119,67 @@ class TotalView extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           child: InkWell(
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Export coming soon'),
-                  behavior: SnackBarBehavior.floating,
+              showModalBottomSheet<void>(
+                context: context,
+                backgroundColor: AppColors.surface,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder: (sheetContext) => SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceVariant,
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Export data as',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.table_chart_rounded),
+                          title: const Text('Excel (.xlsx)'),
+                          onTap: () {
+                            Navigator.of(sheetContext).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Excel export coming soon'),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          },
+                        ),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.picture_as_pdf_rounded),
+                          title: const Text('PDF (.pdf)'),
+                          onTap: () {
+                            Navigator.of(sheetContext).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('PDF export coming soon'),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               );
             },
@@ -139,7 +196,7 @@ class TotalView extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'Export to Excel',
+                    'Export data',
                     style: TextStyle(
                       fontSize: 14,
                       color: AppColors.income,
