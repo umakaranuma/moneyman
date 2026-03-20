@@ -70,9 +70,10 @@ class ReminderService {
       if (recurrence == ReminderRecurrence.daily) {
         final now = DateTime.now();
         var scheduled = DateTime(now.year, now.month, now.day, hour, minute);
-        if (scheduled.isBefore(now)) {
-          scheduled = scheduled.add(const Duration(days: 1));
-        }
+        scheduled = _normalizeRecurringStart(
+          scheduled,
+          ReminderRecurrence.daily,
+        );
         final id = _nextId();
         final body = (reminder.note ?? reminder.title).trim().isNotEmpty
             ? (reminder.note ?? reminder.title)
@@ -104,8 +105,14 @@ class ReminderService {
 
       int? idDayBefore;
       int? idOnDay;
-      final onDayScheduled = DateTime(due.year, due.month, due.day, hour, minute);
-      final dayBefore = onDayScheduled.subtract(const Duration(days: 1));
+      final onDayScheduled = _normalizeRecurringStart(
+        DateTime(due.year, due.month, due.day, hour, minute),
+        recurrence,
+      );
+      final dayBefore = _normalizeRecurringStart(
+        onDayScheduled.subtract(const Duration(days: 1)),
+        recurrence,
+      );
       final repeatType = recurrence == ReminderRecurrence.monthly ? 'Monthly' : 'Annual';
       final repeatComponents = recurrence == ReminderRecurrence.monthly
           ? DateTimeComponents.dayOfMonthAndTime
@@ -270,6 +277,57 @@ class ReminderService {
 
   static String _formatTime(int h, int m) {
     return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+  }
+
+  static bool _isSameMinute(DateTime a, DateTime b) {
+    return a.year == b.year &&
+        a.month == b.month &&
+        a.day == b.day &&
+        a.hour == b.hour &&
+        a.minute == b.minute;
+  }
+
+  static DateTime _normalizeRecurringStart(
+    DateTime scheduled,
+    ReminderRecurrence recurrence,
+  ) {
+    final now = DateTime.now();
+    if (!scheduled.isBefore(now)) return scheduled;
+
+    if (_isSameMinute(scheduled, now)) {
+      return now.add(const Duration(seconds: 5));
+    }
+
+    if (recurrence == ReminderRecurrence.daily) {
+      while (!scheduled.isAfter(now)) {
+        scheduled = scheduled.add(const Duration(days: 1));
+      }
+      return scheduled;
+    }
+
+    if (recurrence == ReminderRecurrence.monthly) {
+      while (!scheduled.isAfter(now)) {
+        scheduled = DateTime(
+          scheduled.year,
+          scheduled.month + 1,
+          scheduled.day,
+          scheduled.hour,
+          scheduled.minute,
+        );
+      }
+      return scheduled;
+    }
+
+    while (!scheduled.isAfter(now)) {
+      scheduled = DateTime(
+        scheduled.year + 1,
+        scheduled.month,
+        scheduled.day,
+        scheduled.hour,
+        scheduled.minute,
+      );
+    }
+    return scheduled;
   }
 
   static Future<void> addReminder(Reminder reminder) async {

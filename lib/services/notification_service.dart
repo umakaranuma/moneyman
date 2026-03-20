@@ -7,6 +7,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
 import 'notification_navigation_handler.dart';
+import 'storage_service.dart';
 
 // Top-level function for background notification handler (runs in background isolate)
 @pragma('vm:entry-point')
@@ -112,12 +113,29 @@ class NotificationService {
       if (launchDetails?.didNotificationLaunchApp == true &&
           launchDetails?.notificationResponse != null) {
         final response = launchDetails!.notificationResponse!;
+        final signature = '${response.id ?? 0}|${response.payload ?? ''}';
+        final lastHandledSignature =
+            StorageService.getLastHandledNotificationLaunchSignature();
+        if (signature == lastHandledSignature) {
+          developer.log(
+            'Skipping duplicate notification launch route: $signature',
+            name: 'NotificationService',
+          );
+        } else {
         final route = NotificationNavigationHandler.routeFromNotification(
           response.id ?? 0,
           response.payload,
         );
         if (route != null && route.isNotEmpty) {
           NotificationNavigationHandler.setPendingRoute(route);
+          await StorageService.setLastHandledNotificationLaunchSignature(
+            signature,
+          );
+          developer.log(
+            'Notification launch route queued: $route',
+            name: 'NotificationService',
+          );
+        }
         }
       }
 

@@ -11,6 +11,8 @@ class StorageService {
   static const String _reminderBoxName = 'reminders';
   static const String _settingsBoxName = 'settings';
   static const String _keyDefaultCurrency = 'default_currency';
+  static const String _keyLastHandledNotificationLaunchSignature =
+      'last_handled_notification_launch_signature';
 
   /// Key and box for pending notification route (used by NotificationNavigationHandler; box name for background isolate).
   static const String pendingNotificationRouteKey = 'pending_notification_route';
@@ -54,6 +56,22 @@ class StorageService {
       await _settingsBox.delete(pendingNotificationRouteKey);
     }
     return v != null && v.toString().isNotEmpty ? v.toString() : null;
+  }
+
+  /// Signature of the last notification launch event handled on startup.
+  /// Used to avoid opening the same notification route again after normal app restarts.
+  static String? getLastHandledNotificationLaunchSignature() {
+    return _settingsBox.get(_keyLastHandledNotificationLaunchSignature) as String?;
+  }
+
+  static Future<void> setLastHandledNotificationLaunchSignature(
+    String? signature,
+  ) async {
+    if (signature == null || signature.isEmpty) {
+      await _settingsBox.delete(_keyLastHandledNotificationLaunchSignature);
+    } else {
+      await _settingsBox.put(_keyLastHandledNotificationLaunchSignature, signature);
+    }
   }
 
   // Transaction methods
