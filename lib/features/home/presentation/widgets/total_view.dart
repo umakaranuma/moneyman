@@ -157,7 +157,7 @@ class TotalView extends StatelessWidget {
                           onTap: () async {
                             Navigator.of(sheetContext).pop();
                             try {
-                              final filePath = await TotalExportService.exportExcel(
+                              await TotalExportService.exportExcel(
                                 selectedMonth: selectedMonth,
                                 comparisonPercent: comparisonPercent,
                                 cashExpenses: cashExpenses,
@@ -168,7 +168,7 @@ class TotalView extends StatelessWidget {
                               if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Excel exported to: $filePath'),
+                                  content: Text('Downloaded successfully'),
                                   behavior: SnackBarBehavior.floating,
                                 ),
                               );
@@ -176,7 +176,7 @@ class TotalView extends StatelessWidget {
                               if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Failed to export Excel: $error'),
+                                  content: Text('Download failed'),
                                   behavior: SnackBarBehavior.floating,
                                 ),
                               );
@@ -190,7 +190,7 @@ class TotalView extends StatelessWidget {
                           onTap: () async {
                             Navigator.of(sheetContext).pop();
                             try {
-                              final filePath = await TotalExportService.exportPdf(
+                              await TotalExportService.exportPdf(
                                 selectedMonth: selectedMonth,
                                 comparisonPercent: comparisonPercent,
                                 cashExpenses: cashExpenses,
@@ -201,7 +201,7 @@ class TotalView extends StatelessWidget {
                               if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('PDF exported to: $filePath'),
+                                  content: Text('Downloaded successfully'),
                                   behavior: SnackBarBehavior.floating,
                                 ),
                               );
@@ -209,7 +209,7 @@ class TotalView extends StatelessWidget {
                               if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Failed to export PDF: $error'),
+                                  content: Text('Download failed'),
                                   behavior: SnackBarBehavior.floating,
                                 ),
                               );
