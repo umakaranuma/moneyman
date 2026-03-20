@@ -219,14 +219,6 @@ class _AccountsScreenState extends State<AccountsScreen>
                       ),
                       const Divider(height: 1),
                       _buildActionTile(
-                        title: 'Modify Orders',
-                        onTap: () {
-                          Navigator.pop(context);
-                          _showModifyOrdersDialog();
-                        },
-                      ),
-                      const Divider(height: 1),
-                      _buildActionTile(
                         title: 'Delete Accounts',
                         isDestructive: true,
                         onTap: () {
@@ -334,18 +326,6 @@ class _AccountsScreenState extends State<AccountsScreen>
             _refreshKey++;
           });
         },
-      ),
-    );
-  }
-
-  void _showModifyOrdersDialog() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Modify Orders feature coming soon',
-          style: GoogleFonts.inter(),
-        ),
-        backgroundColor: AppColors.surface,
       ),
     );
   }
