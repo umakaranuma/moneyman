@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/storage_service.dart';
 import '../services/sms_service.dart';
+import '../services/total_export_service.dart';
 import '../services/budget_service.dart';
 import '../models/transaction.dart';
 import '../models/category.dart';
@@ -1693,30 +1694,66 @@ class _HomeScreenState extends State<HomeScreen>
                             contentPadding: EdgeInsets.zero,
                             leading: const Icon(Icons.table_chart_rounded),
                             title: const Text('Excel (.xlsx)'),
-                            onTap: () {
+                            onTap: () async {
                               Navigator.of(sheetContext).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Excel export will be available soon',
+                              try {
+                                final filePath = await TotalExportService.exportExcel(
+                                  selectedMonth: _selectedMonth,
+                                  comparisonPercent: comparisonPercent,
+                                  cashExpenses: cashExpenses,
+                                  cardExpenses: cardExpenses,
+                                  transfers: transfers,
+                                  monthTransactions: monthTransactions,
+                                );
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Excel exported to: $filePath',
+                                    ),
                                   ),
-                                ),
-                              );
+                                );
+                              } catch (error) {
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Failed to export Excel: $error',
+                                    ),
+                                  ),
+                                );
+                              }
                             },
                           ),
                           ListTile(
                             contentPadding: EdgeInsets.zero,
                             leading: const Icon(Icons.picture_as_pdf_rounded),
                             title: const Text('PDF (.pdf)'),
-                            onTap: () {
+                            onTap: () async {
                               Navigator.of(sheetContext).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'PDF export will be available soon',
+                              try {
+                                final filePath = await TotalExportService.exportPdf(
+                                  selectedMonth: _selectedMonth,
+                                  comparisonPercent: comparisonPercent,
+                                  cashExpenses: cashExpenses,
+                                  cardExpenses: cardExpenses,
+                                  transfers: transfers,
+                                  monthTransactions: monthTransactions,
+                                );
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('PDF exported to: $filePath'),
                                   ),
-                                ),
-                              );
+                                );
+                              } catch (error) {
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Failed to export PDF: $error'),
+                                  ),
+                                );
+                              }
                             },
                           ),
                         ],
