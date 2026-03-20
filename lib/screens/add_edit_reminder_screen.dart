@@ -19,38 +19,32 @@ class AddEditReminderScreen extends StatefulWidget {
 class _AddEditReminderScreenState extends State<AddEditReminderScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
-  late TextEditingController _amountController;
+  late TextEditingController _labelController;
   late TextEditingController _noteController;
 
-  late ReminderType _type;
+  late ReminderRecurrence _recurrence;
   late DateTime _dueDate;
   int? _dueTimeHour;
   int? _dueTimeMinute;
-  late DateTime _activationDate;
-  late DateTime _expiryDate;
 
   @override
   void initState() {
     super.initState();
     final r = widget.reminder;
     _titleController = TextEditingController(text: r?.title ?? '');
-    _amountController = TextEditingController(
-      text: r?.loanAmount != null ? r!.loanAmount!.toStringAsFixed(0) : '',
-    );
+    _labelController = TextEditingController(text: r?.label ?? '');
     _noteController = TextEditingController(text: r?.note ?? '');
 
-    _type = r?.type ?? ReminderType.general;
+    _recurrence = r?.recurrence ?? ReminderRecurrence.daily;
     _dueDate = r?.dueDate ?? DateTime.now().add(const Duration(days: 1));
     _dueTimeHour = r?.dueTimeHour;
     _dueTimeMinute = r?.dueTimeMinute;
-    _activationDate = r?.activationDate ?? DateTime.now();
-    _expiryDate = r?.expiryDate ?? DateTime.now().add(const Duration(days: 30));
   }
 
   @override
   void dispose() {
     _titleController.dispose();
-    _amountController.dispose();
+    _labelController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -107,71 +101,24 @@ class _AddEditReminderScreenState extends State<AddEditReminderScreen> {
     }
   }
 
-  Future<void> _pickActivationDate(BuildContext context) async {
-    final p = await showDatePicker(
-      context: context,
-      initialDate: _activationDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-      builder: (c, child) => Theme(
-        data: Theme.of(c).copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: AppColors.primary,
-            onPrimary: Colors.white,
-            surface: AppColors.surface,
-            onSurface: AppColors.textPrimary,
-          ),
-        ),
-        child: child!,
-      ),
-    );
-    if (p != null && mounted) setState(() => _activationDate = p);
-  }
-
-  Future<void> _pickExpiryDate(BuildContext context) async {
-    final p = await showDatePicker(
-      context: context,
-      initialDate: _expiryDate,
-      firstDate: _activationDate,
-      lastDate: DateTime(2100),
-      builder: (c, child) => Theme(
-        data: Theme.of(c).copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: AppColors.primary,
-            onPrimary: Colors.white,
-            surface: AppColors.surface,
-            onSurface: AppColors.textPrimary,
-          ),
-        ),
-        child: child!,
-      ),
-    );
-    if (p != null && mounted) setState(() => _expiryDate = p);
-  }
-
   void _save() async {
     if (!_formKey.currentState!.validate()) return;
 
     final now = DateTime.now();
     final id = widget.reminder?.id ?? Helpers.generateId();
-
-    double? amount;
-    if (_type == ReminderType.loan && _amountController.text.trim().isNotEmpty) {
-      amount = double.tryParse(_amountController.text.trim());
-    }
+    final normalizedLabel = _labelController.text.trim();
 
     final reminder = Reminder(
       id: id,
-      type: _type,
+      type: ReminderType.general,
       title: _titleController.text.trim(),
+      label: normalizedLabel.isEmpty ? null : normalizedLabel,
       createdAt: widget.reminder?.createdAt ?? now,
-      dueDate: _type == ReminderType.general || _type == ReminderType.loan ? _dueDate : null,
-      dueTimeHour: _type == ReminderType.general || _type == ReminderType.loan ? _dueTimeHour : null,
-      dueTimeMinute: _type == ReminderType.general || _type == ReminderType.loan ? _dueTimeMinute : null,
-      loanAmount: amount,
+      dueDate: _dueDate,
+      dueTimeHour: _dueTimeHour,
+      dueTimeMinute: _dueTimeMinute,
+      recurrence: _recurrence,
       note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
-      activationDate: _type == ReminderType.package ? _activationDate : null,
-      expiryDate: _type == ReminderType.package ? _expiryDate : null,
     );
 
     if (widget.reminder != null) {
@@ -243,13 +190,12 @@ class _AddEditReminderScreenState extends State<AddEditReminderScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Type selector
             _card(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Type',
+                    'Repeat',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       color: AppColors.textMuted,
@@ -261,17 +207,15 @@ class _AddEditReminderScreenState extends State<AddEditReminderScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _typeChip(ReminderType.general, 'Date & time'),
-                      _typeChip(ReminderType.loan, 'Loan due date'),
-                      _typeChip(ReminderType.package, 'Package'),
+                      _recurrenceChip(ReminderRecurrence.daily, 'Daily'),
+                      _recurrenceChip(ReminderRecurrence.monthly, 'Monthly'),
+                      _recurrenceChip(ReminderRecurrence.annually, 'Annually'),
                     ],
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-
-            // Title
             _card(
               child: TextFormField(
                 controller: _titleController,
@@ -281,11 +225,7 @@ class _AddEditReminderScreenState extends State<AddEditReminderScreen> {
                   fontWeight: FontWeight.w600,
                 ),
                 decoration: InputDecoration(
-                  hintText: _type == ReminderType.general
-                      ? 'e.g. Call mom'
-                      : _type == ReminderType.loan
-                          ? 'e.g. John\'s loan'
-                          : 'e.g. Cursor subscription',
+                  hintText: 'e.g. Pay internet bill',
                   hintStyle: GoogleFonts.inter(color: AppColors.textMuted),
                   border: InputBorder.none,
                   labelText: 'Title',
@@ -298,104 +238,70 @@ class _AddEditReminderScreenState extends State<AddEditReminderScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
-            if (_type == ReminderType.general) ...[
-              _dateTimeCard(
-                label: 'Date & time',
-                date: _dueDate,
-                onDateTap: () { _pickDueDate(context); },
-                showTime: true,
-                timeLabel: _dueTimeHour != null
-                    ? '${_dueTimeHour.toString().padLeft(2, '0')}:${(_dueTimeMinute ?? 0).toString().padLeft(2, '0')}'
-                    : 'Set time',
-                onTimeTap: () { _pickTime(context); },
-              ),
-              const SizedBox(height: 16),
-              _card(
-                child: TextFormField(
-                  controller: _noteController,
-                  maxLines: 3,
-                  style: GoogleFonts.inter(color: AppColors.textPrimary),
-                  decoration: const InputDecoration(
-                    hintText: 'Description (optional)',
-                    border: InputBorder.none,
-                    labelText: 'Description',
-                    labelStyle: TextStyle(color: AppColors.textMuted, fontSize: 12),
-                  ),
+            _card(
+              child: TextFormField(
+                controller: _labelController,
+                style: GoogleFonts.inter(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  hintText: 'e.g. Bills (optional)',
+                  hintStyle: GoogleFonts.inter(color: AppColors.textMuted),
+                  border: InputBorder.none,
+                  labelText: 'Label',
+                  labelStyle: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 12),
                 ),
               ),
-            ] else if (_type == ReminderType.loan) ...[
-              _dateTimeCard(
-                label: 'Due date',
-                date: _dueDate,
-                onDateTap: () { _pickDueDate(context); },
-                showTime: true,
-                timeLabel: _dueTimeHour != null
-                    ? '${_dueTimeHour.toString().padLeft(2, '0')}:${(_dueTimeMinute ?? 0).toString().padLeft(2, '0')}'
-                    : 'Set time (optional)',
-                onTimeTap: () { _pickTime(context); },
-              ),
-              const SizedBox(height: 16),
-              _card(
-                child: TextFormField(
-                  controller: _amountController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: GoogleFonts.inter(color: AppColors.textPrimary),
-                  decoration: InputDecoration(
-                    hintText: 'Loan amount (optional)',
-                    hintStyle: GoogleFonts.inter(color: AppColors.textMuted),
-                    border: InputBorder.none,
-                    prefixText: 'Rs. ',
-                    prefixStyle: GoogleFonts.inter(color: AppColors.textSecondary),
-                  ),
+            ),
+            const SizedBox(height: 16),
+            _dateTimeCard(
+              label: 'Date & time',
+              date: _dueDate,
+              onDateTap: () {
+                _pickDueDate(context);
+              },
+              showTime: true,
+              timeLabel: _dueTimeHour != null
+                  ? '${_dueTimeHour.toString().padLeft(2, '0')}:${(_dueTimeMinute ?? 0).toString().padLeft(2, '0')}'
+                  : 'Set time',
+              onTimeTap: () {
+                _pickTime(context);
+              },
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 12),
+              child: Text(
+                _recurrence == ReminderRecurrence.daily
+                    ? 'Daily reminders notify every day at the selected time.'
+                    : 'You will be notified one day before and on the day at the selected time.',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.textMuted,
                 ),
               ),
-              const SizedBox(height: 16),
-              _card(
-                child: TextFormField(
-                  controller: _noteController,
-                  maxLines: 2,
-                  style: GoogleFonts.inter(color: AppColors.textPrimary),
-                  decoration: const InputDecoration(
-                    hintText: 'Note (optional)',
-                    border: InputBorder.none,
-                  ),
+            ),
+            _card(
+              child: TextFormField(
+                controller: _noteController,
+                maxLines: 3,
+                style: GoogleFonts.inter(color: AppColors.textPrimary),
+                decoration: const InputDecoration(
+                  hintText: 'Description (optional)',
+                  border: InputBorder.none,
+                  labelText: 'Description',
+                  labelStyle: TextStyle(color: AppColors.textMuted, fontSize: 12),
                 ),
               ),
-            ] else ...[
-              _dateTimeCard(
-                label: 'Activated on',
-                date: _activationDate,
-                onDateTap: () { _pickActivationDate(context); },
-              ),
-              const SizedBox(height: 12),
-              _dateTimeCard(
-                label: 'Expires on',
-                date: _expiryDate,
-                onDateTap: () { _pickExpiryDate(context); },
-              ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.only(left: 4),
-                child: Text(
-                  'You\'ll get a notification the day before expiry: "Your [title] was activated on [date], it will expire tomorrow – renew or activate."',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _typeChip(ReminderType type, String label) {
-    final selected = _type == type;
+  Widget _recurrenceChip(ReminderRecurrence recurrence, String label) {
+    final selected = _recurrence == recurrence;
     return GestureDetector(
-      onTap: () => setState(() => _type = type),
+      onTap: () => setState(() => _recurrence = recurrence),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(

@@ -73,10 +73,6 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final generalReminders = _reminders.where((r) => r.type == ReminderType.general).toList();
-    final loanReminders = _reminders.where((r) => r.type == ReminderType.loan).toList();
-    final packageReminders = _reminders.where((r) => r.type == ReminderType.package).toList();
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -131,20 +127,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                 children: [
-                  if (generalReminders.isNotEmpty) ...[
-                    _sectionHeader('Reminders', Icons.notifications_active_rounded),
-                    ...generalReminders.map((r) => _buildReminderCard(r, _isHighlighted(r))),
-                  ],
-                  if (loanReminders.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    _sectionHeader('Loan reminders', Icons.account_balance_wallet_rounded),
-                    ...loanReminders.map((r) => _buildReminderCard(r, _isHighlighted(r))),
-                  ],
-                  if (packageReminders.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    _sectionHeader('Package / subscription', Icons.card_membership_rounded),
-                    ...packageReminders.map((r) => _buildReminderCard(r, _isHighlighted(r))),
-                  ],
+                  _sectionHeader('Reminders', Icons.notifications_active_rounded),
+                  ..._reminders.map((r) => _buildReminderCard(r, _isHighlighted(r))),
                 ],
               ),
             ),
@@ -209,8 +193,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
   }
 
   Widget _buildReminderCard(Reminder reminder, bool isHighlighted) {
-    final isGeneral = reminder.type == ReminderType.general;
-    final isLoan = reminder.type == ReminderType.loan;
+    final rawLabel = reminder.label?.trim();
+    final displayLabel =
+        (rawLabel != null && rawLabel.isNotEmpty) ? rawLabel : 'Reminder';
     final effectiveDate = reminder.effectiveDate;
     final isPast = effectiveDate != null && effectiveDate.isBefore(DateTime.now()) &&
         (effectiveDate.day != DateTime.now().day || effectiveDate.month != DateTime.now().month || effectiveDate.year != DateTime.now().year);
@@ -220,23 +205,14 @@ class _RemindersScreenState extends State<RemindersScreen> {
       borderColor = AppColors.primary;
     } else if (isPast) {
       borderColor = AppColors.textMuted.withValues(alpha: 0.3);
-    } else if (isGeneral) {
+    } else if (reminder.type == ReminderType.general) {
       borderColor = AppColors.primary.withValues(alpha: 0.3);
-    } else if (isLoan) {
-      borderColor = AppColors.expense.withValues(alpha: 0.3);
     } else {
-      borderColor = AppColors.secondary.withValues(alpha: 0.3);
+      borderColor = AppColors.primary.withValues(alpha: 0.2);
     }
 
-    IconData icon = Icons.notifications_rounded;
-    Color iconColor = AppColors.primary;
-    if (isLoan) {
-      icon = Icons.account_balance_wallet_rounded;
-      iconColor = AppColors.expense;
-    } else if (reminder.type == ReminderType.package) {
-      icon = Icons.card_membership_rounded;
-      iconColor = AppColors.secondary;
-    }
+    const icon = Icons.notifications_rounded;
+    final iconColor = AppColors.primary;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -271,7 +247,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
@@ -311,6 +287,17 @@ class _RemindersScreenState extends State<RemindersScreen> {
                           ),
                         ),
                       ],
+                      if (reminder.type == ReminderType.general) ...[
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            _labelPill(displayLabel),
+                            _metaPill(_generalRecurrenceLabel(reminder.recurrence)),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                      ],
                       Text(
                         reminder.title,
                         style: GoogleFonts.inter(
@@ -320,7 +307,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      if (isGeneral && reminder.dueDate != null) ...[
+                      if (reminder.dueDate != null) ...[
                         Text(
                           '${DateFormat('dd.MM.yyyy').format(reminder.dueDate!)}'
                               '${reminder.dueTimeHour != null ? " at ${reminder.dueTimeHour!.toString().padLeft(2, '0')}:${(reminder.dueTimeMinute ?? 0).toString().padLeft(2, '0')}" : ""}',
@@ -342,40 +329,6 @@ class _RemindersScreenState extends State<RemindersScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                      ] else if (isLoan && reminder.dueDate != null) ...[
-                        Text(
-                          'Due: ${DateFormat('dd.MM.yyyy').format(reminder.dueDate!)}'
-                              '${reminder.dueTimeHour != null ? " at ${reminder.dueTimeHour!.toString().padLeft(2, '0')}:${(reminder.dueTimeMinute ?? 0).toString().padLeft(2, '0')}" : ""}',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        if (reminder.loanAmount != null)
-                          Text(
-                            'Rs. ${reminder.loanAmount!.toStringAsFixed(0)}',
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.expense,
-                            ),
-                          ),
-                      ] else if (reminder.type == ReminderType.package && reminder.expiryDate != null) ...[
-                        Text(
-                          'Expires: ${DateFormat('dd.MM.yyyy').format(reminder.expiryDate!)}',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        if (reminder.activationDate != null)
-                          Text(
-                            'Activated: ${DateFormat('dd.MM.yyyy').format(reminder.activationDate!)}',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: AppColors.textMuted,
-                            ),
-                          ),
                       ],
                     ],
                   ),
@@ -388,6 +341,56 @@ class _RemindersScreenState extends State<RemindersScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  String _generalRecurrenceLabel(ReminderRecurrence recurrence) {
+    switch (recurrence) {
+      case ReminderRecurrence.daily:
+        return 'Daily';
+      case ReminderRecurrence.monthly:
+        return 'Monthly';
+      case ReminderRecurrence.annually:
+        return 'Annually';
+    }
+  }
+
+  Widget _metaPill(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textSecondary,
+        ),
+      ),
+    );
+  }
+
+  Widget _labelPill(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: AppColors.primary,
+          width: 1.2,
+        ),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: AppColors.primary,
         ),
       ),
     );

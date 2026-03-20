@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../models/reminder.dart';
 import 'storage_service.dart';
 import 'notification_service.dart';
@@ -48,46 +49,107 @@ class ReminderService {
     }
   }
 
-  /// Schedules notifications: for general = one at date+time; for loan = day-before + on-day; for package = day-before expiry.
+  /// Schedules notifications:
+  /// - general daily = repeats every day at selected time
+  /// - general monthly/annually = day-before + on-day at selected time
+  /// - loan = day-before + on-day
+  /// - package = day-before expiry
   static Future<Reminder> scheduleNotificationsForReminder(
     Reminder reminder,
   ) async {
     await _cancelReminderNotifications(reminder);
 
-    // General reminder: single notification at the chosen date and time
+    // General reminder recurrence scheduling.
     if (reminder.type == ReminderType.general) {
       final due = reminder.dueDate;
       if (due == null) return reminder;
       final hour = reminder.dueTimeHour ?? 9;
       final minute = reminder.dueTimeMinute ?? 0;
-      final scheduled = DateTime(due.year, due.month, due.day, hour, minute);
-      final id = _nextId();
-      final dateStr = _formatDate(due);
-      final timeStr = _formatTime(hour, minute);
-      final body = (reminder.note ?? reminder.title).trim().isNotEmpty
-          ? (reminder.note ?? reminder.title)
-          : 'Reminder: ${reminder.title}';
-      final bigText = StringBuffer()
-        ..writeln('When: $dateStr at $timeStr')
-        ..writeln()
-        ..write(
-          reminder.note?.trim().isNotEmpty == true
-              ? 'Note: ${reminder.note}'
-              : 'Reminder: ${reminder.title}',
-        );
-      final scheduledOk =
-          await NotificationService.scheduleReminderNotification(
-            notificationId: id,
-            title: '🔔 ${reminder.title}',
-            body: body,
-            scheduledDate: scheduled,
-            bigText: bigText.toString(),
-            subText: 'Finzo • Reminder',
-            largeIconDrawable: 'ic_notification_256',
+      final recurrence = reminder.recurrence;
+
+      if (recurrence == ReminderRecurrence.daily) {
+        final now = DateTime.now();
+        var scheduled = DateTime(now.year, now.month, now.day, hour, minute);
+        if (scheduled.isBefore(now)) {
+          scheduled = scheduled.add(const Duration(days: 1));
+        }
+        final id = _nextId();
+        final body = (reminder.note ?? reminder.title).trim().isNotEmpty
+            ? (reminder.note ?? reminder.title)
+            : 'Reminder: ${reminder.title}';
+        final bigText = StringBuffer()
+          ..writeln('Repeats: Daily at ${_formatTime(hour, minute)}')
+          ..writeln()
+          ..write(
+            reminder.note?.trim().isNotEmpty == true
+                ? 'Note: ${reminder.note}'
+                : 'Reminder: ${reminder.title}',
           );
+        final scheduledOk =
+            await NotificationService.scheduleReminderNotification(
+              notificationId: id,
+              title: '🔔 ${reminder.title}',
+              body: body,
+              scheduledDate: scheduled,
+              bigText: bigText.toString(),
+              subText: 'Finzo • Daily',
+              largeIconDrawable: 'ic_notification_256',
+              matchDateTimeComponents: DateTimeComponents.time,
+            );
+        return reminder.copyWith(
+          notificationIdDayBefore: scheduledOk ? id : null,
+          notificationIdOnDay: null,
+        );
+      }
+
+      int? idDayBefore;
+      int? idOnDay;
+      final onDayScheduled = DateTime(due.year, due.month, due.day, hour, minute);
+      final dayBefore = onDayScheduled.subtract(const Duration(days: 1));
+      final repeatType = recurrence == ReminderRecurrence.monthly ? 'Monthly' : 'Annual';
+      final repeatComponents = recurrence == ReminderRecurrence.monthly
+          ? DateTimeComponents.dayOfMonthAndTime
+          : DateTimeComponents.dateAndTime;
+
+      idDayBefore = _nextId();
+      final scheduledDayBefore =
+          await NotificationService.scheduleReminderNotification(
+            notificationId: idDayBefore,
+            title: '⏰ ${reminder.title} is tomorrow',
+            body:
+                '${reminder.title} reminder is tomorrow at ${_formatTime(hour, minute)}.',
+            scheduledDate: dayBefore,
+            bigText:
+                'Reminder: ${reminder.title}\n'
+                'Repeats: $repeatType\n'
+                'Next alert: tomorrow at ${_formatTime(hour, minute)}',
+            subText: 'Finzo • $repeatType',
+            largeIconDrawable: 'ic_notification_256',
+            matchDateTimeComponents: repeatComponents,
+          );
+      if (!scheduledDayBefore) idDayBefore = null;
+
+      idOnDay = _nextId();
+      final scheduledOnDay =
+          await NotificationService.scheduleReminderNotification(
+            notificationId: idOnDay,
+            title: '🔔 ${reminder.title}',
+            body:
+                '${reminder.title} reminder is now (${_formatTime(hour, minute)}).',
+            scheduledDate: onDayScheduled,
+            bigText:
+                'Reminder: ${reminder.title}\n'
+                'Repeats: $repeatType\n'
+                'Time: ${_formatTime(hour, minute)}',
+            subText: 'Finzo • $repeatType',
+            largeIconDrawable: 'ic_notification_256',
+            matchDateTimeComponents: repeatComponents,
+          );
+      if (!scheduledOnDay) idOnDay = null;
+
       return reminder.copyWith(
-        notificationIdDayBefore: scheduledOk ? id : null,
-        notificationIdOnDay: null,
+        notificationIdDayBefore: idDayBefore,
+        notificationIdOnDay: idOnDay,
       );
     }
 

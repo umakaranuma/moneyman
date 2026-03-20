@@ -6,11 +6,19 @@ enum ReminderType {
   package,
 }
 
+/// Recurrence for general reminders.
+enum ReminderRecurrence {
+  daily,
+  monthly,
+  annually,
+}
+
 /// A reminder for either a loan due date or a package/subscription expiry.
 class Reminder {
   final String id;
   final ReminderType type;
   final String title;
+  final String? label;
   final DateTime createdAt;
 
   // Loan: due date and time, amount, optional note
@@ -19,6 +27,7 @@ class Reminder {
   final int? dueTimeMinute; // 0-59
   final double? loanAmount;
   final String? note;
+  final ReminderRecurrence recurrence;
 
   // Package: activation date, expiry date
   final DateTime? activationDate;
@@ -32,12 +41,14 @@ class Reminder {
     required this.id,
     required this.type,
     required this.title,
+    this.label,
     required this.createdAt,
     this.dueDate,
     this.dueTimeHour,
     this.dueTimeMinute,
     this.loanAmount,
     this.note,
+    this.recurrence = ReminderRecurrence.daily,
     this.activationDate,
     this.expiryDate,
     this.notificationIdDayBefore,
@@ -56,12 +67,14 @@ class Reminder {
       'id': id,
       'type': type.name,
       'title': title,
+      'label': label,
       'createdAt': createdAt.toIso8601String(),
       'dueDate': dueDate?.toIso8601String(),
       'dueTimeHour': dueTimeHour,
       'dueTimeMinute': dueTimeMinute,
       'loanAmount': loanAmount,
       'note': note,
+      'recurrence': recurrence.name,
       'activationDate': activationDate?.toIso8601String(),
       'expiryDate': expiryDate?.toIso8601String(),
       'notificationIdDayBefore': notificationIdDayBefore,
@@ -77,6 +90,7 @@ class Reminder {
         orElse: () => ReminderType.loan,
       ),
       title: json['title'] as String,
+      label: json['label'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       dueDate: json['dueDate'] != null
           ? DateTime.parse(json['dueDate'] as String)
@@ -85,6 +99,10 @@ class Reminder {
       dueTimeMinute: json['dueTimeMinute'] as int?,
       loanAmount: (json['loanAmount'] as num?)?.toDouble(),
       note: json['note'] as String?,
+      recurrence: ReminderRecurrence.values.firstWhere(
+        (e) => e.name == json['recurrence'],
+        orElse: () => ReminderRecurrence.daily,
+      ),
       activationDate: json['activationDate'] != null
           ? DateTime.parse(json['activationDate'] as String)
           : null,
@@ -100,12 +118,14 @@ class Reminder {
     String? id,
     ReminderType? type,
     String? title,
+    String? label,
     DateTime? createdAt,
     DateTime? dueDate,
     int? dueTimeHour,
     int? dueTimeMinute,
     double? loanAmount,
     String? note,
+    ReminderRecurrence? recurrence,
     DateTime? activationDate,
     DateTime? expiryDate,
     int? notificationIdDayBefore,
@@ -115,12 +135,14 @@ class Reminder {
       id: id ?? this.id,
       type: type ?? this.type,
       title: title ?? this.title,
+      label: label ?? this.label,
       createdAt: createdAt ?? this.createdAt,
       dueDate: dueDate ?? this.dueDate,
       dueTimeHour: dueTimeHour ?? this.dueTimeHour,
       dueTimeMinute: dueTimeMinute ?? this.dueTimeMinute,
       loanAmount: loanAmount ?? this.loanAmount,
       note: note ?? this.note,
+      recurrence: recurrence ?? this.recurrence,
       activationDate: activationDate ?? this.activationDate,
       expiryDate: expiryDate ?? this.expiryDate,
       notificationIdDayBefore:

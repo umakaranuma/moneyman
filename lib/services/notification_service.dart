@@ -743,6 +743,7 @@ class NotificationService {
     required String title,
     required String body,
     required DateTime scheduledDate,
+    DateTimeComponents? matchDateTimeComponents,
     String? bigText,
     String? subText,
     String? largeIconDrawable,
@@ -789,6 +790,7 @@ class NotificationService {
             androidScheduleMode: mode,
             uiLocalNotificationDateInterpretation:
                 UILocalNotificationDateInterpretation.absoluteTime,
+            matchDateTimeComponents: matchDateTimeComponents,
           );
           developer.log(
             'Scheduled reminder $notificationId at $scheduledDate',
