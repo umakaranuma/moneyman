@@ -91,336 +91,486 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Configuration',
           style: GoogleFonts.inter(
-            fontSize: 28,
+            fontSize: 24,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
           ),
         ),
       ),
-      body: ListView(
-        children: [
-          _buildSectionHeader('Category/Repeat'),
-          _buildItem(
-            title: 'Income Category Setting',
-            onTap: () => context.goToCategories(isExpense: false),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle('Category & Budget'),
+              _buildCard([
+                _buildSettingItem(
+                  icon: Icons.account_balance_wallet_rounded,
+                  iconColor: AppColors.income,
+                  title: 'Income Category Setting',
+                  onTap: () => context.goToCategories(isExpense: false),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.shopping_bag_rounded,
+                  iconColor: AppColors.expense,
+                  title: 'Expenses Category Setting',
+                  onTap: () => context.goToCategories(isExpense: true),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.account_tree_rounded,
+                  iconColor: Colors.purpleAccent,
+                  title: 'Subcategory',
+                  trailing: Switch(
+                    value: _subcategoryEnabled,
+                    activeColor: AppColors.primary,
+                    onChanged: (value) async {
+                      await StorageService.setConfigSubcategoryEnabled(value);
+                      if (!mounted) return;
+                      setState(() => _subcategoryEnabled = value);
+                    },
+                  ),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.pie_chart_rounded,
+                  iconColor: Colors.orangeAccent,
+                  title: 'Budget Setting',
+                  onTap: () => context.goToBudgetSetting(),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.update_rounded,
+                  iconColor: Colors.blueAccent,
+                  title: 'Repeat Setting',
+                  onTap: () => context.goToReminders(),
+                ),
+              ]),
+              const SizedBox(height: 24),
+              _buildSectionTitle('General Configuration'),
+              _buildCard([
+                _buildSettingItem(
+                  icon: Icons.currency_exchange_rounded,
+                  iconColor: AppColors.primary,
+                  title: 'Main Currency',
+                  subtitle: _mainCurrency,
+                  onTap: _pickMainCurrency,
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.monetization_on_rounded,
+                  iconColor: AppColors.secondary,
+                  title: 'Sub Currency',
+                  subtitle: _subCurrency,
+                  onTap: () => _pickStringOption(
+                    title: 'Sub Currency',
+                    options: ['\$ ', 'Rs.', '€', '£', '¥'],
+                    currentValue: _subCurrency,
+                    onSelected: (value) async {
+                      await StorageService.setConfigSubCurrency(value);
+                      if (!mounted) return;
+                      setState(() => _subCurrency = value);
+                    },
+                  ),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.home_rounded,
+                  iconColor: Colors.indigoAccent,
+                  title: 'Start Screen',
+                  subtitle: _startScreen,
+                  onTap: () => _pickStringOption(
+                    title: 'Start Screen',
+                    options: ['Daily', 'Calendar'],
+                    currentValue: _startScreen,
+                    onSelected: (value) async {
+                      await StorageService.setConfigStartScreen(value);
+                      if (!mounted) return;
+                      setState(() => _startScreen = value);
+                    },
+                  ),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.calendar_today_rounded,
+                  iconColor: Colors.tealAccent,
+                  title: 'Monthly Start Date',
+                  subtitle: 'Every $_monthlyStartDate',
+                  onTap: () => _pickStringOption(
+                    title: 'Monthly Start Date',
+                    options: List<String>.generate(
+                      28,
+                      (index) => 'Every ${index + 1}',
+                    ),
+                    currentValue: 'Every $_monthlyStartDate',
+                    onSelected: (value) async {
+                      final day =
+                          int.tryParse(value.replaceAll('Every ', '')) ?? 1;
+                      await StorageService.setConfigMonthlyStartDate(day);
+                      if (!mounted) return;
+                      setState(() => _monthlyStartDate = day);
+                    },
+                  ),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.date_range_rounded,
+                  iconColor: Colors.brown,
+                  title: 'Weekly Start Day',
+                  subtitle: _weeklyStartDay,
+                  onTap: () => _pickStringOption(
+                    title: 'Weekly Start Day',
+                    options: [
+                      'Sunday',
+                      'Monday',
+                      'Tuesday',
+                      'Wednesday',
+                      'Thursday',
+                      'Friday',
+                      'Saturday',
+                    ],
+                    currentValue: _weeklyStartDay,
+                    onSelected: (value) async {
+                      await StorageService.setConfigWeeklyStartDay(value);
+                      if (!mounted) return;
+                      setState(() => _weeklyStartDay = value);
+                    },
+                  ),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.forward_rounded,
+                  iconColor: Colors.lightGreen,
+                  title: 'Carry-over Setting',
+                  trailing: Switch(
+                    value: _carryOverEnabled,
+                    activeColor: AppColors.primary,
+                    onChanged: (value) async {
+                      await StorageService.setConfigCarryOverEnabled(value);
+                      if (!mounted) return;
+                      setState(() => _carryOverEnabled = value);
+                    },
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 24),
+              _buildSectionTitle('Input & Display'),
+              _buildCard([
+                _buildSettingItem(
+                  icon: Icons.swipe_rounded,
+                  iconColor: Colors.deepPurple,
+                  title: 'Swipe Mode',
+                  subtitle: _swipeMode,
+                  onTap: () => _pickStringOption(
+                    title: 'Swipe',
+                    options: ['To Change Date', 'Disabled'],
+                    currentValue: _swipeMode,
+                    onSelected: (value) async {
+                      await StorageService.setConfigSwipeMode(value);
+                      if (!mounted) return;
+                      setState(() => _swipeMode = value);
+                    },
+                  ),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.palette_rounded,
+                  iconColor: Colors.pinkAccent,
+                  title: 'Income-Expenses Color',
+                  subtitle: _colorSetting,
+                  onTap: () => _pickStringOption(
+                    title: 'Color Setting',
+                    options: const ['Set. A', 'Set. B', 'Set. C'],
+                    currentValue: _colorSetting,
+                    onSelected: (value) async {
+                      await StorageService.setConfigColorSetting(value);
+                      if (!mounted) return;
+                      setState(() => _colorSetting = value);
+                    },
+                  ),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.access_time_rounded,
+                  iconColor: Colors.amber,
+                  title: 'Time Input Method',
+                  subtitle: _timeInput,
+                  onTap: () => _pickStringOption(
+                    title: 'Time Input',
+                    options: ['Input Only, Desc.', 'Input + Time', 'No Time'],
+                    currentValue: _timeInput,
+                    onSelected: (value) async {
+                      await StorageService.setConfigTimeInput(value);
+                      if (!mounted) return;
+                      setState(() => _timeInput = value);
+                    },
+                  ),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.description_rounded,
+                  iconColor: Colors.blueGrey,
+                  title: 'Show Description',
+                  trailing: Switch(
+                    value: _showDescription,
+                    activeColor: AppColors.primary,
+                    onChanged: (value) async {
+                      await StorageService.setConfigShowDescription(value);
+                      if (!mounted) return;
+                      setState(() => _showDescription = value);
+                    },
+                  ),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.auto_awesome_rounded,
+                  iconColor: Colors.yellow,
+                  title: 'Autocomplete',
+                  trailing: Switch(
+                    value: _autocomplete,
+                    activeColor: AppColors.primary,
+                    onChanged: (value) async {
+                      await StorageService.setConfigAutocomplete(value);
+                      if (!mounted) return;
+                      setState(() => _autocomplete = value);
+                    },
+                  ),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.sort_rounded,
+                  iconColor: Colors.cyan,
+                  title: 'Input Order',
+                  subtitle: _inputOrder,
+                  onTap: () => _pickStringOption(
+                    title: 'Input Order',
+                    options: const ['From Amount', 'From Category'],
+                    currentValue: _inputOrder,
+                    onSelected: (value) async {
+                      await StorageService.setConfigInputOrder(value);
+                      if (!mounted) return;
+                      setState(() => _inputOrder = value);
+                    },
+                  ),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.note_add_rounded,
+                  iconColor: Colors.lime,
+                  title: 'Note Button',
+                  trailing: Switch(
+                    value: _noteButtonEnabled,
+                    activeColor: AppColors.primary,
+                    onChanged: (value) async {
+                      await StorageService.setConfigNoteButtonEnabled(value);
+                      if (!mounted) return;
+                      setState(() => _noteButtonEnabled = value);
+                    },
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 24),
+              _buildSectionTitle('Security & Other'),
+              _buildCard([
+                _buildSettingItem(
+                  icon: Icons.lock_rounded,
+                  iconColor: Colors.redAccent,
+                  title: 'Passcode',
+                  trailing: Switch(
+                    value: _passcodeEnabled,
+                    activeColor: AppColors.primary,
+                    onChanged: (value) async {
+                      await StorageService.setConfigPasscodeEnabled(value);
+                      if (!mounted) return;
+                      setState(() => _passcodeEnabled = value);
+                    },
+                  ),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.alarm_rounded,
+                  iconColor: Colors.orange,
+                  title: 'Alarm Setting',
+                  trailing: Switch(
+                    value: _alarmEnabled,
+                    activeColor: AppColors.primary,
+                    onChanged: (value) async {
+                      await StorageService.setConfigAlarmEnabled(value);
+                      if (!mounted) return;
+                      setState(() => _alarmEnabled = value);
+                    },
+                  ),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.add_circle_rounded,
+                  iconColor: Colors.greenAccent,
+                  title: 'Quick Add',
+                  trailing: Switch(
+                    value: _quickAddEnabled,
+                    activeColor: AppColors.primary,
+                    onChanged: (value) async {
+                      await StorageService.setConfigQuickAddEnabled(value);
+                      if (!mounted) return;
+                      setState(() => _quickAddEnabled = value);
+                    },
+                  ),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.style_rounded,
+                  iconColor: Colors.purple,
+                  title: 'App Style',
+                  subtitle: _style,
+                  onTap: () => _pickStringOption(
+                    title: 'Style',
+                    options: ['Dark', 'Light'],
+                    currentValue: _style,
+                    onSelected: (value) async {
+                      await StorageService.setConfigStyle(value);
+                      if (!mounted) return;
+                      setState(() => _style = value);
+                    },
+                  ),
+                ),
+                _buildDivider(),
+                _buildSettingItem(
+                  icon: Icons.language_rounded,
+                  iconColor: Colors.blue,
+                  title: 'Language',
+                  subtitle: _language,
+                  onTap: () => _pickStringOption(
+                    title: 'Language',
+                    options: ['English', 'Sinhala', 'Tamil'],
+                    currentValue: _language,
+                    onSelected: (value) async {
+                      await StorageService.setConfigLanguage(value);
+                      if (!mounted) return;
+                      setState(() => _language = value);
+                    },
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 32),
+            ],
           ),
-          _buildItem(
-            title: 'Expenses Category Setting',
-            onTap: () => context.goToCategories(isExpense: true),
-          ),
-          _buildItem(
-            title: 'Subcategory',
-            value: _onOff(_subcategoryEnabled),
-            onTap: () async {
-              final value = !_subcategoryEnabled;
-              await StorageService.setConfigSubcategoryEnabled(value);
-              if (!mounted) return;
-              setState(() => _subcategoryEnabled = value);
-            },
-          ),
-          _buildItem(
-            title: 'Budget Setting',
-            onTap: () => context.goToBudgetSetting(),
-          ),
-          _buildItem(title: 'Repeat Setting', onTap: () => context.goToReminders()),
-          const SizedBox(height: 10),
-          _buildSectionHeader('Configuration'),
-          _buildItem(
-            title: 'Main Currency Setting',
-            value: _mainCurrency,
-            onTap: _pickMainCurrency,
-          ),
-          _buildItem(
-            title: 'Sub Currency Setting',
-            value: _subCurrency,
-            onTap: () => _pickStringOption(
-              title: 'Sub Currency',
-              options: const ['\$', 'Rs.', '€', '£', '¥'],
-              currentValue: _subCurrency,
-              onSelected: (value) async {
-                await StorageService.setConfigSubCurrency(value);
-                if (!mounted) return;
-                setState(() => _subCurrency = value);
-              },
-            ),
-          ),
-          _buildItem(
-            title: 'Start Screen (Daily/Calendar)',
-            value: _startScreen,
-            onTap: () => _pickStringOption(
-              title: 'Start Screen',
-              options: const ['Daily', 'Calendar'],
-              currentValue: _startScreen,
-              onSelected: (value) async {
-                await StorageService.setConfigStartScreen(value);
-                if (!mounted) return;
-                setState(() => _startScreen = value);
-              },
-            ),
-          ),
-          _buildItem(
-            title: 'Monthly Start Date',
-            value: 'Every $_monthlyStartDate',
-            onTap: () => _pickStringOption(
-              title: 'Monthly Start Date',
-              options: List<String>.generate(28, (index) => 'Every ${index + 1}'),
-              currentValue: 'Every $_monthlyStartDate',
-              onSelected: (value) async {
-                final day = int.tryParse(value.replaceAll('Every ', '')) ?? 1;
-                await StorageService.setConfigMonthlyStartDate(day);
-                if (!mounted) return;
-                setState(() => _monthlyStartDate = day);
-              },
-            ),
-          ),
-          _buildItem(
-            title: 'Weekly Start Day',
-            value: _weeklyStartDay,
-            onTap: () => _pickStringOption(
-              title: 'Weekly Start Day',
-              options: const [
-                'Sunday',
-                'Monday',
-                'Tuesday',
-                'Wednesday',
-                'Thursday',
-                'Friday',
-                'Saturday',
-              ],
-              currentValue: _weeklyStartDay,
-              onSelected: (value) async {
-                await StorageService.setConfigWeeklyStartDay(value);
-                if (!mounted) return;
-                setState(() => _weeklyStartDay = value);
-              },
-            ),
-          ),
-          _buildItem(
-            title: 'Carry-over Setting',
-            value: _onOff(_carryOverEnabled),
-            onTap: () async {
-              final value = !_carryOverEnabled;
-              await StorageService.setConfigCarryOverEnabled(value);
-              if (!mounted) return;
-              setState(() => _carryOverEnabled = value);
-            },
-          ),
-          _buildItem(
-            title: 'Swipe',
-            value: _swipeMode,
-            onTap: () => _pickStringOption(
-              title: 'Swipe',
-              options: const ['To Change Date', 'Disabled'],
-              currentValue: _swipeMode,
-              onSelected: (value) async {
-                await StorageService.setConfigSwipeMode(value);
-                if (!mounted) return;
-                setState(() => _swipeMode = value);
-              },
-            ),
-          ),
-          _buildItem(
-            title: 'Income-Expenses Color Setting',
-            value: _colorSetting,
-            onTap: () => _pickStringOption(
-              title: 'Income-Expenses Color Setting',
-              options: const ['Set. A', 'Set. B', 'Set. C'],
-              currentValue: _colorSetting,
-              onSelected: (value) async {
-                await StorageService.setConfigColorSetting(value);
-                if (!mounted) return;
-                setState(() => _colorSetting = value);
-              },
-            ),
-          ),
-          _buildItem(
-            title: 'Time Input',
-            value: _timeInput,
-            onTap: () => _pickStringOption(
-              title: 'Time Input',
-              options: const ['Input Only, Desc.', 'Input + Time', 'No Time'],
-              currentValue: _timeInput,
-              onSelected: (value) async {
-                await StorageService.setConfigTimeInput(value);
-                if (!mounted) return;
-                setState(() => _timeInput = value);
-              },
-            ),
-          ),
-          _buildItem(
-            title: 'Show description',
-            value: _onOff(_showDescription),
-            onTap: () async {
-              final value = !_showDescription;
-              await StorageService.setConfigShowDescription(value);
-              if (!mounted) return;
-              setState(() => _showDescription = value);
-            },
-          ),
-          _buildItem(
-            title: 'Autocomplete',
-            value: _onOff(_autocomplete),
-            onTap: () async {
-              final value = !_autocomplete;
-              await StorageService.setConfigAutocomplete(value);
-              if (!mounted) return;
-              setState(() => _autocomplete = value);
-            },
-          ),
-          _buildItem(
-            title: 'Input order',
-            value: _inputOrder,
-            onTap: () => _pickStringOption(
-              title: 'Input Order',
-              options: const ['From Amount', 'From Category'],
-              currentValue: _inputOrder,
-              onSelected: (value) async {
-                await StorageService.setConfigInputOrder(value);
-                if (!mounted) return;
-                setState(() => _inputOrder = value);
-              },
-            ),
-          ),
-          _buildItem(
-            title: 'Note button setting',
-            value: _onOff(_noteButtonEnabled),
-            onTap: () async {
-              final value = !_noteButtonEnabled;
-              await StorageService.setConfigNoteButtonEnabled(value);
-              if (!mounted) return;
-              setState(() => _noteButtonEnabled = value);
-            },
-          ),
-          const SizedBox(height: 10),
-          _buildSectionHeader('Other'),
-          _buildItem(
-            title: 'Passcode',
-            value: _onOff(_passcodeEnabled),
-            onTap: () async {
-              final value = !_passcodeEnabled;
-              await StorageService.setConfigPasscodeEnabled(value);
-              if (!mounted) return;
-              setState(() => _passcodeEnabled = value);
-            },
-          ),
-          _buildItem(
-            title: 'Alarm Setting',
-            value: _onOff(_alarmEnabled),
-            onTap: () async {
-              final value = !_alarmEnabled;
-              await StorageService.setConfigAlarmEnabled(value);
-              if (!mounted) return;
-              setState(() => _alarmEnabled = value);
-            },
-          ),
-          _buildItem(
-            title: 'Quick add',
-            value: _onOff(_quickAddEnabled),
-            onTap: () async {
-              final value = !_quickAddEnabled;
-              await StorageService.setConfigQuickAddEnabled(value);
-              if (!mounted) return;
-              setState(() => _quickAddEnabled = value);
-            },
-          ),
-          _buildItem(
-            title: 'Style',
-            value: _style,
-            onTap: () => _pickStringOption(
-              title: 'Style',
-              options: const ['Dark', 'Light'],
-              currentValue: _style,
-              onSelected: (value) async {
-                await StorageService.setConfigStyle(value);
-                if (!mounted) return;
-                setState(() => _style = value);
-              },
-            ),
-          ),
-          _buildItem(
-            title: 'Language Setting',
-            value: _language,
-            onTap: () => _pickStringOption(
-              title: 'Language',
-              options: const ['English', 'Sinhala', 'Tamil'],
-              currentValue: _language,
-              onSelected: (value) async {
-                await StorageService.setConfigLanguage(value);
-                if (!mounted) return;
-                setState(() => _language = value);
-              },
-            ),
-          ),
-          SizedBox(height: 16 + MediaQuery.of(context).padding.bottom),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: AppColors.surface,
-      child: Text(
-        title,
-        style: GoogleFonts.inter(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textSecondary,
         ),
       ),
     );
   }
 
-  Widget _buildItem({
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 12),
+      child: Text(
+        title.toUpperCase(),
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textMuted,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCard(List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.surfaceVariant.withOpacity(0.5),
+          width: 1,
+        ),
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  Widget _buildSettingItem({
+    required IconData icon,
+    required Color iconColor,
     required String title,
-    String? value,
+    String? subtitle,
+    Widget? trailing,
     VoidCallback? onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: const BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: AppColors.surfaceVariant, width: 0.6),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (trailing != null)
+                trailing
+              else if (onTap != null)
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: AppColors.textMuted,
+                ),
+            ],
           ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ),
-            if (value != null && value.isNotEmpty)
-              Text(
-                value,
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: AppColors.primaryLight,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-          ],
         ),
       ),
     );
   }
 
-  String _onOff(bool value) => value ? 'ON' : 'OFF';
+  Widget _buildDivider() {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      indent: 56,
+      endIndent: 16,
+      color: AppColors.surfaceVariant.withOpacity(0.5),
+    );
+  }
 
   Future<void> _pickMainCurrency() async {
     await showModalBottomSheet<void>(
@@ -431,27 +581,71 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
       ),
       builder: (sheetContext) {
         return SafeArea(
-          child: ListView(
-            shrinkWrap: true,
-            children: CurrencyType.values
-                .map(
-                  (currency) => ListTile(
-                    title: Text(
-                      currency.displayLabel,
-                      style: GoogleFonts.inter(color: AppColors.textPrimary),
-                    ),
-                    trailing: _mainCurrency == currency.displayLabel
-                        ? const Icon(Icons.check_rounded, color: AppColors.primary)
-                        : null,
-                    onTap: () async {
-                      await StorageService.setDefaultCurrencyCode(currency.name);
-                      if (!mounted) return;
-                      setState(() => _mainCurrency = currency.displayLabel);
-                      if (sheetContext.mounted) Navigator.pop(sheetContext);
-                    },
-                  ),
-                )
-                .toList(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Main Currency Setting',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  children: CurrencyType.values
+                      .map(
+                        (currency) => ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                          ),
+                          title: Text(
+                            currency.displayLabel,
+                            style: GoogleFonts.inter(
+                              color: AppColors.textPrimary,
+                              fontWeight: _mainCurrency == currency.displayLabel
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                            ),
+                          ),
+                          trailing: _mainCurrency == currency.displayLabel
+                              ? const Icon(
+                                  Icons.check_circle_rounded,
+                                  color: AppColors.primary,
+                                )
+                              : null,
+                          onTap: () async {
+                            await StorageService.setDefaultCurrencyCode(
+                              currency.name,
+                            );
+                            if (!mounted) return;
+                            setState(
+                              () => _mainCurrency = currency.displayLabel,
+                            );
+                            if (sheetContext.mounted)
+                              Navigator.pop(sheetContext);
+                          },
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
           ),
         );
       },
@@ -475,32 +669,61 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
                 title,
                 style: GoogleFonts.inter(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
-              ...options.map(
-                (option) => ListTile(
-                  title: Text(
-                    option,
-                    style: GoogleFonts.inter(color: AppColors.textPrimary),
-                  ),
-                  trailing: option == currentValue
-                      ? const Icon(Icons.check_rounded, color: AppColors.primary)
-                      : null,
-                  onTap: () async {
-                    await onSelected(option);
-                    if (sheetContext.mounted) Navigator.pop(sheetContext);
-                  },
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  children: options
+                      .map(
+                        (option) => ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                          ),
+                          title: Text(
+                            option,
+                            style: GoogleFonts.inter(
+                              color: AppColors.textPrimary,
+                              fontWeight: option == currentValue
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                            ),
+                          ),
+                          trailing: option == currentValue
+                              ? const Icon(
+                                  Icons.check_circle_rounded,
+                                  color: AppColors.primary,
+                                )
+                              : null,
+                          onTap: () async {
+                            await onSelected(option);
+                            if (sheetContext.mounted)
+                              Navigator.pop(sheetContext);
+                          },
+                        ),
+                      )
+                      .toList(),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
             ],
           ),
         );
