@@ -74,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen>
       if (!unique.containsKey(t.id)) unique[t.id] = t;
     }
     var list = unique.values.toList();
+    final allTransactions = List<Transaction>.from(list);
 
     switch (_tabController.index) {
       case 0: // Daily tab -> current month
@@ -98,6 +99,25 @@ class _HomeScreenState extends State<HomeScreen>
         break;
     }
 
+    if (StorageService.getConfigCarryOverEnabled()) {
+      if (_tabController.index == 0 || _tabController.index == 1) {
+        final carryAmount = _calculateCarryOverAmount(_selectedMonth, allTransactions);
+        if (carryAmount != 0) {
+          list.add(_buildCarryOverTransaction(_selectedMonth, carryAmount));
+        }
+      } else if (_tabController.index == 2) {
+        final now = DateTime.now();
+        final maxMonth = _selectedMonth.year == now.year ? now.month : 12;
+        for (int month = 1; month <= maxMonth; month++) {
+          final monthDate = DateTime(_selectedMonth.year, month, 1);
+          final carryAmount = _calculateCarryOverAmount(monthDate, allTransactions);
+          if (carryAmount != 0) {
+            list.add(_buildCarryOverTransaction(monthDate, carryAmount));
+          }
+        }
+      }
+    }
+
     if (_activeFilter != null && _activeFilter!.hasActiveFilters) {
       list = _activeFilter!.apply(list);
     }
@@ -113,6 +133,44 @@ class _HomeScreenState extends State<HomeScreen>
           .toList();
     }
     return list;
+  }
+
+  double _calculateCarryOverAmount(
+    DateTime targetMonth,
+    List<Transaction> allTransactions,
+  ) {
+    final monthStart = DateTime(targetMonth.year, targetMonth.month, 1);
+    double income = 0;
+    double expense = 0;
+
+    for (final t in allTransactions) {
+      if (!t.date.isBefore(monthStart)) continue;
+      if (t.type == TransactionType.income) {
+        income += t.amount;
+      } else if (t.type == TransactionType.expense) {
+        expense += t.amount;
+      }
+    }
+
+    return income - expense;
+  }
+
+  Transaction _buildCarryOverTransaction(DateTime month, double amount) {
+    final isIncome = amount >= 0;
+    return Transaction(
+      id: 'carry_over_${month.year}_${month.month}',
+      title: 'Carry-over',
+      amount: amount.abs(),
+      type: isIncome ? TransactionType.income : TransactionType.expense,
+      date: DateTime(month.year, month.month, 1),
+      category: 'Carry-over',
+      note: 'Previous month balance carried forward',
+      accountType: AccountType.cash,
+    );
+  }
+
+  bool _isCarryOverTransaction(Transaction t) {
+    return t.id.startsWith('carry_over_') && t.category == 'Carry-over';
   }
 
   Future<List<Transaction>> _getSmsTransactionsAsTransactions() async {
@@ -618,11 +676,23 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _onTransactionTap(Transaction t) async {
+    if (_isCarryOverTransaction(t)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Carry-over entry is auto-generated.')),
+      );
+      return;
+    }
     final result = await context.goToEditTransaction<bool>(t);
     if (result == true) _refresh();
   }
 
   void _onTransactionLongPress(Transaction t) {
+    if (_isCarryOverTransaction(t)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Carry-over entry cannot be modified.')),
+      );
+      return;
+    }
     showTransactionOptionsSheet(
       context,
       transaction: t,

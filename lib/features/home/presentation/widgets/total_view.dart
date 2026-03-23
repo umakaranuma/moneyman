@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../../../../models/transaction.dart';
 import '../../../../services/budget_service.dart';
+import '../../../../services/storage_service.dart';
 import '../../../../services/total_export_service.dart';
 import '../../../../theme/app_theme.dart';
 import '../../../../core/router/app_router.dart';
@@ -31,6 +32,12 @@ class TotalView extends StatelessWidget {
               t.date.month == selectedMonth.month,
         )
         .toList();
+    if (StorageService.getConfigCarryOverEnabled()) {
+      final carryAmount = _calculateCarryOverAmount(selectedMonth, transactions);
+      if (carryAmount != 0) {
+        monthTransactions.add(_buildCarryOverTransaction(selectedMonth, carryAmount));
+      }
+    }
     final lastMonth = DateTime(selectedMonth.year, selectedMonth.month - 1);
     final lastMonthExpense = transactions
         .where(
@@ -248,6 +255,39 @@ class TotalView extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  double _calculateCarryOverAmount(
+    DateTime targetMonth,
+    List<Transaction> allTransactions,
+  ) {
+    final monthStart = DateTime(targetMonth.year, targetMonth.month, 1);
+    double income = 0;
+    double expense = 0;
+
+    for (final t in allTransactions) {
+      if (!t.date.isBefore(monthStart)) continue;
+      if (t.type == TransactionType.income) {
+        income += t.amount;
+      } else if (t.type == TransactionType.expense) {
+        expense += t.amount;
+      }
+    }
+    return income - expense;
+  }
+
+  Transaction _buildCarryOverTransaction(DateTime month, double amount) {
+    final isIncome = amount >= 0;
+    return Transaction(
+      id: 'carry_over_${month.year}_${month.month}',
+      title: 'Carry-over',
+      amount: amount.abs(),
+      type: isIncome ? TransactionType.income : TransactionType.expense,
+      date: DateTime(month.year, month.month, 1),
+      category: 'Carry-over',
+      note: 'Previous month balance carried forward',
+      accountType: AccountType.cash,
     );
   }
 }

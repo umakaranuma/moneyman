@@ -23,6 +23,7 @@ import '../../screens/terms_of_service_screen.dart';
 import '../../screens/budget_setting_screen.dart';
 import '../../screens/reminders_screen.dart';
 import '../../screens/add_edit_reminder_screen.dart';
+import '../../screens/configuration_screen.dart';
 import '../../models/transaction.dart';
 import '../../models/note.dart';
 import '../../models/todo.dart';
@@ -466,6 +467,34 @@ class AppRouter {
 
       // Settings routes
       GoRoute(
+        path: '/configuration',
+        name: 'configuration',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const ConfigurationScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(1, 0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  );
+                },
+          );
+        },
+      ),
+
+      // Settings routes
+      GoRoute(
         path: '/settings',
         name: 'settings',
         pageBuilder: (context, state) {
@@ -828,6 +857,10 @@ extension GoRouterExtension on BuildContext {
 
   void goToSettings() {
     GoRouter.of(this).pushNamed('settings');
+  }
+
+  void goToConfiguration() {
+    GoRouter.of(this).pushNamed('configuration');
   }
 
   void goToSecurity() {

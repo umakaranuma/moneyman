@@ -11,6 +11,24 @@ class StorageService {
   static const String _reminderBoxName = 'reminders';
   static const String _settingsBoxName = 'settings';
   static const String _keyDefaultCurrency = 'default_currency';
+  static const String _keyConfigSubcategoryEnabled = 'config_subcategory_enabled';
+  static const String _keyConfigSubCurrency = 'config_sub_currency';
+  static const String _keyConfigStartScreen = 'config_start_screen';
+  static const String _keyConfigMonthlyStartDate = 'config_monthly_start_date';
+  static const String _keyConfigWeeklyStartDay = 'config_weekly_start_day';
+  static const String _keyConfigCarryOverEnabled = 'config_carry_over_enabled';
+  static const String _keyConfigSwipeMode = 'config_swipe_mode';
+  static const String _keyConfigColorSetting = 'config_color_setting';
+  static const String _keyConfigTimeInput = 'config_time_input';
+  static const String _keyConfigShowDescription = 'config_show_description';
+  static const String _keyConfigAutocomplete = 'config_autocomplete';
+  static const String _keyConfigInputOrder = 'config_input_order';
+  static const String _keyConfigNoteButtonEnabled = 'config_note_button_enabled';
+  static const String _keyConfigPasscodeEnabled = 'config_passcode_enabled';
+  static const String _keyConfigAlarmEnabled = 'config_alarm_enabled';
+  static const String _keyConfigQuickAddEnabled = 'config_quick_add_enabled';
+  static const String _keyConfigStyle = 'config_style';
+  static const String _keyConfigLanguage = 'config_language';
   static const String _keyLastHandledNotificationLaunchSignature =
       'last_handled_notification_launch_signature';
 
@@ -38,6 +56,151 @@ class StorageService {
 
   static Future<void> setDefaultCurrencyCode(String currencyCode) async {
     await _settingsBox.put(_keyDefaultCurrency, currencyCode);
+  }
+
+  // Configuration settings
+  static bool getConfigSubcategoryEnabled() {
+    return (_settingsBox.get(_keyConfigSubcategoryEnabled) as bool?) ?? true;
+  }
+
+  static Future<void> setConfigSubcategoryEnabled(bool value) async {
+    await _settingsBox.put(_keyConfigSubcategoryEnabled, value);
+  }
+
+  static String getConfigSubCurrency() {
+    return (_settingsBox.get(_keyConfigSubCurrency) as String?) ?? r'$';
+  }
+
+  static Future<void> setConfigSubCurrency(String value) async {
+    await _settingsBox.put(_keyConfigSubCurrency, value);
+  }
+
+  static String getConfigStartScreen() {
+    return (_settingsBox.get(_keyConfigStartScreen) as String?) ?? 'Daily';
+  }
+
+  static Future<void> setConfigStartScreen(String value) async {
+    await _settingsBox.put(_keyConfigStartScreen, value);
+  }
+
+  static int getConfigMonthlyStartDate() {
+    return (_settingsBox.get(_keyConfigMonthlyStartDate) as int?) ?? 1;
+  }
+
+  static Future<void> setConfigMonthlyStartDate(int value) async {
+    await _settingsBox.put(_keyConfigMonthlyStartDate, value);
+  }
+
+  static String getConfigWeeklyStartDay() {
+    return (_settingsBox.get(_keyConfigWeeklyStartDay) as String?) ?? 'Sunday';
+  }
+
+  static Future<void> setConfigWeeklyStartDay(String value) async {
+    await _settingsBox.put(_keyConfigWeeklyStartDay, value);
+  }
+
+  static bool getConfigCarryOverEnabled() {
+    return (_settingsBox.get(_keyConfigCarryOverEnabled) as bool?) ?? true;
+  }
+
+  static Future<void> setConfigCarryOverEnabled(bool value) async {
+    await _settingsBox.put(_keyConfigCarryOverEnabled, value);
+  }
+
+  static String getConfigSwipeMode() {
+    return (_settingsBox.get(_keyConfigSwipeMode) as String?) ?? 'To Change Date';
+  }
+
+  static Future<void> setConfigSwipeMode(String value) async {
+    await _settingsBox.put(_keyConfigSwipeMode, value);
+  }
+
+  static String getConfigColorSetting() {
+    return (_settingsBox.get(_keyConfigColorSetting) as String?) ?? 'Set. A';
+  }
+
+  static Future<void> setConfigColorSetting(String value) async {
+    await _settingsBox.put(_keyConfigColorSetting, value);
+  }
+
+  static String getConfigTimeInput() {
+    return (_settingsBox.get(_keyConfigTimeInput) as String?) ?? 'Input Only, Desc.';
+  }
+
+  static Future<void> setConfigTimeInput(String value) async {
+    await _settingsBox.put(_keyConfigTimeInput, value);
+  }
+
+  static bool getConfigShowDescription() {
+    return (_settingsBox.get(_keyConfigShowDescription) as bool?) ?? false;
+  }
+
+  static Future<void> setConfigShowDescription(bool value) async {
+    await _settingsBox.put(_keyConfigShowDescription, value);
+  }
+
+  static bool getConfigAutocomplete() {
+    return (_settingsBox.get(_keyConfigAutocomplete) as bool?) ?? true;
+  }
+
+  static Future<void> setConfigAutocomplete(bool value) async {
+    await _settingsBox.put(_keyConfigAutocomplete, value);
+  }
+
+  static String getConfigInputOrder() {
+    return (_settingsBox.get(_keyConfigInputOrder) as String?) ?? 'From Amount';
+  }
+
+  static Future<void> setConfigInputOrder(String value) async {
+    await _settingsBox.put(_keyConfigInputOrder, value);
+  }
+
+  static bool getConfigNoteButtonEnabled() {
+    return (_settingsBox.get(_keyConfigNoteButtonEnabled) as bool?) ?? false;
+  }
+
+  static Future<void> setConfigNoteButtonEnabled(bool value) async {
+    await _settingsBox.put(_keyConfigNoteButtonEnabled, value);
+  }
+
+  static bool getConfigPasscodeEnabled() {
+    return (_settingsBox.get(_keyConfigPasscodeEnabled) as bool?) ?? false;
+  }
+
+  static Future<void> setConfigPasscodeEnabled(bool value) async {
+    await _settingsBox.put(_keyConfigPasscodeEnabled, value);
+  }
+
+  static bool getConfigAlarmEnabled() {
+    return (_settingsBox.get(_keyConfigAlarmEnabled) as bool?) ?? true;
+  }
+
+  static Future<void> setConfigAlarmEnabled(bool value) async {
+    await _settingsBox.put(_keyConfigAlarmEnabled, value);
+  }
+
+  static bool getConfigQuickAddEnabled() {
+    return (_settingsBox.get(_keyConfigQuickAddEnabled) as bool?) ?? false;
+  }
+
+  static Future<void> setConfigQuickAddEnabled(bool value) async {
+    await _settingsBox.put(_keyConfigQuickAddEnabled, value);
+  }
+
+  static String getConfigStyle() {
+    return (_settingsBox.get(_keyConfigStyle) as String?) ?? 'Dark';
+  }
+
+  static Future<void> setConfigStyle(String value) async {
+    await _settingsBox.put(_keyConfigStyle, value);
+  }
+
+  static String getConfigLanguage() {
+    return (_settingsBox.get(_keyConfigLanguage) as String?) ?? 'English';
+  }
+
+  static Future<void> setConfigLanguage(String value) async {
+    await _settingsBox.put(_keyConfigLanguage, value);
   }
 
   /// Pending notification route (e.g. 'todos', 'home', 'reminders|123'). Used when app is opened from a notification tap.
