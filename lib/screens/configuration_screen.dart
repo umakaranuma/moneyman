@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/router/app_router.dart';
 import '../models/account.dart';
+import '../services/notification_service.dart';
 import '../services/storage_service.dart';
+import 'passcode_lock_screen.dart';
+import 'passcode_setup_screen.dart';
 import '../theme/app_theme.dart';
 
 class ConfigurationScreen extends StatefulWidget {
@@ -20,6 +23,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
   bool _passcodeEnabled = false;
   bool _alarmEnabled = true;
   bool _quickAddEnabled = false;
+  bool _notificationPermissionGranted = false;
 
   @override
   void initState() {
@@ -38,6 +42,13 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
     _passcodeEnabled = StorageService.getConfigPasscodeEnabled();
     _alarmEnabled = StorageService.getConfigAlarmEnabled();
     _quickAddEnabled = StorageService.getConfigQuickAddEnabled();
+    _refreshNotificationPermission();
+  }
+
+  Future<void> _refreshNotificationPermission() async {
+    final granted = await NotificationService.hasNotificationPermission();
+    if (!mounted) return;
+    setState(() => _notificationPermissionGranted = granted);
   }
 
   String _formatCurrencyLabel(String code) {
@@ -175,15 +186,25 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                   iconColor: Colors.blue,
                   title: 'Passcode',
                   subtitle: _passcodeEnabled ? 'Enabled' : 'Disabled',
-                  onTap: () => context.goToSecurity(),
+                  trailing: Switch(
+                    value: _passcodeEnabled,
+                    activeColor: AppColors.primary,
+                    onChanged: (value) async {
+                      await _onPasscodeToggle(value);
+                    },
+                  ),
                 ),
                 _buildDivider(),
                 _buildSettingItem(
-                  icon: Icons.alarm_rounded,
+                  icon: Icons.notifications_active_rounded,
                   iconColor: Colors.orange,
-                  title: 'Alarm Setting',
-                  subtitle: _alarmEnabled ? 'Enabled' : 'Disabled',
-                  onTap: () => context.goToReminders(),
+                  title: 'Reminder Setting',
+                  subtitle: _notificationPermissionGranted
+                      ? (_alarmEnabled
+                          ? 'Alarm tone reminders enabled'
+                          : 'Reminder feature disabled')
+                      : 'Permission required',
+                  onTap: () => _openReminderSettings(),
                 ),
                 _buildDivider(),
                 _buildSettingItem(
@@ -378,8 +399,9 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                             setState(
                               () => _mainCurrency = currency.displayLabel,
                             );
-                            if (sheetContext.mounted)
+                            if (sheetContext.mounted) {
                               Navigator.pop(sheetContext);
+                            }
                           },
                         ),
                       )
@@ -457,8 +479,9 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                               : null,
                           onTap: () async {
                             await onSelected(option);
-                            if (sheetContext.mounted)
+                            if (sheetContext.mounted) {
                               Navigator.pop(sheetContext);
+                            }
                           },
                         ),
                       )
@@ -470,6 +493,84 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
           ),
         );
       },
+    );
+  }
+
+  Future<void> _onPasscodeToggle(bool enable) async {
+    if (enable) {
+      final pin = await Navigator.of(context).push<String>(
+        MaterialPageRoute(
+          builder: (_) => const PasscodeSetupScreen(),
+          fullscreenDialog: false,
+        ),
+      );
+      if (pin == null || pin.length != 4) return;
+      await StorageService.setConfigPin(pin);
+      await StorageService.setConfigPasscodeEnabled(true);
+      if (!mounted) return;
+      setState(() => _passcodeEnabled = true);
+      _showMessage('Passcode enabled');
+      return;
+    }
+
+    final currentPin = StorageService.getConfigPin();
+    if (currentPin == null || currentPin.length != 4) {
+      await StorageService.setConfigPasscodeEnabled(false);
+      if (!mounted) return;
+      setState(() => _passcodeEnabled = false);
+      return;
+    }
+
+    final confirmed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => PasscodeLockScreen(
+          expectedPin: currentPin,
+          popOnSuccess: true,
+          title: 'Confirm passcode',
+          subtitle: 'Enter your current passcode to turn it off',
+        ),
+        fullscreenDialog: false,
+      ),
+    );
+
+    if (confirmed == true) {
+      await StorageService.setConfigPin(null);
+      await StorageService.setConfigPasscodeEnabled(false);
+      if (!mounted) return;
+      setState(() => _passcodeEnabled = false);
+      _showMessage('Passcode disabled');
+      return;
+    }
+
+    _showMessage('Passcode confirmation required');
+  }
+
+  Future<void> _openReminderSettings() async {
+    final hasPermission = await NotificationService.hasNotificationPermission();
+    if (!hasPermission) {
+      final granted = await NotificationService.requestNotificationPermission();
+      if (!granted) {
+        if (!mounted) return;
+        _showMessage(
+          'Reminder permission is required to play alarm tone reminders.',
+        );
+        return;
+      }
+    }
+
+    await NotificationService.rescheduleAllNotifications();
+    await StorageService.setConfigAlarmEnabled(true);
+    if (!mounted) return;
+    setState(() {
+      _alarmEnabled = true;
+      _notificationPermissionGranted = true;
+    });
+    context.goToReminders();
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message, style: GoogleFonts.inter())),
     );
   }
 }
