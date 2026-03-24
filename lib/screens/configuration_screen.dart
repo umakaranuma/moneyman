@@ -133,7 +133,6 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                   title: 'Budget Setting',
                   onTap: () => context.goToBudgetSetting(),
                 ),
-
               ]),
               const SizedBox(height: 24),
               _buildSectionTitle('General Configuration'),
@@ -145,23 +144,23 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                   subtitle: _mainCurrency,
                   onTap: _pickMainCurrency,
                 ),
-                _buildDivider(),
-                _buildSettingItem(
-                  icon: Icons.home_rounded,
-                  iconColor: Colors.indigoAccent,
-                  title: 'Start Screen',
-                  subtitle: _startScreen,
-                  onTap: () => _pickStringOption(
-                    title: 'Start Screen',
-                    options: ['Daily', 'Calendar'],
-                    currentValue: _startScreen,
-                    onSelected: (value) async {
-                      await StorageService.setConfigStartScreen(value);
-                      if (!mounted) return;
-                      setState(() => _startScreen = value);
-                    },
-                  ),
-                ),
+                // _buildDivider(),
+                // _buildSettingItem(
+                //   icon: Icons.home_rounded,
+                //   iconColor: Colors.indigoAccent,
+                //   title: 'Start Screen',
+                //   subtitle: _startScreen,
+                //   onTap: () => _pickStringOption(
+                //     title: 'Start Screen',
+                //     options: ['Daily', 'Calendar'],
+                //     currentValue: _startScreen,
+                //     onSelected: (value) async {
+                //       await StorageService.setConfigStartScreen(value);
+                //       if (!mounted) return;
+                //       setState(() => _startScreen = value);
+                //     },
+                //   ),
+                // ),
                 _buildDivider(),
                 _buildSettingItem(
                   icon: Icons.forward_rounded,
@@ -194,33 +193,33 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                     },
                   ),
                 ),
-                _buildDivider(),
-                _buildSettingItem(
-                  icon: Icons.notifications_active_rounded,
-                  iconColor: Colors.orange,
-                  title: 'Reminder Setting',
-                  subtitle: _notificationPermissionGranted
-                      ? (_alarmEnabled
-                          ? 'Alarm tone reminders enabled'
-                          : 'Reminder feature disabled')
-                      : 'Permission required',
-                  onTap: () => _openReminderSettings(),
-                ),
-                _buildDivider(),
-                _buildSettingItem(
-                  icon: Icons.add_circle_rounded,
-                  iconColor: Colors.greenAccent,
-                  title: 'Quick Add',
-                  trailing: Switch(
-                    value: _quickAddEnabled,
-                    activeColor: AppColors.primary,
-                    onChanged: (value) async {
-                      await StorageService.setConfigQuickAddEnabled(value);
-                      if (!mounted) return;
-                      setState(() => _quickAddEnabled = value);
-                    },
-                  ),
-                ),
+                // _buildDivider(),
+                // _buildSettingItem(
+                //   icon: Icons.notifications_active_rounded,
+                //   iconColor: Colors.orange,
+                //   title: 'Reminder Setting',
+                //   subtitle: _notificationPermissionGranted
+                //       ? (_alarmEnabled
+                //           ? 'Alarm tone reminders enabled'
+                //           : 'Reminder feature disabled')
+                //       : 'Permission required',
+                //   onTap: () => _openReminderSettings(),
+                // ),
+                // _buildDivider(),
+                // _buildSettingItem(
+                //   icon: Icons.add_circle_rounded,
+                //   iconColor: Colors.greenAccent,
+                //   title: 'Quick Add',
+                //   trailing: Switch(
+                //     value: _quickAddEnabled,
+                //     activeColor: AppColors.primary,
+                //     onChanged: (value) async {
+                //       await StorageService.setConfigQuickAddEnabled(value);
+                //       if (!mounted) return;
+                //       setState(() => _quickAddEnabled = value);
+                //     },
+                //   ),
+                // ),
               ]),
               const SizedBox(height: 32),
             ],
