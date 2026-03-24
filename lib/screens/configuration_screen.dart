@@ -558,6 +558,17 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
       }
     }
 
+    final exactGranted = await NotificationService.hasExactAlarmPermission();
+    if (!exactGranted) {
+      final exactNowGranted =
+          await NotificationService.requestExactAlarmPermission();
+      if (!exactNowGranted && mounted) {
+        _showMessage(
+          'Exact alarm permission not granted. Reminders can still work, but may be delayed.',
+        );
+      }
+    }
+
     await NotificationService.rescheduleAllNotifications();
     await StorageService.setConfigAlarmEnabled(true);
     if (!mounted) return;
