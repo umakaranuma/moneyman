@@ -11,6 +11,7 @@ class AmountSection extends StatelessWidget {
   final TransactionType type;
   final VoidCallback? onCalculatorTap;
   final String? budgetWarning;
+  final VoidCallback? onBudgetWarningTap;
 
   const AmountSection({
     super.key,
@@ -19,6 +20,7 @@ class AmountSection extends StatelessWidget {
     required this.type,
     this.onCalculatorTap,
     this.budgetWarning,
+    this.onBudgetWarningTap,
   });
 
   @override
@@ -87,9 +89,13 @@ class AmountSection extends StatelessWidget {
                     contentPadding: EdgeInsets.zero,
                   ),
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty) return 'Required';
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Required';
+                    }
                     if (double.tryParse(value.trim()) == null ||
-                        double.parse(value.trim()) <= 0) return 'Invalid amount';
+                        double.parse(value.trim()) <= 0) {
+                      return 'Invalid amount';
+                    }
                     return null;
                   },
                 ),
@@ -107,36 +113,43 @@ class AmountSection extends StatelessWidget {
           ),
           if (budgetWarning != null) ...[
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onBudgetWarningTap,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.error.withValues(alpha: 0.2),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.warning_amber_rounded,
-                    color: AppColors.error,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      budgetWarning!,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.error,
-                      ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.error.withValues(alpha: 0.2),
+                      width: 1,
                     ),
                   ),
-                ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: AppColors.error,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          budgetWarning!,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.error,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],

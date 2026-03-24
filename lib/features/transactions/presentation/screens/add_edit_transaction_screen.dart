@@ -2,7 +2,6 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -10,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../domain/transaction.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../services/storage_service.dart';
 import '../../../../services/category_service.dart';
 import '../../../../theme/app_theme.dart';
@@ -492,6 +492,14 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                         type: _type,
                         onCalculatorTap: _openCalculator,
                         budgetWarning: _budgetWarning,
+                        onBudgetWarningTap: _budgetWarning == null
+                            ? null
+                            : () => context.goToBudgetSetting(
+                                  initialMonth: DateTime(
+                                    _selectedDate.year,
+                                    _selectedDate.month,
+                                  ),
+                                ),
                       ),
                       const SizedBox(height: 20),
                       TransactionDetailsSection(
