@@ -133,7 +133,6 @@ class _BudgetSettingScreenState extends State<BudgetSettingScreen> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (mounted) {

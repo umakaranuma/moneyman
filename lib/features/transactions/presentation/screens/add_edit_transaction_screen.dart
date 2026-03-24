@@ -494,12 +494,16 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                         budgetWarning: _budgetWarning,
                         onBudgetWarningTap: _budgetWarning == null
                             ? null
-                            : () => context.goToBudgetSetting(
+                            : () async {
+                                await context.goToBudgetSetting(
                                   initialMonth: DateTime(
                                     _selectedDate.year,
                                     _selectedDate.month,
                                   ),
-                                ),
+                                );
+                                if (!mounted) return;
+                                _checkBudget();
+                              },
                       ),
                       const SizedBox(height: 20),
                       TransactionDetailsSection(
