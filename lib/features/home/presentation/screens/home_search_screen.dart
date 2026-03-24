@@ -1,7 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../../../../utils/helpers.dart';
 import '../../../../models/transaction.dart';
 import '../../../../services/storage_service.dart';
 import '../../../../theme/app_theme.dart';
@@ -61,8 +61,6 @@ class _HomeSearchScreenState extends State<HomeSearchScreen> {
                 .toList();
     });
   }
-
-  static String _fmt(double n) => NumberFormat('#,##0', 'en_US').format(n);
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +145,7 @@ class _HomeSearchScreenState extends State<HomeSearchScreen> {
                     ),
                   ),
                   trailing: Text(
-                    'Rs. ${_fmt(t.amount)}',
+                    Helpers.formatCurrency(t.amount),
                     style: TextStyle(
                       color: color,
                       fontWeight: FontWeight.w600,

@@ -1,13 +1,14 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import '../../../../utils/helpers.dart';
 import '../../../../models/transaction.dart';
 import '../../../../services/budget_service.dart';
 import '../../../../services/storage_service.dart';
 import '../../../../services/total_export_service.dart';
 import '../../../../theme/app_theme.dart';
 import '../../../../core/router/app_router.dart';
-import 'summary_card.dart';
+
 
 class TotalView extends StatelessWidget {
   final DateTime selectedMonth;
@@ -107,17 +108,17 @@ class TotalView extends StatelessWidget {
             const SizedBox(height: 12),
             _StatRow(
               'Expenses (Cash, Accounts)',
-              'Rs. ${SummaryCard.formatCurrency(cashExpenses)}',
+              Helpers.formatCurrency(cashExpenses),
             ),
             const SizedBox(height: 12),
             _StatRow(
               'Expenses (Card)',
-              'Rs. ${SummaryCard.formatCurrency(cardExpenses)}',
+              Helpers.formatCurrency(cardExpenses),
             ),
             const SizedBox(height: 12),
             _StatRow(
               'Transfers',
-              'Rs. ${SummaryCard.formatCurrency(transfers)}',
+              Helpers.formatCurrency(transfers),
             ),
           ],
         ),

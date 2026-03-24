@@ -29,6 +29,8 @@ class StorageService {
   static const String _keyConfigQuickAddEnabled = 'config_quick_add_enabled';
   static const String _keyConfigStyle = 'config_style';
   static const String _keyConfigLanguage = 'config_language';
+  static const String _keyConfigPin = 'config_pin';
+  static const String _keyConfigBiometricEnabled = 'config_biometric_enabled';
   static const String _keyLastHandledNotificationLaunchSignature =
       'last_handled_notification_launch_signature';
 
@@ -201,6 +203,26 @@ class StorageService {
 
   static Future<void> setConfigLanguage(String value) async {
     await _settingsBox.put(_keyConfigLanguage, value);
+  }
+  
+  static String? getConfigPin() {
+    return _settingsBox.get(_keyConfigPin) as String?;
+  }
+
+  static Future<void> setConfigPin(String? pin) async {
+    if (pin == null) {
+      await _settingsBox.delete(_keyConfigPin);
+    } else {
+      await _settingsBox.put(_keyConfigPin, pin);
+    }
+  }
+
+  static bool getConfigBiometricEnabled() {
+    return (_settingsBox.get(_keyConfigBiometricEnabled) as bool?) ?? false;
+  }
+
+  static Future<void> setConfigBiometricEnabled(bool value) async {
+    await _settingsBox.put(_keyConfigBiometricEnabled, value);
   }
 
   /// Pending notification route (e.g. 'todos', 'home', 'reminders|123'). Used when app is opened from a notification tap.

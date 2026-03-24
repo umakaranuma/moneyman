@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import '../utils/helpers.dart';
 import '../services/storage_service.dart';
 import '../models/transaction.dart';
 import '../models/category.dart';
@@ -63,10 +64,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return total;
   }
 
-  String _formatCurrency(double amount) {
-    final formatter = NumberFormat('#,##0.00', 'en_US');
-    return 'Rs. ${formatter.format(amount)}';
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -297,7 +295,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     ],
                   ),
                   child: Text(
-                    _formatCurrency(_getDayTotal(_selectedDay).abs()),
+                    Helpers.formatCurrency(_getDayTotal(_selectedDay).abs()),
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -469,7 +467,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
             // Amount
             Text(
-              _formatCurrency(transaction.amount),
+              Helpers.formatCurrency(transaction.amount),
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,

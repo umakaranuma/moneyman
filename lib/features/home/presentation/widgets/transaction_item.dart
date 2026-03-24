@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import '../../../../utils/helpers.dart';
 import '../../../../models/transaction.dart';
 import '../../../../models/category.dart';
 import '../../../../theme/app_theme.dart';
@@ -17,9 +18,7 @@ class TransactionItem extends StatelessWidget {
     this.onLongPress,
   });
 
-  static String formatAmount(double value) {
-    return value.toStringAsFixed(0);
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -72,8 +71,8 @@ class TransactionItem extends StatelessWidget {
               ),
             ),
             Text(
-              'Rs. ${formatAmount(transaction.amount)}',
-              style: TextStyle(
+            Helpers.formatCurrency(transaction.amount),
+            style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
                 color: color,

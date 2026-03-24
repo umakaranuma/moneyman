@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
+import '../../../../utils/helpers.dart';
 import '../../../../theme/app_theme.dart';
 
 /// Clean pie chart card: soft surface, one subtle shadow, no gradient/borders.
@@ -50,7 +50,7 @@ class PieChartCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Rs. ${NumberFormat('#,##0').format(total)}',
+                      Helpers.formatCurrency(total),
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,

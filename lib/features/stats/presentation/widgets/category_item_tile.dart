@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../utils/helpers.dart';
 import '../../../../theme/app_theme.dart';
-import '../helpers/stats_calculator.dart';
 
 /// Single category row: emoji, name, progress bar, amount, percentage. Clean, no gradient borders.
 class CategoryItemTile extends StatelessWidget {
@@ -102,7 +102,7 @@ class CategoryItemTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'Rs. ${StatsCalculator.formatCurrency(amount)}',
+                Helpers.formatCurrency(amount),
                 style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 14,

@@ -1,3 +1,5 @@
+import '../utils/helpers.dart';
+
 enum AccountCategory {
   cash,
   bank,
@@ -30,13 +32,42 @@ extension CurrencyTypeExtension on CurrencyType {
       case CurrencyType.inr:
         return 'INR (Rs.)';
       case CurrencyType.usd:
-        return 'USD (\$)';
+        return 'USD (\$)' ;
       case CurrencyType.eur:
         return 'EUR (€)';
       case CurrencyType.gbp:
         return 'GBP (£)';
       case CurrencyType.jpy:
         return 'JPY (¥)';
+    }
+  }
+
+  String get symbol {
+    switch (this) {
+      case CurrencyType.lkr:
+      case CurrencyType.inr:
+        return 'Rs.';
+      case CurrencyType.usd:
+        return '\$';
+      case CurrencyType.eur:
+        return '€';
+      case CurrencyType.gbp:
+        return '£';
+      case CurrencyType.jpy:
+        return '¥';
+    }
+  }
+
+  static String getSymbolByCode(String? code) {
+    if (code == null) return 'Rs.';
+    try {
+      final type = CurrencyType.values.firstWhere(
+        (e) => e.name.toLowerCase() == code.toLowerCase(),
+        orElse: () => CurrencyType.lkr,
+      );
+      return type.symbol;
+    } catch (_) {
+      return 'Rs.';
     }
   }
 }
@@ -66,6 +97,10 @@ class Account {
     DateTime? updatedAt,
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
+
+  String get formattedBalance {
+    return Helpers.formatCurrency(balance, symbol: currency.symbol);
+  }
 
   String get currencySymbol {
     switch (currency) {

@@ -1,7 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../../../../utils/helpers.dart';
 import '../../../../theme/app_theme.dart';
 
 class SummaryCard extends StatelessWidget {
@@ -16,9 +16,7 @@ class SummaryCard extends StatelessWidget {
     required this.total,
   });
 
-  static String formatCurrency(double value) {
-    return NumberFormat('#,##0', 'en_US').format(value);
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +46,7 @@ class SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${total < 0 ? '-' : ''}Rs. ${formatCurrency(total.abs())}',
+            Helpers.formatCurrency(total),
             style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w700,
@@ -83,7 +81,7 @@ class _MiniStat extends StatelessWidget {
         Text(label, style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
         const SizedBox(height: 4),
         Text(
-          'Rs. ${SummaryCard.formatCurrency(value)}',
+          Helpers.formatCurrency(value),
           style: TextStyle(
             color: color,
             fontWeight: FontWeight.w600,

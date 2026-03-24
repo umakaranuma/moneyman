@@ -15,23 +15,11 @@ class ConfigurationScreen extends StatefulWidget {
 class _ConfigurationScreenState extends State<ConfigurationScreen> {
   String _mainCurrency = 'LKR (Rs.)';
   bool _subcategoryEnabled = true;
-  String _subCurrency = r'$';
   String _startScreen = 'Daily';
-  int _monthlyStartDate = 1;
-  String _weeklyStartDay = 'Sunday';
   bool _carryOverEnabled = true;
-  String _swipeMode = 'To Change Date';
-  String _colorSetting = 'Set. A';
-  String _timeInput = 'Input Only, Desc.';
-  bool _showDescription = false;
-  bool _autocomplete = true;
-  String _inputOrder = 'From Amount';
-  bool _noteButtonEnabled = false;
   bool _passcodeEnabled = false;
   bool _alarmEnabled = true;
   bool _quickAddEnabled = false;
-  String _style = 'Dark';
-  String _language = 'English';
 
   @override
   void initState() {
@@ -45,23 +33,11 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
         ? _formatCurrencyLabel(code)
         : _formatCurrencyLabel(CurrencyType.lkr.name.toUpperCase());
     _subcategoryEnabled = StorageService.getConfigSubcategoryEnabled();
-    _subCurrency = StorageService.getConfigSubCurrency();
     _startScreen = StorageService.getConfigStartScreen();
-    _monthlyStartDate = StorageService.getConfigMonthlyStartDate();
-    _weeklyStartDay = StorageService.getConfigWeeklyStartDay();
     _carryOverEnabled = StorageService.getConfigCarryOverEnabled();
-    _swipeMode = StorageService.getConfigSwipeMode();
-    _colorSetting = StorageService.getConfigColorSetting();
-    _timeInput = StorageService.getConfigTimeInput();
-    _showDescription = StorageService.getConfigShowDescription();
-    _autocomplete = StorageService.getConfigAutocomplete();
-    _inputOrder = StorageService.getConfigInputOrder();
-    _noteButtonEnabled = StorageService.getConfigNoteButtonEnabled();
     _passcodeEnabled = StorageService.getConfigPasscodeEnabled();
     _alarmEnabled = StorageService.getConfigAlarmEnabled();
     _quickAddEnabled = StorageService.getConfigQuickAddEnabled();
-    _style = StorageService.getConfigStyle();
-    _language = StorageService.getConfigLanguage();
   }
 
   String _formatCurrencyLabel(String code) {
@@ -146,13 +122,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                   title: 'Budget Setting',
                   onTap: () => context.goToBudgetSetting(),
                 ),
-                _buildDivider(),
-                _buildSettingItem(
-                  icon: Icons.update_rounded,
-                  iconColor: Colors.blueAccent,
-                  title: 'Repeat Setting',
-                  onTap: () => context.goToReminders(),
-                ),
+
               ]),
               const SizedBox(height: 24),
               _buildSectionTitle('General Configuration'),
@@ -163,23 +133,6 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                   title: 'Main Currency',
                   subtitle: _mainCurrency,
                   onTap: _pickMainCurrency,
-                ),
-                _buildDivider(),
-                _buildSettingItem(
-                  icon: Icons.monetization_on_rounded,
-                  iconColor: AppColors.secondary,
-                  title: 'Sub Currency',
-                  subtitle: _subCurrency,
-                  onTap: () => _pickStringOption(
-                    title: 'Sub Currency',
-                    options: ['\$ ', 'Rs.', '€', '£', '¥'],
-                    currentValue: _subCurrency,
-                    onSelected: (value) async {
-                      await StorageService.setConfigSubCurrency(value);
-                      if (!mounted) return;
-                      setState(() => _subCurrency = value);
-                    },
-                  ),
                 ),
                 _buildDivider(),
                 _buildSettingItem(
@@ -200,55 +153,8 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                 ),
                 _buildDivider(),
                 _buildSettingItem(
-                  icon: Icons.calendar_today_rounded,
-                  iconColor: Colors.tealAccent,
-                  title: 'Monthly Start Date',
-                  subtitle: 'Every $_monthlyStartDate',
-                  onTap: () => _pickStringOption(
-                    title: 'Monthly Start Date',
-                    options: List<String>.generate(
-                      28,
-                      (index) => 'Every ${index + 1}',
-                    ),
-                    currentValue: 'Every $_monthlyStartDate',
-                    onSelected: (value) async {
-                      final day =
-                          int.tryParse(value.replaceAll('Every ', '')) ?? 1;
-                      await StorageService.setConfigMonthlyStartDate(day);
-                      if (!mounted) return;
-                      setState(() => _monthlyStartDate = day);
-                    },
-                  ),
-                ),
-                _buildDivider(),
-                _buildSettingItem(
-                  icon: Icons.date_range_rounded,
-                  iconColor: Colors.brown,
-                  title: 'Weekly Start Day',
-                  subtitle: _weeklyStartDay,
-                  onTap: () => _pickStringOption(
-                    title: 'Weekly Start Day',
-                    options: [
-                      'Sunday',
-                      'Monday',
-                      'Tuesday',
-                      'Wednesday',
-                      'Thursday',
-                      'Friday',
-                      'Saturday',
-                    ],
-                    currentValue: _weeklyStartDay,
-                    onSelected: (value) async {
-                      await StorageService.setConfigWeeklyStartDay(value);
-                      if (!mounted) return;
-                      setState(() => _weeklyStartDay = value);
-                    },
-                  ),
-                ),
-                _buildDivider(),
-                _buildSettingItem(
                   icon: Icons.forward_rounded,
-                  iconColor: Colors.lightGreen,
+                  iconColor: Colors.teal,
                   title: 'Carry-over Setting',
                   trailing: Switch(
                     value: _carryOverEnabled,
@@ -262,152 +168,22 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                 ),
               ]),
               const SizedBox(height: 24),
-              _buildSectionTitle('Input & Display'),
-              _buildCard([
-                _buildSettingItem(
-                  icon: Icons.swipe_rounded,
-                  iconColor: Colors.deepPurple,
-                  title: 'Swipe Mode',
-                  subtitle: _swipeMode,
-                  onTap: () => _pickStringOption(
-                    title: 'Swipe',
-                    options: ['To Change Date', 'Disabled'],
-                    currentValue: _swipeMode,
-                    onSelected: (value) async {
-                      await StorageService.setConfigSwipeMode(value);
-                      if (!mounted) return;
-                      setState(() => _swipeMode = value);
-                    },
-                  ),
-                ),
-                _buildDivider(),
-                _buildSettingItem(
-                  icon: Icons.palette_rounded,
-                  iconColor: Colors.pinkAccent,
-                  title: 'Income-Expenses Color',
-                  subtitle: _colorSetting,
-                  onTap: () => _pickStringOption(
-                    title: 'Color Setting',
-                    options: const ['Set. A', 'Set. B', 'Set. C'],
-                    currentValue: _colorSetting,
-                    onSelected: (value) async {
-                      await StorageService.setConfigColorSetting(value);
-                      if (!mounted) return;
-                      setState(() => _colorSetting = value);
-                    },
-                  ),
-                ),
-                _buildDivider(),
-                _buildSettingItem(
-                  icon: Icons.access_time_rounded,
-                  iconColor: Colors.amber,
-                  title: 'Time Input Method',
-                  subtitle: _timeInput,
-                  onTap: () => _pickStringOption(
-                    title: 'Time Input',
-                    options: ['Input Only, Desc.', 'Input + Time', 'No Time'],
-                    currentValue: _timeInput,
-                    onSelected: (value) async {
-                      await StorageService.setConfigTimeInput(value);
-                      if (!mounted) return;
-                      setState(() => _timeInput = value);
-                    },
-                  ),
-                ),
-                _buildDivider(),
-                _buildSettingItem(
-                  icon: Icons.description_rounded,
-                  iconColor: Colors.blueGrey,
-                  title: 'Show Description',
-                  trailing: Switch(
-                    value: _showDescription,
-                    activeColor: AppColors.primary,
-                    onChanged: (value) async {
-                      await StorageService.setConfigShowDescription(value);
-                      if (!mounted) return;
-                      setState(() => _showDescription = value);
-                    },
-                  ),
-                ),
-                _buildDivider(),
-                _buildSettingItem(
-                  icon: Icons.auto_awesome_rounded,
-                  iconColor: Colors.yellow,
-                  title: 'Autocomplete',
-                  trailing: Switch(
-                    value: _autocomplete,
-                    activeColor: AppColors.primary,
-                    onChanged: (value) async {
-                      await StorageService.setConfigAutocomplete(value);
-                      if (!mounted) return;
-                      setState(() => _autocomplete = value);
-                    },
-                  ),
-                ),
-                _buildDivider(),
-                _buildSettingItem(
-                  icon: Icons.sort_rounded,
-                  iconColor: Colors.cyan,
-                  title: 'Input Order',
-                  subtitle: _inputOrder,
-                  onTap: () => _pickStringOption(
-                    title: 'Input Order',
-                    options: const ['From Amount', 'From Category'],
-                    currentValue: _inputOrder,
-                    onSelected: (value) async {
-                      await StorageService.setConfigInputOrder(value);
-                      if (!mounted) return;
-                      setState(() => _inputOrder = value);
-                    },
-                  ),
-                ),
-                _buildDivider(),
-                _buildSettingItem(
-                  icon: Icons.note_add_rounded,
-                  iconColor: Colors.lime,
-                  title: 'Note Button',
-                  trailing: Switch(
-                    value: _noteButtonEnabled,
-                    activeColor: AppColors.primary,
-                    onChanged: (value) async {
-                      await StorageService.setConfigNoteButtonEnabled(value);
-                      if (!mounted) return;
-                      setState(() => _noteButtonEnabled = value);
-                    },
-                  ),
-                ),
-              ]),
-              const SizedBox(height: 24),
               _buildSectionTitle('Security & Other'),
               _buildCard([
                 _buildSettingItem(
                   icon: Icons.lock_rounded,
-                  iconColor: Colors.redAccent,
+                  iconColor: Colors.blue,
                   title: 'Passcode',
-                  trailing: Switch(
-                    value: _passcodeEnabled,
-                    activeColor: AppColors.primary,
-                    onChanged: (value) async {
-                      await StorageService.setConfigPasscodeEnabled(value);
-                      if (!mounted) return;
-                      setState(() => _passcodeEnabled = value);
-                    },
-                  ),
+                  subtitle: _passcodeEnabled ? 'Enabled' : 'Disabled',
+                  onTap: () => context.goToSecurity(),
                 ),
                 _buildDivider(),
                 _buildSettingItem(
                   icon: Icons.alarm_rounded,
                   iconColor: Colors.orange,
                   title: 'Alarm Setting',
-                  trailing: Switch(
-                    value: _alarmEnabled,
-                    activeColor: AppColors.primary,
-                    onChanged: (value) async {
-                      await StorageService.setConfigAlarmEnabled(value);
-                      if (!mounted) return;
-                      setState(() => _alarmEnabled = value);
-                    },
-                  ),
+                  subtitle: _alarmEnabled ? 'Enabled' : 'Disabled',
+                  onTap: () => context.goToReminders(),
                 ),
                 _buildDivider(),
                 _buildSettingItem(
@@ -421,40 +197,6 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                       await StorageService.setConfigQuickAddEnabled(value);
                       if (!mounted) return;
                       setState(() => _quickAddEnabled = value);
-                    },
-                  ),
-                ),
-                _buildDivider(),
-                _buildSettingItem(
-                  icon: Icons.style_rounded,
-                  iconColor: Colors.purple,
-                  title: 'App Style',
-                  subtitle: _style,
-                  onTap: () => _pickStringOption(
-                    title: 'Style',
-                    options: ['Dark', 'Light'],
-                    currentValue: _style,
-                    onSelected: (value) async {
-                      await StorageService.setConfigStyle(value);
-                      if (!mounted) return;
-                      setState(() => _style = value);
-                    },
-                  ),
-                ),
-                _buildDivider(),
-                _buildSettingItem(
-                  icon: Icons.language_rounded,
-                  iconColor: Colors.blue,
-                  title: 'Language',
-                  subtitle: _language,
-                  onTap: () => _pickStringOption(
-                    title: 'Language',
-                    options: ['English', 'Sinhala', 'Tamil'],
-                    currentValue: _language,
-                    onSelected: (value) async {
-                      await StorageService.setConfigLanguage(value);
-                      if (!mounted) return;
-                      setState(() => _language = value);
                     },
                   ),
                 ),

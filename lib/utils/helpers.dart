@@ -1,10 +1,14 @@
 import 'package:intl/intl.dart';
+import '../services/storage_service.dart';
+import '../models/account.dart';
 import 'constants.dart';
 
 class Helpers {
-  static String formatCurrency(double amount, {String symbol = 'Rs.'}) {
+  static String formatCurrency(double amount, {String? symbol}) {
+    final effectiveSymbol =
+        symbol ?? CurrencyTypeExtension.getSymbolByCode(StorageService.getDefaultCurrencyCode());
     final formatter = NumberFormat('#,##0.00', 'en_US');
-    return '$symbol ${formatter.format(amount)}';
+    return '$effectiveSymbol ${formatter.format(amount)}';
   }
 
   static String formatCurrencyCompact(double amount) {
@@ -75,5 +79,9 @@ class Helpers {
       'Dec'
     ];
     return months[month - 1];
+  }
+
+  static String formatMonth(DateTime date) {
+    return DateFormat('MMMM').format(date);
   }
 }

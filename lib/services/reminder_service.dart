@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../models/reminder.dart';
 import 'storage_service.dart';
 import 'notification_service.dart';
+import '../utils/helpers.dart';
 
 class ReminderService {
   /// Base ID for user reminder notifications (must not clash with 1, 2 used by app).
@@ -199,7 +200,7 @@ class ReminderService {
       bodyDayBefore =
           '${reminder.title} is due tomorrow at ${_formatTime(hour, minute)}. Don\'t forget to repay.';
       final amountLine = reminder.loanAmount != null
-          ? 'Amount: Rs. ${reminder.loanAmount!.toStringAsFixed(0)}\n\n'
+          ? 'Amount: ${_currency(reminder.loanAmount!)}\n\n'
           : '';
       bigTextDayBefore =
           'Loan: ${reminder.title}\n'
@@ -245,7 +246,7 @@ class ReminderService {
         minute,
       );
       final amountLineOnDay = reminder.loanAmount != null
-          ? 'Amount: Rs. ${reminder.loanAmount!.toStringAsFixed(0)}\n\n'
+          ? 'Amount: ${_currency(reminder.loanAmount!)}\n\n'
           : '';
       final bigTextOnDay =
           'Loan: ${reminder.title}\n'
@@ -271,6 +272,8 @@ class ReminderService {
       notificationIdOnDay: idOnDay,
     );
   }
+
+  static String _currency(double value) => Helpers.formatCurrency(value);
 
   static String _formatDate(DateTime d) {
     return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';

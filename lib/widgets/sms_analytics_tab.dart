@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../services/sms_service.dart';
 import '../services/sms_analytics_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/helpers.dart';
 import 'sms_analytics_charts.dart';
 
 class SmsAnalyticsTab extends StatefulWidget {
@@ -404,9 +405,6 @@ class _SmsAnalyticsTabState extends State<SmsAnalyticsTab> {
   }
 
   String _formatCurrency(double amount) {
-    final formatter = NumberFormat('#,##0.00', 'en_US');
-    final sign = amount >= 0 ? '' : '-';
-    return '$sign Rs. ${formatter.format(amount.abs())}';
+    return Helpers.formatCurrency(amount);
   }
 }
-

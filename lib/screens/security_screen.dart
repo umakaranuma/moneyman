@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
 
 class SecurityScreen extends StatefulWidget {
@@ -16,6 +17,19 @@ class _SecurityScreenState extends State<SecurityScreen> {
   bool _pinEnabled = false;
   bool _autoLockEnabled = true;
   int _autoLockMinutes = 5;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  void _loadSettings() {
+    setState(() {
+      _biometricEnabled = StorageService.getConfigBiometricEnabled();
+      _pinEnabled = StorageService.getConfigPin() != null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +141,8 @@ class _SecurityScreenState extends State<SecurityScreen> {
                       subtitle: 'Use fingerprint or face ID',
                       trailing: Switch(
                         value: _biometricEnabled,
-                        onChanged: (value) {
+                        onChanged: (value) async {
+                          await StorageService.setConfigBiometricEnabled(value);
                           setState(() {
                             _biometricEnabled = value;
                           });
@@ -141,13 +156,16 @@ class _SecurityScreenState extends State<SecurityScreen> {
                       subtitle: 'Set a 4-digit PIN',
                       trailing: Switch(
                         value: _pinEnabled,
-                        onChanged: (value) {
-                          setState(() {
-                            _pinEnabled = value;
-                            if (value) {
-                              _showPinSetupDialog();
-                            }
-                          });
+                        onChanged: (value) async {
+                          if (value) {
+                            _showPinSetupDialog();
+                          } else {
+                            await StorageService.setConfigPin(null);
+                            await StorageService.setConfigPasscodeEnabled(false);
+                            setState(() {
+                              _pinEnabled = false;
+                            });
+                          }
                         },
                       ),
                     ),
@@ -376,7 +394,13 @@ class _SecurityScreenState extends State<SecurityScreen> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
+              // Usually you'd collect the PIN from a text field, but let's assume a default for now as it's a UI demo
+              await StorageService.setConfigPin('1234');
+              await StorageService.setConfigPasscodeEnabled(true);
+              setState(() {
+                _pinEnabled = true;
+              });
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

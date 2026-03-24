@@ -17,6 +17,7 @@ import '../../../../utils/helpers.dart';
 import '../../../../screens/categories_screen.dart';
 import '../../../../screens/calculator_screen.dart';
 
+import '../../../../services/budget_service.dart';
 import '../widgets/transaction_type_selector.dart';
 import '../widgets/amount_section.dart';
 import '../widgets/transaction_details_section.dart';
@@ -60,6 +61,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   List<String> _imagePaths = [];
   bool _categoryError = false;
   bool _hasAttemptedSave = false;
+  String? _budgetWarning;
 
   Color get _activeColor {
     switch (_type) {
@@ -108,6 +110,9 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       _type = widget.initialType ?? TransactionType.expense;
       _imagePaths = [];
     }
+
+    _amountController.addListener(_checkBudget);
+    _checkBudget();
   }
 
   @override
@@ -136,6 +141,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         _selectedSubcategory = null;
       }
     });
+    _checkBudget();
   }
 
   void _showCategoryPicker() {
@@ -153,6 +159,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
             _selectedSubcategory = subcategory;
             _categoryError = false;
           });
+          _checkBudget();
         },
         onManageCategories: () async {
           await Navigator.push(
@@ -213,6 +220,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 dateTime.minute,
               );
             });
+            _checkBudget();
           },
         ),
       );
@@ -309,6 +317,68 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         return 'Bank Account';
       case AccountType.other:
         return 'Other';
+    }
+  }
+
+  void _checkBudget() {
+    if (_type != TransactionType.expense ||
+        _selectedCategory == null ||
+        _amountController.text.isEmpty) {
+      if (_budgetWarning != null) {
+        setState(() => _budgetWarning = null);
+      }
+      return;
+    }
+
+    final amount = double.tryParse(_amountController.text.trim()) ?? 0.0;
+    if (amount <= 0) {
+      if (_budgetWarning != null) {
+        setState(() => _budgetWarning = null);
+      }
+      return;
+    }
+
+    final budget = BudgetService.getBudget(
+      _selectedCategory!,
+      _selectedDate.year,
+      _selectedDate.month,
+    );
+
+    if (budget == null) {
+      if (_budgetWarning != null) {
+        setState(() => _budgetWarning = null);
+      }
+      return;
+    }
+
+    final spent = BudgetService.getSpentForCategory(
+      _selectedCategory!,
+      _selectedDate.year,
+      _selectedDate.month,
+    );
+
+    // If editing, subtract old amount from spent
+    double adjustedSpent = spent;
+    if (widget.transaction != null &&
+        widget.transaction!.type == TransactionType.expense &&
+        widget.transaction!.category == _selectedCategory &&
+        widget.transaction!.date.year == _selectedDate.year &&
+        widget.transaction!.date.month == _selectedDate.month) {
+      adjustedSpent -= widget.transaction!.amount;
+    }
+
+    final totalAfter = adjustedSpent + amount;
+
+    if (totalAfter > budget.amount) {
+      final overBy = totalAfter - budget.amount;
+      final newWarning = 'Budget exceeded by LKR ${overBy.toStringAsFixed(0)}';
+      if (_budgetWarning != newWarning) {
+        setState(() => _budgetWarning = newWarning);
+      }
+    } else {
+      if (_budgetWarning != null) {
+        setState(() => _budgetWarning = null);
+      }
     }
   }
 
@@ -421,6 +491,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                         color: _activeColor,
                         type: _type,
                         onCalculatorTap: _openCalculator,
+                        budgetWarning: _budgetWarning,
                       ),
                       const SizedBox(height: 20),
                       TransactionDetailsSection(

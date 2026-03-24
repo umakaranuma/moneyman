@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../../../../utils/helpers.dart';
 import '../../../../models/transaction.dart';
 import '../../../../theme/app_theme.dart';
-import 'summary_card.dart';
 
 class MonthlyView extends StatelessWidget {
   final DateTime selectedMonth;
@@ -38,7 +37,7 @@ class MonthlyView extends StatelessWidget {
           .fold(0.0, (s, t) => s + t.amount);
 
       final monthName =
-          DateFormat('MMM').format(DateTime(selectedMonth.year, month));
+          Helpers.formatMonth(DateTime(selectedMonth.year, month));
 
       months.add(
         _MonthData(
@@ -171,7 +170,7 @@ class _MonthRow extends StatelessWidget {
               ),
               Expanded(
                 child: Text(
-                  'Rs. ${SummaryCard.formatCurrency(data.income)}',
+                  Helpers.formatCurrency(data.income),
                   style: const TextStyle(
                     fontSize: 13,
                     color: AppColors.income,
@@ -185,7 +184,7 @@ class _MonthRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      'Rs. ${SummaryCard.formatCurrency(data.expense)}',
+                      Helpers.formatCurrency(data.expense),
                       style: const TextStyle(
                         fontSize: 13,
                         color: AppColors.expense,
@@ -193,7 +192,7 @@ class _MonthRow extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Rs. ${SummaryCard.formatCurrency(data.total)}',
+                      Helpers.formatCurrency(data.total),
                       style: TextStyle(
                         fontSize: 11,
                         color: data.total >= 0
@@ -243,7 +242,7 @@ class _MonthRow extends StatelessWidget {
                             ),
                             Expanded(
                               child: Text(
-                                'Rs. ${SummaryCard.formatCurrency(week.income)}',
+                                Helpers.formatCurrency(week.income),
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: AppColors.income,
@@ -257,7 +256,7 @@ class _MonthRow extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    'Rs. ${SummaryCard.formatCurrency(week.expense)}',
+                                    Helpers.formatCurrency(week.expense),
                                     style: const TextStyle(
                                       fontSize: 12,
                                       color: AppColors.expense,
@@ -265,7 +264,7 @@ class _MonthRow extends StatelessWidget {
                                     ),
                                   ),
                                   Text(
-                                    'Rs. ${SummaryCard.formatCurrency(week.total)}',
+                                    Helpers.formatCurrency(week.total),
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: week.total >= 0

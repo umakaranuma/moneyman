@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import '../../../../utils/helpers.dart';
 import '../../../../models/transaction.dart';
 import '../../../../services/storage_service.dart';
 import '../../../../theme/app_theme.dart';
-import '../widgets/summary_card.dart';
 
 void showTransactionOptionsSheet(
   BuildContext context, {
@@ -101,7 +101,7 @@ void showTransactionOptionsSheet(
                     ),
                   ),
                   Text(
-                    'Rs. ${SummaryCard.formatCurrency(transaction.amount)}',
+                    Helpers.formatCurrency(transaction.amount),
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
@@ -168,7 +168,7 @@ void showTransactionOptionsSheet(
                       onTap: () {
                         final text =
                             '${transaction.title}\n'
-                            'Rs. ${SummaryCard.formatCurrency(transaction.amount)}\n'
+                            '${Helpers.formatCurrency(transaction.amount)}\n'
                             '${DateFormat('MMM d, yyyy · h:mm a').format(transaction.date)}\n'
                             '${transaction.category ?? 'N/A'}';
                         Clipboard.setData(ClipboardData(text: text));

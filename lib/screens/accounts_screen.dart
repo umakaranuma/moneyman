@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
+
 import '../theme/app_theme.dart';
 import '../services/storage_service.dart';
 import '../services/sms_service.dart';
@@ -10,6 +10,7 @@ import '../services/account_service.dart';
 import '../models/transaction.dart';
 import '../models/account.dart';
 import '../features/stats/presentation/screens/stats_screen.dart';
+import '../utils/helpers.dart';
 import 'add_account_screen.dart';
 
 class AccountsScreen extends StatefulWidget {
@@ -737,10 +738,7 @@ class _AccountsScreenState extends State<AccountsScreen>
     return balances;
   }
 
-  String _formatCurrency(double amount, {String prefix = ''}) {
-    final formatter = NumberFormat('#,##0.00', 'en_US');
-    return '$prefix${formatter.format(amount.abs())}';
-  }
+
 
   Widget _buildSummaryCards(Map<String, double> balances) {
     final totalAssets = balances['total_assets'] ?? 0.0;
@@ -767,7 +765,7 @@ class _AccountsScreenState extends State<AccountsScreen>
             ),
             const SizedBox(height: 6),
             Text(
-              _formatCurrency(total, prefix: 'Rs. '),
+              Helpers.formatCurrency(total),
               style: GoogleFonts.inter(
                 fontSize: 26,
                 fontWeight: FontWeight.w700,
@@ -802,7 +800,7 @@ class _AccountsScreenState extends State<AccountsScreen>
         ),
         const SizedBox(height: 2),
         Text(
-          _formatCurrency(value, prefix: 'Rs. '),
+          Helpers.formatCurrency(value),
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -872,9 +870,9 @@ class _AccountsScreenState extends State<AccountsScreen>
                         ),
                       ),
                       Text(
-                        _formatCurrency(
+                        Helpers.formatCurrency(
                           account.balance,
-                          prefix: '${account.currency} ',
+                          symbol: account.currency,
                         ),
                         style: GoogleFonts.inter(
                           fontSize: 14,
@@ -933,7 +931,7 @@ class _AccountsScreenState extends State<AccountsScreen>
                 ),
               ),
               Text(
-                _formatCurrency(payable, prefix: '$currency '),
+                Helpers.formatCurrency(payable, symbol: currency),
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -954,7 +952,7 @@ class _AccountsScreenState extends State<AccountsScreen>
                 ),
               ),
               Text(
-                _formatCurrency(outstanding, prefix: '$currency '),
+                Helpers.formatCurrency(outstanding, symbol: currency),
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+
+import '../../../../utils/helpers.dart';
 import '../../../../theme/app_theme.dart';
 
 /// Segmented control: Income | Expenses. Premium, no gradients.
@@ -93,7 +94,7 @@ class _Segment extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Rs. ${NumberFormat('#,##0').format(amount)}',
+                Helpers.formatCurrency(amount),
                 style: TextStyle(
                   color: isSelected ? Colors.white : accentColor,
                   fontWeight: FontWeight.w700,

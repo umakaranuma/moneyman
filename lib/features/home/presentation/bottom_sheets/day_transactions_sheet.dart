@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../../utils/helpers.dart';
 import '../../../../models/transaction.dart';
 import '../../../../theme/app_theme.dart';
-import '../widgets/summary_card.dart';
 import '../widgets/transaction_item.dart';
 
 void showDayTransactionsSheet(
@@ -80,9 +80,9 @@ void showDayTransactionsSheet(
                         spacing: 12,
                         runSpacing: 4,
                         children: [
-                          if (dayIncome > 0) _DotLabel('+Rs. ${SummaryCard.formatCurrency(dayIncome)}', AppColors.income),
-                          if (dayExpense > 0) _DotLabel('-Rs. ${SummaryCard.formatCurrency(dayExpense)}', AppColors.expense),
-                          if (dayTransfer > 0) _DotLabel('Rs. ${SummaryCard.formatCurrency(dayTransfer)}', AppColors.transfer),
+                          if (dayIncome > 0) _DotLabel('+${Helpers.formatCurrency(dayIncome)}', AppColors.income),
+                          if (dayExpense > 0) _DotLabel('-${Helpers.formatCurrency(dayExpense)}', AppColors.expense),
+                          if (dayTransfer > 0) _DotLabel(Helpers.formatCurrency(dayTransfer), AppColors.transfer),
                         ],
                       ),
                     ],

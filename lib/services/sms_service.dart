@@ -1,5 +1,7 @@
 import 'package:flutter_sms_inbox/flutter_sms_inbox.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+
 import 'package:hive_flutter/hive_flutter.dart';
 
 class ParsedSmsTransaction {
@@ -417,6 +419,8 @@ class SmsService {
     }
     return null;
   }
+
+
 
   static String? _extractAccountNumber(String body) {
     // Pattern for account numbers (usually last 4-6 digits shown)

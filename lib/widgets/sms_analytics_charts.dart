@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/sms_analytics_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/helpers.dart';
 
 /// Helper function to ensure horizontalInterval is never zero
 double _ensureNonZeroInterval(double value) {
@@ -194,8 +195,7 @@ class BankBreakdownPieChart extends StatelessWidget {
   }
 
   static String _formatCurrency(double amount) {
-    final formatter = NumberFormat('#,##0.00', 'en_US');
-    return 'Rs. ${formatter.format(amount)}';
+    return Helpers.formatCurrency(amount);
   }
 }
 

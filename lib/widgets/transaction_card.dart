@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/transaction.dart';
 import '../models/category.dart';
 import '../theme/app_theme.dart';
+import '../utils/helpers.dart';
 
 class TransactionCard extends StatelessWidget {
   final Transaction transaction;
@@ -30,10 +31,7 @@ class TransactionCard extends StatelessWidget {
     }
   }
 
-  String _formatCurrency(double amount) {
-    final formatter = NumberFormat('#,##0.00', 'en_US');
-    return 'Rs. ${formatter.format(amount)}';
-  }
+
 
   Color get _typeColor {
     switch (transaction.type) {
@@ -184,7 +182,7 @@ class TransactionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '$prefix${_formatCurrency(transaction.amount)}',
+                  '$prefix${Helpers.formatCurrency(transaction.amount, symbol: "")}',
                   style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,

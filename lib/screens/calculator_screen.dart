@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../utils/helpers.dart';
+
 
 class CalculatorScreen extends StatefulWidget {
   final String? initialValue;
@@ -25,9 +27,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     if (widget.initialValue != null && widget.initialValue!.isNotEmpty) {
       // Remove currency symbols and parse the value
       String cleanValue = widget.initialValue!
-          .replaceAll('Rs.', '')
-          .replaceAll('\$', '')
-          .replaceAll(',', '')
+          .replaceAll(RegExp(r'[^\d.]'), '')
           .trim();
       try {
         double parsedValue = double.parse(cleanValue);
@@ -221,8 +221,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerRight,
                       child: Text(
-                        _display,
-                        style: GoogleFonts.inter(
+                       Helpers.formatCurrency(double.tryParse(_display) ?? 0),
+                    style: GoogleFonts.inter(
                           color: AppColors.textPrimary,
                           fontSize: 64,
                           fontWeight: FontWeight.w400,

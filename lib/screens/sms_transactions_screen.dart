@@ -4,6 +4,7 @@ import '../services/sms_service.dart';
 import '../services/storage_service.dart';
 import '../models/transaction.dart';
 import '../theme/app_theme.dart';
+import '../utils/helpers.dart';
 import '../widgets/sms_analytics_tab.dart';
 
 enum TransactionFilter { all, credit, debit }
@@ -169,7 +170,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Transaction imported: Rs. ${_formatCurrency(smsTransaction.amount)}',
+            'Transaction imported: ${Helpers.formatCurrency(smsTransaction.amount)}',
           ),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
@@ -205,10 +206,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
     }
   }
 
-  String _formatCurrency(double amount) {
-    final formatter = NumberFormat('#,##0.00', 'en_US');
-    return formatter.format(amount);
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -1046,7 +1044,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
               Expanded(
                 child: _buildSummaryItem(
                   'Credited',
-                  'Rs. ${_formatCurrency(totalCredit)}',
+                  Helpers.formatCurrency(totalCredit),
                   AppColors.income,
                   Icons.arrow_downward,
                 ),
@@ -1055,7 +1053,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
               Expanded(
                 child: _buildSummaryItem(
                   'Debited',
-                  'Rs. ${_formatCurrency(totalDebit)}',
+                  Helpers.formatCurrency(totalDebit),
                   AppColors.expense,
                   Icons.arrow_upward,
                 ),
@@ -1313,7 +1311,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  'Rs. ${_formatCurrency(transaction.amount)}',
+                  Helpers.formatCurrency(transaction.amount),
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -1434,7 +1432,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                     ),
                   ),
                   Text(
-                    'Rs. ${_formatCurrency(transaction.amount)}',
+                    Helpers.formatCurrency(transaction.amount),
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import '../models/transaction.dart';
+import '../utils/helpers.dart';
 import '../services/category_service.dart';
 import '../services/storage_service.dart';
 import '../services/sms_service.dart';
@@ -270,7 +271,7 @@ class _TransactionFilterScreenState extends State<TransactionFilterScreen>
           ),
           const SizedBox(height: 12),
           Text(
-            "Rs. ${_formatAmount(summary['total']!)}",
+            Helpers.formatCurrency(summary['total']!),
             style: GoogleFonts.inter(
               fontSize: 26,
               fontWeight: FontWeight.w700,
@@ -312,7 +313,7 @@ class _TransactionFilterScreenState extends State<TransactionFilterScreen>
           ),
           const SizedBox(height: 4),
           Text(
-            'Rs. ${_formatAmount(value)}',
+            Helpers.formatCurrency(value),
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -664,9 +665,7 @@ class _TransactionFilterScreenState extends State<TransactionFilterScreen>
     );
   }
 
-  String _formatAmount(double amount) {
-    return NumberFormat('#,##,##0.00').format(amount);
-  }
+
 }
 
 class TransactionFilter {

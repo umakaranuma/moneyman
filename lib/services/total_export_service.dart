@@ -10,10 +10,12 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+
 import '../models/transaction.dart';
+import '../utils/helpers.dart';
+
 
 class TotalExportService {
-  static final NumberFormat _currencyFormat = NumberFormat('#,##0.00');
   static final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
   static final DateFormat _monthNameFormat = DateFormat('MMMM');
   static const PdfColor _finzoPrimary = PdfColor(
@@ -403,7 +405,7 @@ class TotalExportService {
   }
 
   static String _currency(double value) =>
-      'Rs. ${_currencyFormat.format(value)}';
+      Helpers.formatCurrency(value);
 
   static double _sumByType(
     List<Transaction> monthTransactions,

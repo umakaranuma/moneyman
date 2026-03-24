@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../../utils/helpers.dart';
 import '../../../../models/transaction.dart';
 import '../../../../services/storage_service.dart';
 import '../../../../services/sms_service.dart';
 import '../../../../theme/app_theme.dart';
-import '../../../../core/router/app_router.dart';
 import '../../../../screens/transaction_filter_screen.dart';
 import '../widgets/home_header.dart';
 import '../widgets/summary_card.dart';
@@ -13,6 +13,7 @@ import '../widgets/monthly_view.dart';
 import '../widgets/total_view.dart';
 import '../widgets/add_transaction_fab.dart';
 import '../bottom_sheets/transaction_options_sheet.dart';
+import '../../../../core/router/app_router.dart';
 import 'home_search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -497,7 +498,7 @@ class _HomeScreenState extends State<HomeScreen>
                             style: const TextStyle(color: AppColors.textMuted),
                           ),
                           trailing: Text(
-                            'Rs. ${t.amount.toStringAsFixed(0)}',
+                            Helpers.formatCurrency(t.amount),
                             style: TextStyle(
                               color: t.type == TransactionType.income
                                   ? AppColors.income

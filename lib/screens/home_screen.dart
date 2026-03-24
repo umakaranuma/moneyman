@@ -13,6 +13,8 @@ import '../models/category.dart';
 import '../theme/app_theme.dart';
 import '../core/router/app_router.dart';
 import 'transaction_filter_screen.dart';
+import '../utils/helpers.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -498,10 +500,7 @@ class _HomeScreenState extends State<HomeScreen>
     });
   }
 
-  String _formatCurrency(double amount) {
-    final formatter = NumberFormat('#,##0.00', 'en_US');
-    return formatter.format(amount);
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -1080,8 +1079,8 @@ class _HomeScreenState extends State<HomeScreen>
           const SizedBox(height: 6),
           Text(
             showSign && value < 0
-                ? '-Rs. ${_formatCurrency(value.abs())}'
-                : 'Rs. ${_formatCurrency(value.abs())}',
+                ? '-${Helpers.formatCurrency(value.abs())}'
+                : Helpers.formatCurrency(value.abs()),
             style: GoogleFonts.inter(
               color: color,
               fontSize: 13,
@@ -1315,7 +1314,7 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           Expanded(
             child: Text(
-              'Rs. ${_formatCurrency(week['income'])}',
+              Helpers.formatCurrency(week['income']),
               style: GoogleFonts.inter(
                 fontSize: 13,
                 color: AppColors.income,
@@ -1329,7 +1328,7 @@ class _HomeScreenState extends State<HomeScreen>
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  'Rs. ${_formatCurrency(week['expense'])}',
+                  Helpers.formatCurrency(week['expense']),
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     color: AppColors.expense,
@@ -1337,7 +1336,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
                 Text(
-                  'Rs. ${_formatCurrency(week['total'])}',
+                  Helpers.formatCurrency(week['total']),
                   style: GoogleFonts.inter(
                     fontSize: 10,
                     color: week['total'] >= 0
@@ -1430,7 +1429,7 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           Expanded(
             child: Text(
-              'Rs. ${_formatCurrency(income)}',
+              Helpers.formatCurrency(income),
               style: GoogleFonts.inter(
                 fontSize: 13,
                 color: AppColors.income,
@@ -1444,7 +1443,7 @@ class _HomeScreenState extends State<HomeScreen>
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  'Rs. ${_formatCurrency(expense)}',
+                  Helpers.formatCurrency(expense),
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     color: AppColors.expense,
@@ -1452,7 +1451,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
                 Text(
-                  'Rs. ${_formatCurrency(total)}',
+                  Helpers.formatCurrency(total),
                   style: GoogleFonts.inter(
                     fontSize: 10,
                     color: total >= 0
@@ -1618,19 +1617,19 @@ class _HomeScreenState extends State<HomeScreen>
                     _buildStatRow(
                       'Expenses',
                       '(Cash, Accounts)',
-                      'Rs. ${_formatCurrency(cashExpenses)}',
+                      Helpers.formatCurrency(cashExpenses),
                     ),
                     const SizedBox(height: 16),
                     _buildStatRow(
                       'Expenses',
                       '(Card)',
-                      'Rs. ${_formatCurrency(cardExpenses)}',
+                      Helpers.formatCurrency(cardExpenses),
                     ),
                     const SizedBox(height: 16),
                     _buildStatRow(
                       'Transfer',
                       '(Cash, Accounts→)',
-                      'Rs. ${_formatCurrency(transfers)}',
+                      Helpers.formatCurrency(transfers),
                     ),
                   ],
                 ),
@@ -2273,7 +2272,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      'Rs. ${_formatCurrency(dayIncome)}',
+                                      Helpers.formatCurrency(dayIncome),
                                       style: GoogleFonts.inter(
                                         fontSize: 11,
                                         color: AppColors.income,
@@ -2296,7 +2295,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      'Rs. ${_formatCurrency(dayExpense)}',
+                                      Helpers.formatCurrency(dayExpense),
                                       style: GoogleFonts.inter(
                                         fontSize: 11,
                                         color: AppColors.expense,
@@ -2319,7 +2318,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      'Rs. ${_formatCurrency(dayTransfer)}',
+                                      Helpers.formatCurrency(dayTransfer),
                                       style: GoogleFonts.inter(
                                         fontSize: 11,
                                         color: AppColors.transfer,
@@ -2566,10 +2565,10 @@ class _HomeScreenState extends State<HomeScreen>
                 // Daily Total (show expense if any, otherwise show income)
                 Text(
                   dayExpense > 0
-                      ? 'Rs. ${_formatCurrency(dayExpense)}'
+                      ? Helpers.formatCurrency(dayExpense)
                       : dayIncome > 0
-                      ? 'Rs. ${_formatCurrency(dayIncome)}'
-                      : 'Rs. 0.00',
+                      ? Helpers.formatCurrency(dayIncome)
+                      : Helpers.formatCurrency(0),
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -2700,7 +2699,7 @@ class _HomeScreenState extends State<HomeScreen>
 
             // Amount
             Text(
-              'Rs. ${_formatCurrency(transaction.amount)}',
+              Helpers.formatCurrency(transaction.amount),
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -2715,343 +2714,9 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  void _showTransactionOptions(Transaction transaction) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle bar
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.textMuted,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
 
-              // Transaction Info
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: transaction.type == TransactionType.income
-                          ? AppColors.income.withValues(alpha: 0.15)
-                          : transaction.type == TransactionType.expense
-                          ? AppColors.expense.withValues(alpha: 0.15)
-                          : AppColors.secondary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      transaction.type == TransactionType.income
-                          ? Icons.arrow_downward_rounded
-                          : transaction.type == TransactionType.expense
-                          ? Icons.arrow_upward_rounded
-                          : Icons.swap_horiz_rounded,
-                      color: transaction.type == TransactionType.income
-                          ? AppColors.income
-                          : transaction.type == TransactionType.expense
-                          ? AppColors.expense
-                          : AppColors.secondary,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          transaction.title,
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          DateFormat(
-                            'MMM dd, yyyy - hh:mm a',
-                          ).format(transaction.date),
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    'Rs. ${_formatCurrency(transaction.amount)}',
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: transaction.type == TransactionType.income
-                          ? AppColors.income
-                          : transaction.type == TransactionType.expense
-                          ? AppColors.expense
-                          : AppColors.secondary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
 
-              // Options
-              _buildOptionItem(
-                icon: Icons.copy_rounded,
-                label: 'Copy',
-                color: AppColors.secondary,
-                onTap: () {
-                  final transactionText =
-                      '${transaction.title}\n'
-                      'Rs. ${_formatCurrency(transaction.amount)}\n'
-                      '${DateFormat('MMM dd, yyyy - hh:mm a').format(transaction.date)}\n'
-                      '${transaction.category ?? 'N/A'}';
-                  Clipboard.setData(ClipboardData(text: transactionText));
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: AppColors.secondary,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.check_rounded,
-                              color: Colors.white,
-                              size: 14,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Transaction copied',
-                            style: GoogleFonts.inter(),
-                          ),
-                        ],
-                      ),
-                      backgroundColor: AppColors.surface,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildOptionItem(
-                icon: transaction.isBookmarked
-                    ? Icons.bookmark_rounded
-                    : Icons.bookmark_border_rounded,
-                label: transaction.isBookmarked
-                    ? 'Remove Bookmark'
-                    : 'Bookmark',
-                color: AppColors.income,
-                onTap: () async {
-                  final updatedTransaction = Transaction(
-                    id: transaction.id,
-                    title: transaction.title,
-                    amount: transaction.amount,
-                    type: transaction.type,
-                    date: transaction.date,
-                    category: transaction.category,
-                    note: transaction.note,
-                    accountType: transaction.accountType,
-                    fromAccount: transaction.fromAccount,
-                    toAccount: transaction.toAccount,
-                    isBookmarked: !transaction.isBookmarked,
-                    imagePaths: transaction.imagePaths,
-                  );
-                  await StorageService.updateTransaction(updatedTransaction);
-                  Navigator.pop(context);
-                  setState(() {
-                    _refreshKey++;
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: AppColors.income,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.check_rounded,
-                              color: Colors.white,
-                              size: 14,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            transaction.isBookmarked
-                                ? 'Bookmark removed'
-                                : 'Transaction bookmarked',
-                            style: GoogleFonts.inter(),
-                          ),
-                        ],
-                      ),
-                      backgroundColor: AppColors.surface,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildOptionItem(
-                icon: Icons.delete_outline_rounded,
-                label: 'Delete',
-                color: AppColors.expense,
-                onTap: () {
-                  Navigator.pop(context);
-                  _showDeleteConfirmation(transaction);
-                },
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
-  Widget _buildOptionItem({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showDeleteConfirmation(Transaction transaction) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Delete Transaction',
-          style: GoogleFonts.inter(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to delete this transaction? This action cannot be undone.',
-          style: GoogleFonts.inter(color: AppColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.inter(color: AppColors.textMuted),
-            ),
-          ),
-          GestureDetector(
-            onTap: () async {
-              await StorageService.deleteTransaction(transaction.id);
-              Navigator.pop(context);
-              setState(() {
-                _refreshKey++;
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: AppColors.expense,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.check_rounded,
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text('Transaction deleted', style: GoogleFonts.inter()),
-                    ],
-                  ),
-                  backgroundColor: AppColors.surface,
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.expense.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: AppColors.expense.withValues(alpha: 0.3),
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                'Delete',
-                style: GoogleFonts.inter(
-                  color: AppColors.expense,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildTransactionItem(Transaction transaction) {
     final emoji = DefaultCategories.getCategoryEmoji(
@@ -3150,7 +2815,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
             Text(
-              'Rs. ${_formatCurrency(transaction.amount)}',
+              Helpers.formatCurrency(transaction.amount),
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -3259,10 +2924,7 @@ class _SearchScreenState extends State<_SearchScreen> {
     });
   }
 
-  String _formatCurrency(double amount) {
-    final formatter = NumberFormat('#,##0.00', 'en_US');
-    return formatter.format(amount);
-  }
+
 
   Color _getTypeColor(TransactionType type) {
     switch (type) {
@@ -3389,7 +3051,7 @@ class _SearchScreenState extends State<_SearchScreen> {
                     ),
                   ),
                   trailing: Text(
-                    'Rs. ${_formatCurrency(transaction.amount)}',
+                    Helpers.formatCurrency(transaction.amount),
                     style: GoogleFonts.inter(
                       color: typeColor,
                       fontWeight: FontWeight.w600,

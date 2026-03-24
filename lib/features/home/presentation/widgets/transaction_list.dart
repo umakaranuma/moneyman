@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../../utils/helpers.dart';
 import '../../../../models/transaction.dart';
 import '../../../../theme/app_theme.dart';
-import 'summary_card.dart';
 import 'transaction_item.dart';
 import 'empty_state.dart';
 
@@ -92,9 +92,7 @@ class _DateGroup extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    dayIncome > 0
-                        ? 'Rs. ${SummaryCard.formatCurrency(dayIncome)}'
-                        : 'Rs.00',
+                    Helpers.formatCurrency(dayIncome),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -104,7 +102,7 @@ class _DateGroup extends StatelessWidget {
                   const SizedBox(width: 12),
                   if (dayExpense > 0)
                     Text(
-                      'Rs. ${SummaryCard.formatCurrency(dayExpense)}',
+                      Helpers.formatCurrency(dayExpense),
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -113,7 +111,7 @@ class _DateGroup extends StatelessWidget {
                     ),
                   if (dayExpense == 0)
                     Text(
-                      'Rs.00',
+                      Helpers.formatCurrency(0),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
