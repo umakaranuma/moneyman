@@ -190,7 +190,7 @@ class _SmsAnalyticsTabState extends State<SmsAnalyticsTab> {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: AppColors.surfaceVariant.withValues(alpha: 0.3),
           width: 1,
@@ -238,7 +238,7 @@ class _SmsAnalyticsTabState extends State<SmsAnalyticsTab> {
                     ],
                   )
                 : null,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
             children: [
@@ -317,7 +317,7 @@ class _SmsAnalyticsTabState extends State<SmsAnalyticsTab> {
             AppColors.surfaceVariant.withValues(alpha: 0.5),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: color.withValues(alpha: 0.2),
           width: 1,
@@ -330,7 +330,7 @@ class _SmsAnalyticsTabState extends State<SmsAnalyticsTab> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: color, size: 18),
           ),

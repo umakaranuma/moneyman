@@ -219,7 +219,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(children: children),
     );
@@ -288,7 +288,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
       ),
       builder: (context) {
         return SafeArea(
@@ -319,6 +319,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ? Icon(Icons.check_rounded, color: AppColors.textSecondary, size: 20)
                       : null,
                   onTap: () {
+                    if (!mounted) return;
                     setState(() => _language = lang);
                     Navigator.pop(context);
                   },
@@ -338,7 +339,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: AppColors.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
       ),
       builder: (context) {
         return SafeArea(
@@ -377,6 +378,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           : null,
                       onTap: () async {
                         await StorageService.setDefaultCurrencyCode(currency.name);
+                        if (!mounted) return;
                         if (mounted) {
                           setState(() => _defaultCurrency = currency);
                           Navigator.pop(context);

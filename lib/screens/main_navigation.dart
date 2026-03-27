@@ -115,16 +115,16 @@ class _MainNavigationState extends State<MainNavigation>
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (didPop) return;
         if (_currentIndex != 0) {
           _pageController.jumpToPage(0);
           setState(() {
             _currentIndex = 0;
           });
-          return false;
         }
-        return true;
       },
       child: ListenableBuilder(
         listenable: ThemeService(),
@@ -155,7 +155,7 @@ class _MainNavigationState extends State<MainNavigation>
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(20),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
@@ -169,7 +169,7 @@ class _MainNavigationState extends State<MainNavigation>
                     AppColors.surfaceVariant.withValues(alpha: 0.85),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: AppColors.primary.withValues(alpha: 0.1),
                   width: 1,
@@ -225,7 +225,7 @@ class _MainNavigationState extends State<MainNavigation>
         ),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary.withValues(alpha: 0.15) : null,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

@@ -42,7 +42,7 @@ class NoteCard extends StatelessWidget {
             AppColors.surfaceVariant,
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: cardColor.withValues(alpha: 0.8),
           width: 2,
@@ -58,7 +58,7 @@ class NoteCard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Column(
@@ -118,7 +118,7 @@ class NoteCard extends StatelessWidget {
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: AppColors.expense.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: AppColors.expense.withValues(alpha: 0.6),
                             width: 1.5,

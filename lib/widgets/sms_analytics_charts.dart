@@ -49,7 +49,7 @@ class BankBreakdownPieChart extends StatelessWidget {
             AppColors.surfaceVariant.withValues(alpha: 0.5),
           ],
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: AppColors.surfaceVariant.withValues(alpha: 0.3),
           width: 1,
@@ -66,7 +66,7 @@ class BankBreakdownPieChart extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: [AppColors.primary, AppColors.primaryLight],
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.pie_chart_rounded,
@@ -241,7 +241,7 @@ class CreditDebitTrendsChart extends StatelessWidget {
             AppColors.surfaceVariant.withValues(alpha: 0.5),
           ],
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: AppColors.surfaceVariant.withValues(alpha: 0.3),
           width: 1,
@@ -261,7 +261,7 @@ class CreditDebitTrendsChart extends StatelessWidget {
                       AppColors.income.withValues(alpha: 0.7),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.trending_up_rounded,
@@ -493,7 +493,7 @@ class BalanceOverTimeChart extends StatelessWidget {
             AppColors.surfaceVariant.withValues(alpha: 0.5),
           ],
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: AppColors.surfaceVariant.withValues(alpha: 0.3),
           width: 1,
@@ -513,7 +513,7 @@ class BalanceOverTimeChart extends StatelessWidget {
                       AppColors.secondary.withValues(alpha: 0.7),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.account_balance_wallet_rounded,
@@ -707,7 +707,7 @@ class TransactionVolumeChart extends StatelessWidget {
             AppColors.surfaceVariant.withValues(alpha: 0.5),
           ],
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: AppColors.surfaceVariant.withValues(alpha: 0.3),
           width: 1,
@@ -727,7 +727,7 @@ class TransactionVolumeChart extends StatelessWidget {
                       AppColors.expense.withValues(alpha: 0.7),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.bar_chart_rounded,

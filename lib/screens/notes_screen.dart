@@ -152,7 +152,7 @@ class _NotesScreenState extends State<NotesScreen> with WidgetsBindingObserver {
               gradient: const LinearGradient(
                 colors: [AppColors.primary, AppColors.primaryLight],
               ),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(Icons.note_alt_rounded, color: Colors.white, size: 18),
           ),
@@ -282,7 +282,7 @@ class _NotesScreenState extends State<NotesScreen> with WidgetsBindingObserver {
         height: 60,
         decoration: BoxDecoration(
           color: AppColors.primary,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
               color: AppColors.primary.withValues(alpha: 0.3),
@@ -306,7 +306,7 @@ class _NotesScreenState extends State<NotesScreen> with WidgetsBindingObserver {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(12),
         ),
         title: Row(
           children: [
@@ -314,7 +314,7 @@ class _NotesScreenState extends State<NotesScreen> with WidgetsBindingObserver {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: AppColors.expense.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: AppColors.expense.withValues(alpha: 0.6),
                   width: 1.5,
@@ -366,7 +366,7 @@ class _NotesScreenState extends State<NotesScreen> with WidgetsBindingObserver {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: AppColors.expense.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: AppColors.expense.withValues(alpha: 0.6),
                   width: 1.5,

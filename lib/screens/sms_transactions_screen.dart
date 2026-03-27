@@ -682,7 +682,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
             color: isSelected
                 ? chipColor.withValues(alpha: 0.2)
                 : AppColors.background,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected ? chipColor : AppColors.surfaceVariant,
               width: isSelected ? 1.5 : 1,
@@ -788,7 +788,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -1,11 +1,10 @@
-// ignore_for_file: unused_field, unused_element, deprecated_member_use
+
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:money_man/services/theme_service.dart';
 import '../core/router/app_router.dart';
 import '../models/account.dart';
-import '../services/notification_service.dart';
 import '../services/storage_service.dart';
 import 'passcode_lock_screen.dart';
 import 'passcode_setup_screen.dart';
@@ -21,12 +20,8 @@ class ConfigurationScreen extends StatefulWidget {
 class _ConfigurationScreenState extends State<ConfigurationScreen> {
   String _mainCurrency = 'LKR (Rs.)';
   bool _subcategoryEnabled = true;
-  String _startScreen = 'Daily';
   bool _carryOverEnabled = true;
   bool _passcodeEnabled = false;
-  bool _alarmEnabled = true;
-  bool _quickAddEnabled = false;
-  bool _notificationPermissionGranted = false;
 
   @override
   void initState() {
@@ -40,18 +35,8 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
         ? _formatCurrencyLabel(code)
         : _formatCurrencyLabel(CurrencyType.lkr.name.toUpperCase());
     _subcategoryEnabled = StorageService.getConfigSubcategoryEnabled();
-    _startScreen = StorageService.getConfigStartScreen();
     _carryOverEnabled = StorageService.getConfigCarryOverEnabled();
     _passcodeEnabled = StorageService.getConfigPasscodeEnabled();
-    _alarmEnabled = StorageService.getConfigAlarmEnabled();
-    _quickAddEnabled = StorageService.getConfigQuickAddEnabled();
-    _refreshNotificationPermission();
-  }
-
-  Future<void> _refreshNotificationPermission() async {
-    final granted = await NotificationService.hasNotificationPermission();
-    if (!mounted) return;
-    setState(() => _notificationPermissionGranted = granted);
   }
 
   String _formatCurrencyLabel(String code) {
@@ -125,7 +110,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                   title: 'Subcategory',
                   trailing: Switch(
                     value: _subcategoryEnabled,
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                     onChanged: (value) async {
                       await StorageService.setConfigSubcategoryEnabled(value);
                       if (!mounted) return;
@@ -170,7 +155,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                   title: 'Carry-over Setting',
                   trailing: Switch(
                     value: _carryOverEnabled,
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                     onChanged: (value) async {
                       await StorageService.setConfigCarryOverEnabled(value);
                       if (!mounted) return;
@@ -190,7 +175,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                   subtitle: _passcodeEnabled ? 'Enabled' : 'Disabled',
                   trailing: Switch(
                     value: _passcodeEnabled,
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                     onChanged: (value) async {
                       await _onPasscodeToggle(value);
                     },
@@ -227,7 +212,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
         color: theme.cardTheme.color,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: theme.dividerColor.withOpacity(0.1),
+          color: theme.dividerColor.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -257,7 +242,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.1),
+                  color: iconColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: iconColor, size: 22),
@@ -310,7 +295,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
       thickness: 1,
       indent: 56,
       endIndent: 16,
-      color: theme.dividerColor.withOpacity(0.1),
+      color: theme.dividerColor.withValues(alpha: 0.1),
     );
   }
 
@@ -396,7 +381,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
       context: context,
       backgroundColor: theme.bottomSheetTheme.backgroundColor,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
       ),
       builder: (sheetContext) {
         return SafeArea(
@@ -472,87 +457,6 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
     );
   }
 
-  Future<void> _pickStringOption({
-    required String title,
-    required List<String> options,
-    required String currentValue,
-    required Future<void> Function(String value) onSelected,
-  }) async {
-    final theme = Theme.of(context);
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: theme.bottomSheetTheme.backgroundColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.dividerColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: theme.textTheme.titleLarge?.color,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  children: options
-                      .map(
-                        (option) => ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                          ),
-                          title: Text(
-                            option,
-                            style: GoogleFonts.inter(
-                              color: theme.textTheme.bodyLarge?.color,
-                              fontWeight: option == currentValue
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
-                            ),
-                          ),
-                          trailing: option == currentValue
-                              ? const Icon(
-                                  Icons.check_circle_rounded,
-                                  color: AppColors.primary,
-                                )
-                              : null,
-                          onTap: () async {
-                            await onSelected(option);
-                            if (sheetContext.mounted) {
-                              Navigator.pop(sheetContext);
-                            }
-                          },
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Future<void> _onPasscodeToggle(bool enable) async {
     if (enable) {
       final pin = await Navigator.of(context).push<String>(
@@ -600,40 +504,6 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
     }
 
     _showMessage('Passcode confirmation required');
-  }
-
-  Future<void> _openReminderSettings() async {
-    final hasPermission = await NotificationService.hasNotificationPermission();
-    if (!hasPermission) {
-      final granted = await NotificationService.requestNotificationPermission();
-      if (!granted) {
-        if (!mounted) return;
-        _showMessage(
-          'Reminder permission is required to play alarm tone reminders.',
-        );
-        return;
-      }
-    }
-
-    final exactGranted = await NotificationService.hasExactAlarmPermission();
-    if (!exactGranted) {
-      final exactNowGranted =
-          await NotificationService.requestExactAlarmPermission();
-      if (!exactNowGranted && mounted) {
-        _showMessage(
-          'Exact alarm permission not granted. Reminders can still work, but may be delayed.',
-        );
-      }
-    }
-
-    await NotificationService.rescheduleAllNotifications();
-    await StorageService.setConfigAlarmEnabled(true);
-    if (!mounted) return;
-    setState(() {
-      _alarmEnabled = true;
-      _notificationPermissionGranted = true;
-    });
-    context.goToReminders();
   }
 
   void _showMessage(String message) {

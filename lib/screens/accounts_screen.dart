@@ -1259,7 +1259,7 @@ class _DeleteAccountsSheetState extends State<_DeleteAccountsSheet> {
               width: double.infinity,
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: ElevatedButton(
                 onPressed: _selectedIds.isEmpty
@@ -1269,7 +1269,7 @@ class _DeleteAccountsSheetState extends State<_DeleteAccountsSheet> {
                           await AccountService.deleteAccount(id);
                         }
                         widget.onDeleted();
-                        if (mounted) {
+                        if (context.mounted) {
                           Navigator.pop(context);
                         }
                       },
@@ -1279,7 +1279,7 @@ class _DeleteAccountsSheetState extends State<_DeleteAccountsSheet> {
                   disabledBackgroundColor: AppColors.surfaceVariant,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   elevation: 0,
                 ),
@@ -1297,7 +1297,7 @@ class _DeleteAccountsSheetState extends State<_DeleteAccountsSheet> {
               width: double.infinity,
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: TextButton(
                 onPressed: () => Navigator.pop(context),

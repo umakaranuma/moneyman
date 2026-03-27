@@ -249,7 +249,7 @@ class _TransactionFilterScreenState extends State<TransactionFilterScreen>
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -331,7 +331,7 @@ class _TransactionFilterScreenState extends State<TransactionFilterScreen>
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
@@ -354,7 +354,7 @@ class _TransactionFilterScreenState extends State<TransactionFilterScreen>
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
             label,
@@ -388,7 +388,7 @@ class _TransactionFilterScreenState extends State<TransactionFilterScreen>
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.15)
               : AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
           label,
@@ -614,7 +614,7 @@ class _TransactionFilterScreenState extends State<TransactionFilterScreen>
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   side: BorderSide(
                     color: AppColors.textMuted.withValues(alpha: 0.5),

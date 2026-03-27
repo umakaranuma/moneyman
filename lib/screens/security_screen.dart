@@ -78,7 +78,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                         AppColors.primary.withValues(alpha: 0.2),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: AppColors.secondary.withValues(alpha: 0.3),
                       width: 1,
@@ -92,7 +92,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                           gradient: const LinearGradient(
                             colors: [AppColors.secondary, AppColors.primary],
                           ),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
                           Icons.lock_rounded,
@@ -287,7 +287,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
             AppColors.surfaceVariant.withValues(alpha: 0.5),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.surfaceVariant, width: 1),
       ),
       child: Column(children: children),
@@ -320,7 +320,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                         ]
                       : [AppColors.secondary, AppColors.primary],
                 ),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: Colors.white, size: 20),
             ),
@@ -398,6 +398,8 @@ class _SecurityScreenState extends State<SecurityScreen> {
               // Usually you'd collect the PIN from a text field, but let's assume a default for now as it's a UI demo
               await StorageService.setConfigPin('1234');
               await StorageService.setConfigPasscodeEnabled(true);
+              if (!mounted) return;
+              if (!mounted) return;
               setState(() {
                 _pinEnabled = true;
               });
@@ -439,6 +441,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                   value: minutes,
                   groupValue: _autoLockMinutes,
                   onChanged: (value) {
+                    if (!mounted) return;
                     setState(() {
                       _autoLockMinutes = value!;
                     });

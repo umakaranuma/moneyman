@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -67,6 +65,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
     );
     if (confirm == true) {
       await ReminderService.deleteReminder(reminder.id);
+      if (!mounted) return;
       _loadReminders();
     }
   }
@@ -99,7 +98,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                 gradient: const LinearGradient(
                   colors: [AppColors.primary, AppColors.primaryLight],
                 ),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.notifications_active_rounded,
@@ -220,7 +219,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
         color: isHighlighted
             ? AppColors.primary.withValues(alpha: 0.08)
             : AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: borderColor,
           width: isHighlighted ? 2 : 1,
@@ -240,8 +239,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () async {
-            await context.goToEditReminder(reminder);
-            if (mounted) _loadReminders();
+        await context.goToEditReminder(reminder);
+        if (mounted) _loadReminders();
           },
           onLongPress: () => _deleteReminder(reminder),
           child: Padding(
@@ -253,7 +252,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: iconColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(icon, color: iconColor, size: 22),
                 ),

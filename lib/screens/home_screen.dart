@@ -144,14 +144,9 @@ class _HomeScreenState extends State<HomeScreen>
 
     // Apply active filter if any
     if (_activeFilter != null) {
-      print(
-        'Applying filter: Income categories: ${_activeFilter!.selectedIncomeCategories}, Expense categories: ${_activeFilter!.selectedExpenseCategories}, Account types: ${_activeFilter!.selectedAccountTypes}',
-      );
-      print('Has active filters: ${_activeFilter!.hasActiveFilters}');
-      print('Transactions before filter: ${combinedTransactions.length}');
       if (_activeFilter!.hasActiveFilters) {
         combinedTransactions = _activeFilter!.apply(combinedTransactions);
-        print('Transactions after filter: ${combinedTransactions.length}');
+        // Removed debug prints
       }
     }
 
@@ -929,12 +924,8 @@ class _HomeScreenState extends State<HomeScreen>
 
     if (result != null) {
       final filter = result['filter'] as TransactionFilter?;
-      print('Filter received from dialog: $filter');
       if (filter != null) {
-        print(
-          'Filter details: Income: ${filter.selectedIncomeCategories}, Expense: ${filter.selectedExpenseCategories}, Accounts: ${filter.selectedAccountTypes}',
-        );
-        print('Has active filters: ${filter.hasActiveFilters}');
+        // Removed debug prints
       }
       setState(() {
         _activeFilter = filter;

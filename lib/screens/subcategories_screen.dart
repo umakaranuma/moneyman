@@ -337,7 +337,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(

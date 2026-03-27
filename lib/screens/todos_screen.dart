@@ -80,7 +80,7 @@ class _TodosScreenState extends State<TodosScreen> {
                 gradient: LinearGradient(
                   colors: [AppColors.primary, AppColors.primaryLight],
                 ),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.checklist_rounded,
@@ -171,7 +171,7 @@ class _TodosScreenState extends State<TodosScreen> {
             color.withValues(alpha: 0.05),
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
@@ -183,7 +183,7 @@ class _TodosScreenState extends State<TodosScreen> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 18),
               ),
@@ -218,7 +218,7 @@ class _TodosScreenState extends State<TodosScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.surfaceVariant, width: 1),
       ),
       child: Row(
@@ -234,7 +234,7 @@ class _TodosScreenState extends State<TodosScreen> {
                     AppColors.primaryLight.withValues(alpha: 0.1),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: AppColors.primary.withValues(alpha: 0.3),
                   width: 1,
@@ -327,7 +327,7 @@ class _TodosScreenState extends State<TodosScreen> {
         height: 36,
         decoration: BoxDecoration(
           color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: AppColors.textPrimary, size: 20),
       ),
@@ -370,7 +370,7 @@ class _TodosScreenState extends State<TodosScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: todo.isDone
               ? AppColors.income.withValues(alpha: 0.3)
@@ -475,7 +475,7 @@ class _TodosScreenState extends State<TodosScreen> {
             ),
             color: AppColors.surface,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
             ),
             onSelected: (value) {
               if (value == 'reschedule') {
@@ -560,14 +560,14 @@ class _TodosScreenState extends State<TodosScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.schedule_rounded,
@@ -664,14 +664,14 @@ class _TodosScreenState extends State<TodosScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: AppColors.expense.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.delete_rounded,
@@ -727,7 +727,7 @@ class _TodosScreenState extends State<TodosScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: AppColors.expense.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 'Delete',
@@ -794,7 +794,7 @@ class _TodosScreenState extends State<TodosScreen> {
           gradient: const LinearGradient(
             colors: [AppColors.primary, AppColors.primaryLight],
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
               color: AppColors.primary.withValues(alpha: 0.3),

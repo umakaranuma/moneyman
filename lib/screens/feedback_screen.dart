@@ -559,7 +559,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         }
       }
     } catch (e) {
-      print('Error launching email: $e');
+    } catch (e) {
+      // Error launching email
     }
 
     // Fallback: Use share functionality to copy email content
