@@ -145,43 +145,78 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   Widget _buildPremiumHeader() {
+    final accent = _isExpense ? AppColors.expense : AppColors.income;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(
-                Icons.arrow_back_rounded,
-                color: AppColors.textPrimary,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: AppColors.surfaceVariant.withValues(alpha: 0.6),
+          ),
+        ),
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.arrow_back_rounded,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              _isExpense ? "Expense Categories" : "Income Categories",
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _isExpense ? "Expense Categories" : "Income Categories",
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _isExpense
+                        ? "Organize spending with smart groups"
+                        : "Organize earnings by source",
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          GestureDetector(
-            onTap: _toggleCategoryType,
-            child: const Icon(
-              Icons.swap_horiz_rounded,
-              color: AppColors.textMuted,
+            GestureDetector(
+              onTap: _toggleCategoryType,
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.swap_horiz_rounded,
+                  color: accent,
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -190,10 +225,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 1),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: AppColors.surfaceVariant.withValues(alpha: 0.55),
+          ),
         ),
         child: TextField(
           controller: _searchController,
@@ -211,6 +249,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
   Widget _buildPremiumCategoryItem(Category category, int index) {
     final hasSubs = category.subcategories.isNotEmpty;
+    final accent = _isExpense ? AppColors.expense : AppColors.income;
+    final icon = _CategoryIconResolver.resolve(category.name, isExpense: _isExpense);
+    final hasEmoji = category.emoji.trim().isNotEmpty;
 
     return Dismissible(
       key: ValueKey(category.id),
@@ -249,28 +290,30 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
+            border: Border.all(
+              color: AppColors.surfaceVariant.withValues(alpha: 0.55),
+            ),
           ),
           child: Row(
             children: [
               Container(
                 width: 48,
                 height: 48,
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceVariant,
-                  shape: BoxShape.circle,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Center(
-                  child: Text(
-                    category.emoji.isNotEmpty ? category.emoji : "📁",
-                    style: const TextStyle(fontSize: 22),
-                  ),
+                  child: hasEmoji
+                      ? Text(
+                          category.emoji,
+                          style: const TextStyle(fontSize: 22),
+                        )
+                      : Icon(
+                          icon,
+                          size: 22,
+                          color: accent,
+                        ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -297,10 +340,18 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   ],
                 ),
               ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textMuted,
-              ),
+              if (hasSubs)
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: AppColors.textMuted,
+                  size: 16,
+                )
+              else
+                Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: accent.withValues(alpha: 0.55),
+                  size: 18,
+                ),
             ],
           ),
         ),
@@ -313,7 +364,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       backgroundColor: _isExpense ? AppColors.expense : AppColors.income,
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      icon: const Icon(Icons.add, color: Colors.white),
+      icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white),
       label: const Text(
         "Add Category",
         style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
@@ -444,5 +495,65 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         _loadCategories();
       }
     });
+  }
+}
+
+class _CategoryIconResolver {
+  static IconData resolve(String categoryName, {required bool isExpense}) {
+    final name = categoryName.toLowerCase();
+
+    if (name.contains('food') || name.contains('restaurant') || name.contains('dining')) {
+      return Icons.restaurant_rounded;
+    }
+    if (name.contains('grocery') || name.contains('supermarket') || name.contains('market')) {
+      return Icons.local_grocery_store_rounded;
+    }
+    if (name.contains('transport') || name.contains('travel')) {
+      return Icons.directions_car_rounded;
+    }
+    if (name.contains('fuel') || name.contains('petrol') || name.contains('diesel')) {
+      return Icons.local_gas_station_rounded;
+    }
+    if (name.contains('shopping') || name.contains('fashion') || name.contains('clothes')) {
+      return Icons.shopping_bag_rounded;
+    }
+    if (name.contains('health') || name.contains('medical') || name.contains('pharmacy')) {
+      return Icons.health_and_safety_rounded;
+    }
+    if (name.contains('education') || name.contains('study') || name.contains('school')) {
+      return Icons.school_rounded;
+    }
+    if (name.contains('entertainment') || name.contains('movie') || name.contains('fun')) {
+      return Icons.movie_rounded;
+    }
+    if (name.contains('bill') || name.contains('utility') || name.contains('electric')) {
+      return Icons.receipt_long_rounded;
+    }
+    if (name.contains('rent') || name.contains('house') || name.contains('home')) {
+      return Icons.home_rounded;
+    }
+    if (name.contains('subscription') || name.contains('streaming')) {
+      return Icons.subscriptions_rounded;
+    }
+    if (name.contains('phone') || name.contains('mobile') || name.contains('internet')) {
+      return Icons.phone_android_rounded;
+    }
+    if (name.contains('salary') || name.contains('income') || name.contains('wage')) {
+      return Icons.payments_rounded;
+    }
+    if (name.contains('business') || name.contains('freelance') || name.contains('project')) {
+      return Icons.work_rounded;
+    }
+    if (name.contains('investment') || name.contains('stock')) {
+      return Icons.trending_up_rounded;
+    }
+    if (name.contains('gift') || name.contains('bonus')) {
+      return Icons.card_giftcard_rounded;
+    }
+    if (name.contains('loan') || name.contains('emi') || name.contains('debt')) {
+      return Icons.account_balance_rounded;
+    }
+
+    return isExpense ? Icons.receipt_rounded : Icons.account_balance_wallet_rounded;
   }
 }
