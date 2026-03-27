@@ -367,12 +367,24 @@ class AppTheme {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
+      // Surface + on-surface text in both modes. (Avoids white-on-white when
+      // SnackBar overrides backgroundColor to AppColors.surface in light mode.)
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: isDark ? surfaceColor : Colors.grey[900],
+        backgroundColor: surfaceColor,
         contentTextStyle: GoogleFonts.inter(
-          color: isDark ? textPrimaryColor : Colors.white,
+          color: textPrimaryColor,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        actionTextColor: AppColors.primary,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: BorderSide(
+            color: surfaceVariantColor.withValues(alpha: 0.65),
+            width: 1,
+          ),
+        ),
         behavior: SnackBarBehavior.floating,
       ),
       tabBarTheme: TabBarThemeData(
