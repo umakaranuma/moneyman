@@ -34,7 +34,7 @@ class StatsHeader extends StatelessWidget {
           if (showBackButton) const SizedBox(width: 8),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
               fontSize: 18,
@@ -48,7 +48,7 @@ class StatsHeader extends StatelessWidget {
           ),
           Text(
             DateFormat('MMM yyyy').format(month),
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
               fontSize: 16,

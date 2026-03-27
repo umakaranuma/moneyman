@@ -81,7 +81,7 @@ void showTransactionOptionsSheet(
                       children: [
                         Text(
                           transaction.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,
@@ -92,7 +92,7 @@ void showTransactionOptionsSheet(
                           DateFormat(
                             'MMM d, yyyy · h:mm a',
                           ).format(transaction.date),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             color: AppColors.textMuted,
                           ),
@@ -294,7 +294,7 @@ void _showDeleteConfirmation(
             onDeleted();
             if (ctx.mounted) {
               ScaffoldMessenger.of(ctx).showSnackBar(
-                const SnackBar(
+                SnackBar(
                   content: Text('Transaction deleted'),
                   backgroundColor: AppColors.surface,
                   behavior: SnackBarBehavior.floating,

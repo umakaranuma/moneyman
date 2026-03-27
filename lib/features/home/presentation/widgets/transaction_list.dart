@@ -81,7 +81,7 @@ class _DateGroup extends StatelessWidget {
             children: [
               Text(
                 '${date.day} $dayName $dateStr',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
@@ -93,7 +93,7 @@ class _DateGroup extends StatelessWidget {
                 children: [
                   Text(
                     Helpers.formatCurrency(dayIncome),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: AppColors.income,
@@ -103,7 +103,7 @@ class _DateGroup extends StatelessWidget {
                   if (dayExpense > 0)
                     Text(
                       Helpers.formatCurrency(dayExpense),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: AppColors.expense,

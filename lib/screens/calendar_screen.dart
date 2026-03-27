@@ -83,7 +83,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+            child: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
           ),
         ),
         title: Text(
@@ -174,9 +174,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   fontWeight: FontWeight.w600,
                 ),
                 leftChevronIcon:
-                    const Icon(Icons.chevron_left_rounded, color: AppColors.textPrimary),
+                    Icon(Icons.chevron_left_rounded, color: AppColors.textPrimary),
                 rightChevronIcon:
-                    const Icon(Icons.chevron_right_rounded, color: AppColors.textPrimary),
+                    Icon(Icons.chevron_right_rounded, color: AppColors.textPrimary),
                 formatButtonTextStyle: GoogleFonts.inter(
                   color: AppColors.primary,
                   fontSize: 12,

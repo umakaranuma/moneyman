@@ -36,7 +36,7 @@ class CustomCircularProgress extends StatelessWidget {
               value: 1.0,
               strokeWidth: 12,
               backgroundColor: AppColors.surfaceVariant,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.surfaceVariant),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.surfaceVariant),
             ),
           ),
           // Progress circle
@@ -59,7 +59,7 @@ class CustomCircularProgress extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textMuted,
                   fontWeight: FontWeight.w500,
@@ -78,7 +78,7 @@ class CustomCircularProgress extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subAmount!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     color: AppColors.textMuted,
                   ),

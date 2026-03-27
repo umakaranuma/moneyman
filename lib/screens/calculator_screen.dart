@@ -137,7 +137,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                           ),
                         ],
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_back_rounded,
                         color: AppColors.textPrimary,
                         size: 22,

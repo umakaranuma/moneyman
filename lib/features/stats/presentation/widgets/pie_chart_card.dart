@@ -51,7 +51,7 @@ class PieChartCard extends StatelessWidget {
                   children: [
                     Text(
                       Helpers.formatCurrency(total),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
@@ -60,7 +60,7 @@ class PieChartCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       isIncome ? 'Total Income' : 'Total Expense',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 12,
                       ),

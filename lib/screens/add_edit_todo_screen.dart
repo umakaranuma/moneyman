@@ -57,7 +57,7 @@ class _AddEditTodoScreenState extends State<AddEditTodoScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: AppColors.primary,
               onPrimary: Colors.white,
               surface: AppColors.surface,
@@ -115,7 +115,7 @@ class _AddEditTodoScreenState extends State<AddEditTodoScreen> {
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+            child: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
           ),
         ),
         title: Text(

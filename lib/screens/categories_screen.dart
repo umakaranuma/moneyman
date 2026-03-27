@@ -168,7 +168,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   color: AppColors.background,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.arrow_back_rounded,
                   color: AppColors.textPrimary,
                 ),
@@ -181,7 +181,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 children: [
                   Text(
                     _isExpense ? "Expense Categories" : "Income Categories",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -192,7 +192,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     _isExpense
                         ? "Organize spending with smart groups"
                         : "Organize earnings by source",
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12.5,
                       fontWeight: FontWeight.w500,
@@ -235,8 +235,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         ),
         child: TextField(
           controller: _searchController,
-          style: const TextStyle(color: AppColors.textPrimary),
-          decoration: const InputDecoration(
+          style: TextStyle(color: AppColors.textPrimary),
+          decoration: InputDecoration(
             icon: Icon(Icons.search_rounded, color: AppColors.textMuted),
             hintText: "Search categories...",
             hintStyle: TextStyle(color: AppColors.textMuted),
@@ -264,7 +264,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           color: AppColors.expense.withOpacity(0.15),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: const Icon(
+        child: Icon(
           Icons.delete_outline_rounded,
           color: AppColors.expense,
         ),
@@ -323,7 +323,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   children: [
                     Text(
                       category.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
@@ -332,7 +332,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     if (hasSubs)
                       Text(
                         "${category.subcategories.length} subcategories",
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           color: AppColors.textMuted,
                         ),
@@ -341,7 +341,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 ),
               ),
               if (hasSubs)
-                const Icon(
+                Icon(
                   Icons.arrow_forward_ios_rounded,
                   color: AppColors.textMuted,
                   size: 16,
@@ -402,7 +402,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           const SizedBox(height: 24),
           Text(
             isSearch ? 'No matches' : 'No Categories Yet',
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textPrimary,
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -413,7 +413,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             isSearch
                 ? 'Try a different search'
                 : 'Tap Add Category to create your first one',
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 14),
+            style: TextStyle(color: AppColors.textMuted, fontSize: 14),
             textAlign: TextAlign.center,
           ),
         ],
@@ -426,18 +426,18 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text(
+        title: Text(
           'Delete Category',
           style: TextStyle(color: AppColors.textPrimary),
         ),
         content: Text(
           'Are you sure you want to delete "${category.name}"?',
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
+            child: Text(
               'Cancel',
               style: TextStyle(color: AppColors.textMuted),
             ),

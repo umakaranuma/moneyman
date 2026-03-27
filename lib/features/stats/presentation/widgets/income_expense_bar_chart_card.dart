@@ -48,7 +48,7 @@ class IncomeExpenseBarChartCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Income vs Expenses',
             style: TextStyle(
               color: AppColors.textPrimary,
@@ -77,7 +77,7 @@ class IncomeExpenseBarChartCard extends StatelessWidget {
                         padding: const EdgeInsets.only(right: 8),
                         child: Text(
                           StatsCalculator.formatCurrency(value),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textMuted,
                             fontSize: 10,
                           ),
@@ -94,7 +94,7 @@ class IncomeExpenseBarChartCard extends StatelessWidget {
                             value.toInt() < months.length) {
                           return Text(
                             months[value.toInt()].split(' ')[0],
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textMuted,
                               fontSize: 10,
                             ),
@@ -164,14 +164,14 @@ class IncomeExpenseBarChartCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       '${month.split(' ')[0]}: ',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 11,
                       ),
                     ),
                     Text(
                       StatsCalculator.formatCurrency(incomes[i]),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -204,14 +204,14 @@ class IncomeExpenseBarChartCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       '${month.split(' ')[0]}: ',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 11,
                       ),
                     ),
                     Text(
                       StatsCalculator.formatCurrency(expenses[i]),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -245,7 +245,7 @@ class IncomeExpenseBarChartCard extends StatelessWidget {
       child: Center(
         child: Text(
           message,
-          style: const TextStyle(color: AppColors.textMuted, fontSize: 14),
+          style: TextStyle(color: AppColors.textMuted, fontSize: 14),
         ),
       ),
     );

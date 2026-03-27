@@ -7,27 +7,12 @@ import 'services/budget_service.dart';
 import 'services/account_service.dart';
 import 'services/sms_service.dart';
 import 'services/notification_service.dart';
+import 'services/theme_service.dart';
 import 'theme/app_theme.dart';
 import 'core/router/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Set system UI overlay style for dark theme
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: AppColors.background,
-      systemNavigationBarIconBrightness: Brightness.light,
-    ),
-  );
-
-  // Set preferred orientations
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
 
   await StorageService.init();
   await CategoryService.init();
@@ -35,6 +20,12 @@ void main() async {
   await AccountService.init();
   await SmsService.init();
   await NotificationService.init();
+
+  // Set preferred orientations
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   runApp(const MyApp());
 }
@@ -50,6 +41,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   bool _requiresPasscode = false;
   bool _isUnlocked = false;
   String? _expectedPin;
+  final ThemeService _themeService = ThemeService();
 
   @override
   void initState() {
@@ -87,26 +79,53 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     });
   }
 
+  void _updateSystemUI(ThemeMode themeMode) {
+    final brightness = themeMode == ThemeMode.dark
+        ? Brightness.dark
+        : (themeMode == ThemeMode.light
+            ? Brightness.light
+            : WidgetsBinding.instance.platformDispatcher.platformBrightness);
+
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness:
+            brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: AppColors.getBackground(brightness),
+        systemNavigationBarIconBrightness:
+            brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Finzo',
-      theme: AppTheme.darkTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark,
-      routerConfig: AppRouter.router,
-      debugShowCheckedModeBanner: false,
-      builder: (context, child) {
-        if (_requiresPasscode && !_isUnlocked && _expectedPin != null) {
-          return PasscodeLockScreen(
-            expectedPin: _expectedPin!,
-            onUnlocked: () {
-              setState(() => _isUnlocked = true);
-            },
-          );
-        }
-        return child ?? const SizedBox.shrink();
+    return ListenableBuilder(
+      listenable: _themeService,
+      builder: (context, _) {
+        _updateSystemUI(_themeService.themeMode);
+        
+        return MaterialApp.router(
+          title: 'Finzo',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: _themeService.themeMode,
+          routerConfig: AppRouter.router,
+          debugShowCheckedModeBanner: false,
+          builder: (context, child) {
+            if (_requiresPasscode && !_isUnlocked && _expectedPin != null) {
+              return PasscodeLockScreen(
+                expectedPin: _expectedPin!,
+                onUnlocked: () {
+                  setState(() => _isUnlocked = true);
+                },
+              );
+            }
+            return child ?? const SizedBox.shrink();
+          },
+        );
       },
     );
   }
 }
+

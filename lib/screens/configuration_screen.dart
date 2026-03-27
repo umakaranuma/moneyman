@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:money_man/services/theme_service.dart';
 import '../core/router/app_router.dart';
 import '../models/account.dart';
 import '../services/notification_service.dart';
@@ -72,10 +73,11 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
@@ -86,7 +88,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
           style: GoogleFonts.inter(
             fontSize: 24,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: theme.textTheme.titleLarge?.color,
           ),
         ),
       ),
@@ -97,22 +99,25 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildSectionTitle('Category & Budget'),
-              _buildCard([
+              _buildCard(context, [
                 _buildSettingItem(
+                  context,
                   icon: Icons.account_balance_wallet_rounded,
                   iconColor: AppColors.income,
                   title: 'Income Category Setting',
                   onTap: () => context.goToCategories(isExpense: false),
                 ),
-                _buildDivider(),
+                _buildDivider(context),
                 _buildSettingItem(
+                  context,
                   icon: Icons.shopping_bag_rounded,
                   iconColor: AppColors.expense,
                   title: 'Expenses Category Setting',
                   onTap: () => context.goToCategories(isExpense: true),
                 ),
-                _buildDivider(),
+                _buildDivider(context),
                 _buildSettingItem(
+                  context,
                   icon: Icons.account_tree_rounded,
                   iconColor: Colors.purpleAccent,
                   title: 'Subcategory',
@@ -126,8 +131,9 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                     },
                   ),
                 ),
-                _buildDivider(),
+                _buildDivider(context),
                 _buildSettingItem(
+                  context,
                   icon: Icons.pie_chart_rounded,
                   iconColor: Colors.orangeAccent,
                   title: 'Budget Setting',
@@ -136,33 +142,27 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
               ]),
               const SizedBox(height: 24),
               _buildSectionTitle('General Configuration'),
-              _buildCard([
+              _buildCard(context, [
                 _buildSettingItem(
+                  context,
                   icon: Icons.currency_exchange_rounded,
                   iconColor: AppColors.primary,
                   title: 'Main Currency',
                   subtitle: _mainCurrency,
                   onTap: _pickMainCurrency,
                 ),
-                // _buildDivider(),
-                // _buildSettingItem(
-                //   icon: Icons.home_rounded,
-                //   iconColor: Colors.indigoAccent,
-                //   title: 'Start Screen',
-                //   subtitle: _startScreen,
-                //   onTap: () => _pickStringOption(
-                //     title: 'Start Screen',
-                //     options: ['Daily', 'Calendar'],
-                //     currentValue: _startScreen,
-                //     onSelected: (value) async {
-                //       await StorageService.setConfigStartScreen(value);
-                //       if (!mounted) return;
-                //       setState(() => _startScreen = value);
-                //     },
-                //   ),
-                // ),
-                _buildDivider(),
+                _buildDivider(context),
                 _buildSettingItem(
+                  context,
+                  icon: Icons.palette_rounded,
+                  iconColor: Colors.indigoAccent,
+                  title: 'Theme',
+                  subtitle: ThemeService().isDarkMode ? 'Dark' : 'Light',
+                  onTap: () => _pickTheme(context),
+                ),
+                _buildDivider(context),
+                _buildSettingItem(
+                  context,
                   icon: Icons.forward_rounded,
                   iconColor: Colors.teal,
                   title: 'Carry-over Setting',
@@ -179,8 +179,9 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
               ]),
               const SizedBox(height: 24),
               _buildSectionTitle('Security & Other'),
-              _buildCard([
+              _buildCard(context, [
                 _buildSettingItem(
+                  context,
                   icon: Icons.lock_rounded,
                   iconColor: Colors.blue,
                   title: 'Passcode',
@@ -193,33 +194,6 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                     },
                   ),
                 ),
-                // _buildDivider(),
-                // _buildSettingItem(
-                //   icon: Icons.notifications_active_rounded,
-                //   iconColor: Colors.orange,
-                //   title: 'Reminder Setting',
-                //   subtitle: _notificationPermissionGranted
-                //       ? (_alarmEnabled
-                //           ? 'Alarm tone reminders enabled'
-                //           : 'Reminder feature disabled')
-                //       : 'Permission required',
-                //   onTap: () => _openReminderSettings(),
-                // ),
-                // _buildDivider(),
-                // _buildSettingItem(
-                //   icon: Icons.add_circle_rounded,
-                //   iconColor: Colors.greenAccent,
-                //   title: 'Quick Add',
-                //   trailing: Switch(
-                //     value: _quickAddEnabled,
-                //     activeColor: AppColors.primary,
-                //     onChanged: (value) async {
-                //       await StorageService.setConfigQuickAddEnabled(value);
-                //       if (!mounted) return;
-                //       setState(() => _quickAddEnabled = value);
-                //     },
-                //   ),
-                // ),
               ]),
               const SizedBox(height: 32),
             ],
@@ -237,20 +211,21 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
         style: GoogleFonts.inter(
           fontSize: 12,
           fontWeight: FontWeight.w700,
-          color: AppColors.textMuted,
+          color: AppColors.navUnselected,
           letterSpacing: 1.2,
         ),
       ),
     );
   }
 
-  Widget _buildCard(List<Widget> children) {
+  Widget _buildCard(BuildContext context, List<Widget> children) {
+    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
+        color: theme.cardTheme.color,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.surfaceVariant.withOpacity(0.5),
+          color: theme.dividerColor.withOpacity(0.1),
           width: 1,
         ),
       ),
@@ -258,7 +233,8 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
     );
   }
 
-  Widget _buildSettingItem({
+  Widget _buildSettingItem(
+    BuildContext context, {
     required IconData icon,
     required Color iconColor,
     required String title,
@@ -266,11 +242,12 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
     Widget? trailing,
     VoidCallback? onTap,
   }) {
+    final theme = Theme.of(context);
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
@@ -279,7 +256,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: iconColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: iconColor, size: 22),
               ),
@@ -293,7 +270,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textPrimary,
+                        color: theme.textTheme.titleMedium?.color,
                       ),
                     ),
                     if (subtitle != null) ...[
@@ -302,7 +279,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                         subtitle,
                         style: GoogleFonts.inter(
                           fontSize: 13,
-                          color: AppColors.textSecondary,
+                          color: theme.textTheme.bodyMedium?.color,
                         ),
                       ),
                     ],
@@ -312,10 +289,10 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
               if (trailing != null)
                 trailing
               else if (onTap != null)
-                const Icon(
+                Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 14,
-                  color: AppColors.textMuted,
+                  color: theme.textTheme.bodySmall?.color,
                 ),
             ],
           ),
@@ -324,20 +301,98 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildDivider(BuildContext context) {
+    final theme = Theme.of(context);
     return Divider(
       height: 1,
       thickness: 1,
       indent: 56,
       endIndent: 16,
-      color: AppColors.surfaceVariant.withOpacity(0.5),
+      color: theme.dividerColor.withOpacity(0.1),
+    );
+  }
+
+  Future<void> _pickTheme(BuildContext context) async {
+    final theme = Theme.of(context);
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: theme.bottomSheetTheme.backgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Select Theme',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: theme.textTheme.titleLarge?.color,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: const Icon(
+                  Icons.light_mode_rounded,
+                  color: Colors.orange,
+                ),
+                title: Text('Light', style: GoogleFonts.inter()),
+                trailing: !ThemeService().isDarkMode
+                    ? const Icon(
+                        Icons.check_circle_rounded,
+                        color: AppColors.primary,
+                      )
+                    : null,
+                onTap: () {
+                  ThemeService().setThemeMode(ThemeMode.light);
+                  Navigator.pop(sheetContext);
+                  setState(() {});
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.dark_mode_rounded,
+                  color: Colors.indigo,
+                ),
+                title: Text('Dark', style: GoogleFonts.inter()),
+                trailing: ThemeService().isDarkMode
+                    ? const Icon(
+                        Icons.check_circle_rounded,
+                        color: AppColors.primary,
+                      )
+                    : null,
+                onTap: () {
+                  ThemeService().setThemeMode(ThemeMode.dark);
+                  Navigator.pop(sheetContext);
+                  setState(() {});
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
     );
   }
 
   Future<void> _pickMainCurrency() async {
+    final theme = Theme.of(context);
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: theme.bottomSheetTheme.backgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -351,7 +406,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceVariant,
+                  color: theme.dividerColor,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -361,7 +416,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: theme.textTheme.titleLarge?.color,
                 ),
               ),
               const SizedBox(height: 8),
@@ -378,7 +433,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                           title: Text(
                             currency.displayLabel,
                             style: GoogleFonts.inter(
-                              color: AppColors.textPrimary,
+                              color: theme.textTheme.bodyLarge?.color,
                               fontWeight: _mainCurrency == currency.displayLabel
                                   ? FontWeight.w600
                                   : FontWeight.w400,
@@ -421,9 +476,10 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
     required String currentValue,
     required Future<void> Function(String value) onSelected,
   }) async {
+    final theme = Theme.of(context);
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: theme.bottomSheetTheme.backgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -437,7 +493,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceVariant,
+                  color: theme.dividerColor,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -447,7 +503,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: theme.textTheme.titleLarge?.color,
                 ),
               ),
               const SizedBox(height: 8),
@@ -464,7 +520,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                           title: Text(
                             option,
                             style: GoogleFonts.inter(
-                              color: AppColors.textPrimary,
+                              color: theme.textTheme.bodyLarge?.color,
                               fontWeight: option == currentValue
                                   ? FontWeight.w600
                                   : FontWeight.w400,

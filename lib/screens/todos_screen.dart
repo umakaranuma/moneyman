@@ -66,7 +66,7 @@ class _TodosScreenState extends State<TodosScreen> {
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_back_rounded,
               color: AppColors.textPrimary,
             ),
@@ -77,7 +77,7 @@ class _TodosScreenState extends State<TodosScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   colors: [AppColors.primary, AppColors.primaryLight],
                 ),
                 borderRadius: BorderRadius.circular(10),
@@ -343,7 +343,7 @@ class _TodosScreenState extends State<TodosScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: AppColors.primary,
               onPrimary: Colors.white,
               surface: AppColors.surface,
@@ -607,7 +607,7 @@ class _TodosScreenState extends State<TodosScreen> {
                 builder: (context, child) {
                   return Theme(
                     data: Theme.of(context).copyWith(
-                      colorScheme: const ColorScheme.dark(
+                      colorScheme: ColorScheme.dark(
                         primary: AppColors.primary,
                         onPrimary: Colors.white,
                         surface: AppColors.surface,

@@ -70,7 +70,10 @@ class _PasscodeSetupScreenState extends State<PasscodeSetupScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        title: Text(
+          'Passcode Lock',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
       ),
       body: SafeArea(
         child: Column(

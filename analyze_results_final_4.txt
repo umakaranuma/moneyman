@@ -1,0 +1,34 @@
+﻿Analyzing money_man...                                          
+
+   info - Unnecessary use of multiple underscores - lib\features\home\presentation\bottom_sheets\day_transactions_sheet.dart:110:37 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\home\presentation\screens\home_search_screen.dart:103:37 - unnecessary_underscores
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\accounts_screen.dart:1273:41 - use_build_context_synchronously
+   info - Use interpolation to compose strings and values - lib\screens\add_account_screen.dart:477:23 - prefer_interpolation_to_compose_strings
+   info - 'scale' is deprecated and shouldn't be used. Use scaleByVector3, scaleByVector4, or scaleByDouble instead - lib\screens\calculator_screen.dart:387:40 - deprecated_member_use
+  error - Invalid constant value - lib\screens\categories_screen.dart:442:39 - invalid_constant
+warning - The value of the field '_startScreen' isn't used - lib\screens\configuration_screen.dart:22:10 - unused_field
+warning - The value of the field '_alarmEnabled' isn't used - lib\screens\configuration_screen.dart:25:8 - unused_field
+warning - The value of the field '_quickAddEnabled' isn't used - lib\screens\configuration_screen.dart:26:8 - unused_field
+warning - The value of the field '_notificationPermissionGranted' isn't used - lib\screens\configuration_screen.dart:27:8 - unused_field
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\screens\configuration_screen.dart:126:21 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\screens\configuration_screen.dart:171:21 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\screens\configuration_screen.dart:191:21 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\configuration_screen.dart:228:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\configuration_screen.dart:258:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\configuration_screen.dart:311:33 - deprecated_member_use
+warning - The declaration '_pickStringOption' isn't referenced - lib\screens\configuration_screen.dart:473:16 - unused_element
+warning - The declaration '_openReminderSettings' isn't referenced - lib\screens\configuration_screen.dart:603:16 - unused_element
+   info - Don't invoke 'print' in production code - lib\screens\feedback_screen.dart:562:7 - avoid_print
+   info - The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\screens\home_screen.dart:4:8 - unnecessary_import
+   info - Don't invoke 'print' in production code - lib\screens\home_screen.dart:147:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\home_screen.dart:150:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\home_screen.dart:151:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\home_screen.dart:154:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\home_screen.dart:932:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\home_screen.dart:934:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\home_screen.dart:937:9 - avoid_print
+   info - 'WillPopScope' is deprecated and shouldn't be used. Use PopScope instead. The Android predictive back feature will not work with WillPopScope. This feature was deprecated after v3.12.0-1.0.pre - lib\screens\main_navigation.dart:117:12 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\screens\security_screen.dart:404:29 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\security_screen.dart:405:36 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\settings_screen.dart:382:41 - use_build_context_synchronously
+

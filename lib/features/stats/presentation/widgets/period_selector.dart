@@ -56,7 +56,7 @@ class PeriodSelector extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
+          Text(
             'Select Period',
             style: TextStyle(
               fontSize: 18,
@@ -98,7 +98,7 @@ class PeriodSelector extends StatelessWidget {
                       ),
                       const Spacer(),
                       if (isSelected)
-                        const Icon(Icons.check_rounded, color: AppColors.primary, size: 22),
+                        Icon(Icons.check_rounded, color: AppColors.primary, size: 22),
                     ],
                   ),
                 ),

@@ -105,7 +105,7 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.arrow_back_rounded,
                     color: AppColors.textPrimary,
                   ),
@@ -171,7 +171,7 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
                             Container(
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(
+                                gradient: LinearGradient(
                                   colors: [AppColors.primary, AppColors.primaryLight],
                                 ),
                                 borderRadius: BorderRadius.circular(24),
@@ -191,7 +191,7 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
                             ),
                             const SizedBox(height: 16),
                             ShaderMask(
-                              shaderCallback: (bounds) => const LinearGradient(
+                              shaderCallback: (bounds) => LinearGradient(
                                 colors: [
                                   AppColors.primary,
                                   AppColors.secondary,
@@ -246,7 +246,7 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
                               gradient: _selectedPlan == 'monthly'
-                                  ? const LinearGradient(
+                                  ? LinearGradient(
                                       colors: [AppColors.primary, AppColors.primaryLight],
                                     )
                                   : null,
@@ -287,7 +287,7 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
                               gradient: _selectedPlan == 'yearly'
-                                  ? const LinearGradient(
+                                  ? LinearGradient(
                                       colors: [AppColors.secondary, AppColors.primary],
                                     )
                                   : null,
@@ -395,7 +395,7 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
+                          gradient: LinearGradient(
                             colors: [AppColors.secondary, AppColors.primary],
                           ),
                           borderRadius: BorderRadius.circular(16),

@@ -298,7 +298,7 @@ class _AnalyticsTabContent extends StatelessWidget {
             size: 22,
           ),
           const SizedBox(width: 12),
-          const Text(
+          Text(
             'Category Breakdown',
             style: TextStyle(
               fontSize: 16,

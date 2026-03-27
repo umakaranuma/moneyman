@@ -461,7 +461,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         elevation: 0,
         leading: IconButton(
           onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
         ),
         title: Text(
           widget.transaction != null ? 'Edit Transaction' : 'New Transaction',

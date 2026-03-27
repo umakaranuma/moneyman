@@ -147,7 +147,7 @@ class _Thumbnail extends StatelessWidget {
             onTap: onRemove,
             child: Container(
               padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.error,
                 shape: BoxShape.circle,
               ),

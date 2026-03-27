@@ -142,7 +142,7 @@ class _NotesScreenState extends State<NotesScreen> with WidgetsBindingObserver {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.surfaceVariant, width: 1),
               ),
-              child: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary, size: 20),
+              child: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary, size: 20),
             ),
           ),
           const SizedBox(width: 12),
@@ -320,7 +320,7 @@ class _NotesScreenState extends State<NotesScreen> with WidgetsBindingObserver {
                   width: 1.5,
                 ),
               ),
-              child: const Icon(Icons.delete_rounded, color: AppColors.expense, size: 20),
+              child: Icon(Icons.delete_rounded, color: AppColors.expense, size: 20),
             ),
             const SizedBox(width: 12),
             Text(
@@ -353,7 +353,7 @@ class _NotesScreenState extends State<NotesScreen> with WidgetsBindingObserver {
                 SnackBar(
                   content: Row(
                     children: [
-                      const Icon(Icons.check_circle_rounded, color: AppColors.income, size: 18),
+                      Icon(Icons.check_circle_rounded, color: AppColors.income, size: 18),
                       const SizedBox(width: 10),
                       Text('Note deleted', style: GoogleFonts.inter()),
                     ],

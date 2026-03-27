@@ -100,7 +100,7 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Select Category',
                 style: TextStyle(
                   color: AppColors.textPrimary,
@@ -150,7 +150,7 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
                               ),
                             ),
                             trailing: isSelected
-                                ? const Icon(Icons.check, color: AppColors.fab)
+                                ? Icon(Icons.check, color: AppColors.fab)
                                 : null,
                             onTap: () {
                               setState(() {
@@ -278,18 +278,18 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text(
+        title: Text(
           'Convert to Main Category',
           style: TextStyle(color: AppColors.textPrimary),
         ),
         content: Text(
           'Are you sure you want to convert "$subcategoryName" to a main category?',
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'Cancel',
               style: TextStyle(color: AppColors.textMuted),
             ),
@@ -356,7 +356,7 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
                 }
               }
             },
-            child: const Text(
+            child: Text(
               'Convert',
               style: TextStyle(color: AppColors.fab),
             ),
@@ -381,7 +381,7 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_back_rounded,
               color: AppColors.textPrimary,
               size: 20,
@@ -390,7 +390,7 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
         ),
         title: Text(
           widget.subcategory != null ? 'Modify Subcategory' : 'Add Subcategory',
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.w500,
@@ -399,7 +399,7 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
         actions: [
           TextButton(
             onPressed: _convertToMainCategory,
-            child: const Text(
+            child: Text(
               '+ Main Category',
               style: TextStyle(
                 color: AppColors.fab,
@@ -469,13 +469,13 @@ class _AddEditSubcategoryScreenState extends State<AddEditSubcategoryScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: TextFormField(
                   controller: _subcategoryController,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 16,
                   ),
                   decoration: InputDecoration(
                     labelText: 'Subcategory',
-                    labelStyle: const TextStyle(
+                    labelStyle: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 14,
                     ),

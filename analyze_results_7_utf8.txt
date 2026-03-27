@@ -1,0 +1,115 @@
+﻿Analyzing money_man...                                          
+
+   info - Unnecessary use of multiple underscores - lib\features\home\presentation\bottom_sheets\day_transactions_sheet.dart:110:37 - unnecessary_underscores
+  error - Invalid constant value - lib\features\home\presentation\screens\home_screen.dart:481:49 - invalid_constant
+   info - Unnecessary use of multiple underscores - lib\features\home\presentation\screens\home_search_screen.dart:103:37 - unnecessary_underscores
+  error - Invalid constant value - lib\features\home\presentation\widgets\home_header.dart:55:24 - invalid_constant
+  error - Invalid constant value - lib\features\home\presentation\widgets\summary_card.dart:53:22 - invalid_constant
+  error - Invalid constant value - lib\features\home\presentation\widgets\total_view.dart:421:30 - invalid_constant
+  error - Invalid constant value - lib\features\home\presentation\widgets\transaction_item.dart:59:30 - invalid_constant
+  error - Invalid constant value - lib\features\home\presentation\widgets\transaction_item.dart:67:30 - invalid_constant
+  error - Invalid constant value - lib\features\home\presentation\widgets\transaction_list.dart:87:26 - invalid_constant
+  error - Invalid constant value - lib\features\stats\presentation\widgets\income_expense_bar_chart_card.dart:168:32 - invalid_constant
+  error - Invalid constant value - lib\features\stats\presentation\widgets\income_expense_bar_chart_card.dart:208:32 - invalid_constant
+  error - Invalid constant value - lib\features\stats\presentation\widgets\period_selector.dart:64:22 - invalid_constant
+  error - Invalid constant value - lib\features\stats\presentation\widgets\stats_header.dart:38:22 - invalid_constant
+  error - Invalid constant value - lib\features\stats\presentation\widgets\stats_header.dart:52:22 - invalid_constant
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\accounts_screen.dart:1273:41 - use_build_context_synchronously
+   info - Use interpolation to compose strings and values - lib\screens\add_account_screen.dart:477:23 - prefer_interpolation_to_compose_strings
+  error - Invalid constant value - lib\screens\add_edit_category_screen.dart:67:35 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_category_screen.dart:71:41 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_category_screen.dart:78:39 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_category_screen.dart:109:39 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_category_screen.dart:192:22 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_category_screen.dart:204:20 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_category_screen.dart:216:30 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_category_screen.dart:248:34 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_category_screen.dart:256:32 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_category_screen.dart:276:28 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_category_screen.dart:282:30 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_note_screen.dart:178:22 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_reminder_screen.dart:291:48 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_subcategory_screen.dart:106:26 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_subcategory_screen.dart:153:66 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_subcategory_screen.dart:283:35 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_subcategory_screen.dart:287:41 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_subcategory_screen.dart:294:39 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_subcategory_screen.dart:361:39 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_subcategory_screen.dart:386:22 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_subcategory_screen.dart:394:20 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_subcategory_screen.dart:405:24 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_subcategory_screen.dart:473:28 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_subcategory_screen.dart:479:30 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_todo_screen.dart:63:24 - invalid_constant
+  error - Invalid constant value - lib\screens\add_edit_todo_screen.dart:118:64 - invalid_constant
+  error - Invalid constant value - lib\screens\backup_screen.dart:36:22 - invalid_constant
+  error - Invalid constant value - lib\screens\calculator_screen.dart:142:32 - invalid_constant
+   info - 'scale' is deprecated and shouldn't be used. Use scaleByVector3, scaleByVector4, or scaleByDouble instead - lib\screens\calculator_screen.dart:387:40 - deprecated_member_use
+  error - Invalid constant value - lib\screens\calendar_screen.dart:86:64 - invalid_constant
+  error - Invalid constant value - lib\screens\calendar_screen.dart:177:67 - invalid_constant
+  error - Invalid constant value - lib\screens\calendar_screen.dart:179:68 - invalid_constant
+  error - Invalid constant value - lib\screens\categories_screen.dart:173:26 - invalid_constant
+  error - Invalid constant value - lib\screens\categories_screen.dart:187:30 - invalid_constant
+  error - Invalid constant value - lib\screens\categories_screen.dart:196:30 - invalid_constant
+  error - Invalid constant value - lib\screens\categories_screen.dart:442:39 - invalid_constant
+warning - The value of the field '_startScreen' isn't used - lib\screens\configuration_screen.dart:22:10 - unused_field
+warning - The value of the field '_alarmEnabled' isn't used - lib\screens\configuration_screen.dart:25:8 - unused_field
+warning - The value of the field '_quickAddEnabled' isn't used - lib\screens\configuration_screen.dart:26:8 - unused_field
+warning - The value of the field '_notificationPermissionGranted' isn't used - lib\screens\configuration_screen.dart:27:8 - unused_field
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\screens\configuration_screen.dart:126:21 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\screens\configuration_screen.dart:171:21 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\screens\configuration_screen.dart:191:21 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\configuration_screen.dart:228:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\configuration_screen.dart:258:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\configuration_screen.dart:311:33 - deprecated_member_use
+warning - The declaration '_pickStringOption' isn't referenced - lib\screens\configuration_screen.dart:473:16 - unused_element
+warning - The declaration '_openReminderSettings' isn't referenced - lib\screens\configuration_screen.dart:603:16 - unused_element
+   info - Don't invoke 'print' in production code - lib\screens\feedback_screen.dart:562:7 - avoid_print
+   info - The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\screens\home_screen.dart:4:8 - unnecessary_import
+   info - Don't invoke 'print' in production code - lib\screens\home_screen.dart:147:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\home_screen.dart:150:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\home_screen.dart:151:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\home_screen.dart:154:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\home_screen.dart:932:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\home_screen.dart:934:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\home_screen.dart:937:9 - avoid_print
+   info - 'WillPopScope' is deprecated and shouldn't be used. Use PopScope instead. The Android predictive back feature will not work with WillPopScope. This feature was deprecated after v3.12.0-1.0.pre - lib\screens\main_navigation.dart:117:12 - deprecated_member_use
+  error - Invalid constant value - lib\screens\more_screen.dart:16:48 - invalid_constant
+  error - Invalid constant value - lib\screens\notes_screen.dart:145:66 - invalid_constant
+  error - Invalid constant value - lib\screens\passcode_setup_screen.dart:73:47 - invalid_constant
+  error - Invalid constant value - lib\screens\reminders_screen.dart:90:22 - invalid_constant
+  error - Invalid constant value - lib\screens\security_screen.dart:50:22 - invalid_constant
+   info - Don't use 'BuildContext's across async gaps - lib\screens\security_screen.dart:404:29 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\security_screen.dart:405:36 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\settings_screen.dart:382:41 - use_build_context_synchronously
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:316:26 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:326:52 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:373:45 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:441:26 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:462:22 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:503:22 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:551:22 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:633:34 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:642:34 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:830:22 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:872:24 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:879:53 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:925:24 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:936:24 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:999:26 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:1079:28 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:1419:36 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:1428:36 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:1464:32 - invalid_constant
+  error - Invalid constant value - lib\screens\sms_transactions_screen.dart:1472:32 - invalid_constant
+  error - Invalid constant value - lib\screens\subcategories_screen.dart:171:35 - invalid_constant
+  error - Invalid constant value - lib\screens\subcategories_screen.dart:184:45 - invalid_constant
+  error - Invalid constant value - lib\screens\subcategories_screen.dart:194:39 - invalid_constant
+  error - Invalid constant value - lib\screens\subcategories_screen.dart:259:22 - invalid_constant
+  error - Invalid constant value - lib\screens\subcategories_screen.dart:272:24 - invalid_constant
+  error - Invalid constant value - lib\screens\subcategories_screen.dart:281:49 - invalid_constant
+  error - Invalid constant value - lib\screens\subcategories_screen.dart:285:48 - invalid_constant
+  error - Invalid constant value - lib\screens\subcategories_screen.dart:369:32 - invalid_constant
+  error - Invalid constant value - lib\screens\subcategories_screen.dart:390:38 - invalid_constant
+  error - Invalid constant value - lib\screens\sync_screen.dart:35:22 - invalid_constant
+

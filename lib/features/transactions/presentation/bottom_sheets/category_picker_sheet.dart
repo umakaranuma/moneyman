@@ -107,7 +107,7 @@ class CategoryPickerSheet extends StatelessWidget {
                         style: IconButton.styleFrom(
                           backgroundColor: AppColors.surface.withValues(alpha: 0.7),
                         ),
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.tune_rounded,
                           color: AppColors.textMuted,
                         ),

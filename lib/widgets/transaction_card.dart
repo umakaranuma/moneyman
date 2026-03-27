@@ -78,7 +78,7 @@ class TransactionCard extends StatelessWidget {
               AppColors.surfaceVariant.withValues(alpha: 0.5),
             ],
           ),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: _typeColor.withValues(alpha: 0.15),
             width: 1,
@@ -92,7 +92,7 @@ class TransactionCard extends StatelessWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: _typeColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
                 child: emoji.isNotEmpty
@@ -130,7 +130,7 @@ class TransactionCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: _typeColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           transaction.category ?? 'Other',
@@ -165,7 +165,7 @@ class TransactionCard extends StatelessWidget {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: AppColors.expense.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
                     Icons.delete_outline_rounded,

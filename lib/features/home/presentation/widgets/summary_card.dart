@@ -47,7 +47,7 @@ class SummaryCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             Helpers.formatCurrency(total),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,

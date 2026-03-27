@@ -217,7 +217,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
         elevation: 0,
         leading: _isSelectionMode
             ? IconButton(
-                icon: const Icon(Icons.close, color: AppColors.textPrimary),
+                icon: Icon(Icons.close, color: AppColors.textPrimary),
                 onPressed: () {
                   setState(() {
                     _selectedIds.clear();
@@ -234,7 +234,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.arrow_back_rounded,
                     color: AppColors.textPrimary,
                     size: 20,
@@ -245,7 +245,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
           _isSelectionMode
               ? '${_selectedIds.length} Selected'
               : 'Bank SMS Transactions',
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -258,7 +258,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                 indicatorColor: AppColors.primary,
                 labelColor: AppColors.primary,
                 unselectedLabelColor: AppColors.textMuted,
-                labelStyle: const TextStyle(
+                labelStyle: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
@@ -271,8 +271,8 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
           if (_isSelectionMode && _selectedIds.isNotEmpty)
             TextButton.icon(
               onPressed: _importSelected,
-              icon: const Icon(Icons.download, color: AppColors.income),
-              label: const Text(
+              icon: Icon(Icons.download, color: AppColors.income),
+              label: Text(
                 'Import',
                 style: TextStyle(color: AppColors.income),
               ),
@@ -301,7 +301,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                       child: Container(
                         width: 8,
                         height: 8,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: AppColors.income,
                           shape: BoxShape.circle,
                         ),
@@ -311,7 +311,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
               ),
             if (!_isLoading && _allTransactions.isNotEmpty)
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.checklist,
                   color: AppColors.textSecondary,
                 ),
@@ -323,7 +323,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
               ),
           ],
           IconButton(
-            icon: const Icon(Icons.refresh, color: AppColors.textSecondary),
+            icon: Icon(Icons.refresh, color: AppColors.textSecondary),
             onPressed: _loadTransactions,
           ),
         ],
@@ -342,7 +342,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -366,11 +366,11 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppColors.expense),
+            Icon(Icons.error_outline, size: 64, color: AppColors.expense),
             const SizedBox(height: 16),
             Text(
               _errorMessage!,
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -433,7 +433,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Filter Transactions',
                 style: TextStyle(
                   fontSize: 16,
@@ -444,7 +444,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
               if (_hasActiveFilters)
                 TextButton(
                   onPressed: _clearFilters,
-                  child: const Text(
+                  child: Text(
                     'Clear All',
                     style: TextStyle(color: AppColors.expense),
                   ),
@@ -454,7 +454,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
           const SizedBox(height: 16),
 
           // Bank Filter
-          const Text(
+          Text(
             'Bank',
             style: TextStyle(
               fontSize: 12,
@@ -495,7 +495,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
           const SizedBox(height: 16),
 
           // Transaction Type Filter
-          const Text(
+          Text(
             'Transaction Type',
             style: TextStyle(
               fontSize: 12,
@@ -543,7 +543,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
           const SizedBox(height: 16),
 
           // Import Status Filter
-          const Text(
+          Text(
             'Import Status',
             style: TextStyle(
               fontSize: 12,
@@ -625,7 +625,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Fetch All Historical Transactions',
                         style: TextStyle(
                           fontSize: 14,
@@ -637,7 +637,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                         _fetchAllTransactions
                             ? 'Showing all SMS transactions'
                             : 'Only showing from install date',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
                           color: AppColors.textSecondary,
                         ),
@@ -714,7 +714,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
       ),
       child: Row(
         children: [
-          const Icon(Icons.filter_list, size: 16, color: AppColors.income),
+          Icon(Icons.filter_list, size: 16, color: AppColors.income),
           const SizedBox(width: 8),
           Expanded(
             child: SingleChildScrollView(
@@ -768,7 +768,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                 _showFilters = true;
               });
             },
-            child: const Text(
+            child: Text(
               'Edit',
               style: TextStyle(color: AppColors.income, fontSize: 13),
             ),
@@ -822,7 +822,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
             color: AppColors.textMuted.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'No transactions match your filters',
             style: TextStyle(
               fontSize: 16,
@@ -833,7 +833,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
           const SizedBox(height: 8),
           TextButton(
             onPressed: _clearFilters,
-            child: const Text(
+            child: Text(
               'Clear Filters',
               style: TextStyle(color: AppColors.income),
             ),
@@ -857,14 +857,14 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.surfaceVariant, width: 2),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.sms_outlined,
                 size: 64,
                 color: AppColors.income,
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'SMS Permission Required',
               style: TextStyle(
                 fontSize: 20,
@@ -873,7 +873,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'To automatically import bank transactions, we need permission to read your SMS messages. We only look for bank transaction messages.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
@@ -917,7 +917,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
               color: AppColors.textMuted.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'No Bank Transactions Found',
               style: TextStyle(
                 fontSize: 18,
@@ -931,7 +931,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                   ? 'No bank SMS messages found in your inbox'
                   : 'No bank SMS messages found since $monthName',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,
               ),
@@ -989,11 +989,11 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
         children: [
           Row(
             children: [
-              const Icon(Icons.sms, color: AppColors.income, size: 20),
+              Icon(Icons.sms, color: AppColors.income, size: 20),
               const SizedBox(width: 8),
               Text(
                 _hasActiveFilters ? 'Filtered Results' : 'Transaction Summary',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
@@ -1074,7 +1074,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                   _hasActiveFilters
                       ? '${_filteredTransactions.length} of ${_allTransactions.length} transactions'
                       : '${_filteredTransactions.length} transactions found',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,
                   ),
@@ -1254,7 +1254,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                             color: AppColors.income.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Imported',
                             style: TextStyle(
                               fontSize: 9,
@@ -1413,7 +1413,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                       children: [
                         Text(
                           transaction.bankName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: AppColors.textPrimary,
@@ -1423,7 +1423,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                           DateFormat(
                             'MMM dd, yyyy - hh:mm a',
                           ).format(transaction.date),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             color: AppColors.textSecondary,
                           ),
@@ -1456,7 +1456,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Original Message',
                       style: TextStyle(
                         fontSize: 12,
@@ -1467,7 +1467,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                     const SizedBox(height: 8),
                     Text(
                       transaction.rawMessage,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         color: AppColors.textSecondary,
                         height: 1.4,
@@ -1507,7 +1507,7 @@ class _SmsTransactionsScreenState extends State<SmsTransactionsScreen>
                     color: AppColors.income.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(

@@ -62,18 +62,18 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text(
+        title: Text(
           'Convert to Subcategory',
           style: TextStyle(color: AppColors.textPrimary),
         ),
         content: Text(
           'Are you sure you want to convert "$categoryName" to a subcategory? This will remove it as a main category.',
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
+            child: Text(
               'Cancel',
               style: TextStyle(color: AppColors.textMuted),
             ),
@@ -104,7 +104,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
                 Navigator.pop(widgetContext, true);
               }
             },
-            child: const Text(
+            child: Text(
               'Convert',
               style: TextStyle(color: AppColors.fab),
             ),
@@ -184,10 +184,10 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
           child: Container(
             margin: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: AppColors.surfaceVariant,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_back_rounded,
               color: AppColors.textPrimary,
               size: 20,
@@ -200,7 +200,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
               : widget.isExpense
               ? 'Expenses Category'
               : 'Income Category',
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.w500,
@@ -210,7 +210,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
             ? [
                 TextButton(
                   onPressed: _convertToSubcategory,
-                  child: const Text(
+                  child: Text(
                     '+ Subcategory',
                     style: TextStyle(
                       color: AppColors.fab,
@@ -242,7 +242,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
+                      Text(
                         '+ Subcategory',
                         style: TextStyle(
                           color: AppColors.fab,
@@ -251,7 +251,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
                         ),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(
+                      Icon(
                         Icons.arrow_forward_ios,
                         color: AppColors.fab,
                         size: 14,
@@ -272,13 +272,13 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: TextFormField(
                   controller: _nameController,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 16,
                   ),
                   decoration: InputDecoration(
                     labelText: 'Category Name',
-                    labelStyle: const TextStyle(
+                    labelStyle: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 14,
                     ),

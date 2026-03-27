@@ -71,14 +71,14 @@ class _HomeSearchScreenState extends State<HomeSearchScreen> {
         title: TextField(
           controller: _controller,
           autofocus: true,
-          style: const TextStyle(color: AppColors.textPrimary),
+          style: TextStyle(color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: 'Search by title, category, note...',
             hintStyle: TextStyle(color: AppColors.textMuted),
             border: InputBorder.none,
             suffixIcon: _controller.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.clear_rounded,
                       color: AppColors.textMuted,
                     ),
@@ -94,7 +94,7 @@ class _HomeSearchScreenState extends State<HomeSearchScreen> {
           ? Center(
               child: Text(
                 _controller.text.isEmpty ? 'No transactions' : 'No results',
-                style: const TextStyle(color: AppColors.textMuted),
+                style: TextStyle(color: AppColors.textMuted),
               ),
             )
           : ListView.separated(
@@ -131,7 +131,7 @@ class _HomeSearchScreenState extends State<HomeSearchScreen> {
                   ),
                   title: Text(
                     t.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
@@ -139,7 +139,7 @@ class _HomeSearchScreenState extends State<HomeSearchScreen> {
                   ),
                   subtitle: Text(
                     t.category ?? 'Other',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textMuted,
                       fontSize: 11,
                     ),

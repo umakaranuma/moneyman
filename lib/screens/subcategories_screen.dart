@@ -124,18 +124,18 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text(
+        title: Text(
           'Delete Subcategory',
           style: TextStyle(color: AppColors.textPrimary),
         ),
         content: Text(
           'Are you sure you want to delete "$subcategory"?',
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'Cancel',
               style: TextStyle(color: AppColors.textMuted),
             ),
@@ -148,7 +148,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
               _saveSubcategories();
               Navigator.pop(context);
             },
-            child: const Text(
+            child: Text(
               'Delete',
               style: TextStyle(color: AppColors.expense),
             ),
@@ -166,7 +166,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text(
+        title: Text(
           'Edit Category',
           style: TextStyle(color: AppColors.textPrimary),
         ),
@@ -175,13 +175,13 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
           children: [
             TextField(
               controller: nameController,
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: AppColors.textPrimary),
               decoration: const InputDecoration(labelText: 'Category Name'),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: emojiController,
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: AppColors.textPrimary),
               decoration: const InputDecoration(labelText: 'Emoji'),
             ),
           ],
@@ -189,7 +189,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'Cancel',
               style: TextStyle(color: AppColors.textMuted),
             ),
@@ -229,7 +229,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                 Navigator.pop(context);
               }
             },
-            child: const Text('Save', style: TextStyle(color: AppColors.fab)),
+            child: Text('Save', style: TextStyle(color: AppColors.textPrimary)),
           ),
         ],
       ),
@@ -254,7 +254,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_back_rounded,
               color: AppColors.textPrimary,
               size: 20,
@@ -268,7 +268,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
             const SizedBox(width: 8),
             Text(
               _category.name,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
@@ -278,11 +278,11 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit, color: AppColors.textPrimary),
+            icon: Icon(Icons.edit, color: AppColors.textPrimary),
             onPressed: _showEditCategoryDialog,
           ),
           IconButton(
-            icon: const Icon(Icons.add, color: AppColors.textPrimary),
+            icon: Icon(Icons.add, color: AppColors.textPrimary),
             onPressed: _showAddSubcategoryDialog,
           ),
         ],
@@ -365,7 +365,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                     ),
                     title: Text(
                       subcategory,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -385,7 +385,7 @@ class _SubcategoriesScreenState extends State<SubcategoriesScreen> {
                               ),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.edit_rounded,
                               color: AppColors.textSecondary,
                               size: 18,

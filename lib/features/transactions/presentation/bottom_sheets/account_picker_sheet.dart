@@ -85,7 +85,7 @@ class AccountPickerSheet extends StatelessWidget {
                     ),
                   ),
                   trailing: isSelected
-                      ? const Icon(Icons.check_rounded, color: AppColors.primary, size: 22)
+                      ? Icon(Icons.check_rounded, color: AppColors.primary, size: 22)
                       : null,
                   onTap: () {
                     onSelected(type);

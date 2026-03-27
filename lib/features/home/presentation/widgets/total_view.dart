@@ -149,7 +149,7 @@ class TotalView extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        const Text(
+                        Text(
                           'Export data as',
                           style: TextStyle(
                             fontSize: 16,
@@ -334,7 +334,7 @@ class _BudgetCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  Text(
                     'Budget',
                     style: TextStyle(
                       fontSize: 16,
@@ -347,7 +347,7 @@ class _BudgetCard extends StatelessWidget {
                       overCount > 0
                           ? '$budgetCount set · $overCount over'
                           : '$budgetCount set for this month',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         color: AppColors.textMuted,
                       ),
@@ -416,7 +416,7 @@ class _SectionCard extends StatelessWidget {
                       color: AppColors.surfaceVariant,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.account_balance_wallet_rounded,
                       color: AppColors.textPrimary,
                       size: 20,
@@ -425,7 +425,7 @@ class _SectionCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
@@ -444,7 +444,7 @@ class _SectionCard extends StatelessWidget {
                 ),
                 child: Text(
                   dateRange,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     color: AppColors.primary,
                     fontWeight: FontWeight.w500,
@@ -475,7 +475,7 @@ class _StatRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+          style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),

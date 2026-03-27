@@ -45,7 +45,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_back_rounded,
               color: AppColors.textPrimary,
             ),

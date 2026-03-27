@@ -78,7 +78,7 @@ class CategoryItemTile extends StatelessWidget {
               children: [
                 Text(
                   name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -103,7 +103,7 @@ class CategoryItemTile extends StatelessWidget {
             children: [
               Text(
                 Helpers.formatCurrency(amount),
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

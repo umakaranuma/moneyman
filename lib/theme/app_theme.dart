@@ -1,38 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/theme_service.dart';
 
 class AppColors {
-  // Finzo Dark Theme - Blue + Gray System
-  // Professional, Calm, Secure, Premium
-
-  // Backgrounds
-  static const Color background = Color(0xFF0B1220); // Deep Navy Blue
-  static const Color surface = Color(0xFF1C2433); // Dark Slate Gray (Cards)
-  static const Color surfaceVariant = Color(0xFF2A3446); // Dividers/Borders
-  static const Color cardBackground = Color(0xFF1C2433); // Same as surface
-
-  // Primary Accent - Warm Orange (Premium Color)
+  // Common Colors
   static const Color primary = Color(0xFFF96A46); // Warm Orange-Red
   static const Color primaryLight = Color(0xFFFF8C64); // Lighter Orange-Red
   static const Color primaryDark = Color(0xFFDC5032); // Darker Orange-Red
-
-  // Secondary Accent - Soft Blue
   static const Color secondary = Color(0xFF60A5FA); // Soft Blue
   static const Color secondaryLight = Color(0xFF93C5FD); // Lighter Soft Blue
 
-  // Text colors
-  static const Color textPrimary = Color(0xFFE5E7EB); // Off White
-  static const Color textSecondary = Color(0xFF9CA3AF); // Cool Gray
-  static const Color textMuted = Color(0xFF6B7280); // Muted Gray
+  // Dark Theme - Backgrounds
+  static const Color backgroundDark = Color(0xFF0B1220); // Deep Navy Blue
+  static const Color surfaceDark = Color(0xFF1C2433); // Dark Slate Gray (Cards)
+  static const Color surfaceVariantDark = Color(0xFF2A3446); // Dividers/Borders
+  static const Color cardBackgroundDark = Color(0xFF1C2433);
 
-  // Semantic colors - Blue, Orange, White system
+  // Light Theme - Backgrounds
+  static const Color backgroundLight = Color(0xFFF8FAFC); // Slate 50
+  static const Color surfaceLight = Color(0xFFFFFFFF); // White
+  static const Color surfaceVariantLight = Color(0xFFE2E8F0); // Slate 200
+  static const Color cardBackgroundLight = Color(0xFFFFFFFF);
+
+  // Text colors - Dark
+  static const Color textPrimaryDark = Color(0xFFE5E7EB); // Off White
+  static const Color textSecondaryDark = Color(0xFF9CA3AF); // Cool Gray
+  static const Color textMutedDark = Color(0xFF6B7280); // Muted Gray
+
+  // Text colors - Light
+  static const Color textPrimaryLight = Color(0xFF0F172A); // Slate 900
+  static const Color textSecondaryLight = Color(0xFF475569); // Slate 600
+  static const Color textMutedLight = Color(0xFF94A3B8); // Slate 400
+
+  // Semantic colors
   static const Color income = Color(0xFF2563EB); // Blue for Income
   static const Color expense = Color(0xFFF97316); // Warm Orange for Expense
-  static const Color balance = Color(0xFFE5E7EB); // White for Balance/Total
-  static const Color transfer = Color(0xFF60A5FA); // Soft Blue for Transfer
-  static const Color success = Color(0xFF2563EB); // Blue
-  static const Color warning = Color(0xFFF59E0B); // Amber
-  static const Color error = Color(0xFFF97316); // Warm Orange
+  static const Color balanceDark = Color(0xFFE5E7EB);
+  static const Color balanceLight = Color(0xFF0F172A);
+  static const Color transfer = Color(0xFF60A5FA);
+  static const Color success = Color(0xFF2563EB);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color error = Color(0xFFF97316);
 
   // Category colors - Vibrant multi-color palette for graphs & charts
   static const List<Color> categoryColors = [
@@ -66,187 +74,235 @@ class AppColors {
     Color(0xFF38BDF8), // Light Sky
   ];
 
-  // FAB - Warm Orange
-  static const Color fab = Color(0xFFF97316);
-  static const Color fabPressed = Color(0xFFEA580C);
-
   // Navigation
-  static const Color navSelected = Color.fromARGB(255, 249, 106, 70);
   static const Color navUnselected = Color(0xFF6B7280);
 
-  // Tab indicator
-  static const Color tabIndicator = Color.fromARGB(255, 249, 106, 70);
-
   // Shimmer
-  static const Color shimmerBase = Color(0xFF1C2433);
-  static const Color shimmerHighlight = Color(0xFF2A3446);
+  static const Color shimmerBaseDark = Color(0xFF1C2433);
+  static const Color shimmerHighlightDark = Color(0xFF2A3446);
+  static const Color shimmerBaseLight = Color(0xFFE2E8F0);
+  static const Color shimmerHighlightLight = Color(0xFFF1F5F9);
 
-  // Glow effects
-  static const Color primaryGlow = Color.fromARGB(64, 249, 106, 70);
-  static const Color incomeGlow = Color(0x402563EB); // Blue glow
-  static const Color expenseGlow = Color.fromARGB(
-    64,
-    249,
-    106,
-    70,
-  ); // Orange-Red glow
+  // Dynamic Getters for Backward Compatibility
+  static Color get background => ThemeService().isDarkMode ? backgroundDark : backgroundLight;
+  static Color get surface => ThemeService().isDarkMode ? surfaceDark : surfaceLight;
+  static Color get surfaceVariant => ThemeService().isDarkMode ? surfaceVariantDark : surfaceVariantLight;
+  static Color get cardBackground => ThemeService().isDarkMode ? cardBackgroundDark : cardBackgroundLight;
+  static Color get textPrimary => ThemeService().isDarkMode ? textPrimaryDark : textPrimaryLight;
+  static Color get textSecondary => ThemeService().isDarkMode ? textSecondaryDark : textSecondaryLight;
+  static Color get textMuted => ThemeService().isDarkMode ? textMutedDark : textMutedLight;
+  static Color get balance => ThemeService().isDarkMode ? balanceDark : balanceLight;
+  
+  static Color get shimmerBase => ThemeService().isDarkMode ? shimmerBaseDark : shimmerBaseLight;
+  static Color get shimmerHighlight => ThemeService().isDarkMode ? shimmerHighlightDark : shimmerHighlightLight;
+
+  static Color get fab => primary;
+  static Color get incomeColor => income;
+  static Color get expenseColor => expense;
+  static Color get errorColor => error;
+
+  // Static Getters for functional use
+  static Color getBackground(Brightness brightness) =>
+      brightness == Brightness.dark ? backgroundDark : backgroundLight;
+  static Color getSurface(Brightness brightness) =>
+      brightness == Brightness.dark ? surfaceDark : surfaceLight;
+  static Color getSurfaceVariant(Brightness brightness) =>
+      brightness == Brightness.dark ? surfaceVariantDark : surfaceVariantLight;
+  static Color getTextPrimary(Brightness brightness) =>
+      brightness == Brightness.dark ? textPrimaryDark : textPrimaryLight;
+  static Color getTextSecondary(Brightness brightness) =>
+      brightness == Brightness.dark ? textSecondaryDark : textSecondaryLight;
+  static Color getTextMuted(Brightness brightness) =>
+      brightness == Brightness.dark ? textMutedDark : textMutedLight;
 }
 
+
 class AppTheme {
-  static TextTheme get _textTheme {
+  static const double _cardRadius = 10.0;
+  static const double _buttonRadius = 8.0;
+  static const double _inputRadius = 8.0;
+
+  static TextTheme _getTextTheme(Brightness brightness) {
+    final color = AppColors.getTextPrimary(brightness);
+    final secondaryColor = AppColors.getTextSecondary(brightness);
+    final mutedColor = AppColors.getTextMuted(brightness);
+
     return GoogleFonts.interTextTheme(
-      const TextTheme(
+      TextTheme(
         displayLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
+          color: color,
           letterSpacing: -0.5,
         ),
         displayMedium: TextStyle(
           fontSize: 28,
           fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
+          color: color,
           letterSpacing: -0.5,
         ),
         displaySmall: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: color,
         ),
         headlineLarge: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: color,
         ),
         headlineMedium: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: color,
         ),
         headlineSmall: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: color,
         ),
         titleLarge: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: color,
         ),
         titleMedium: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
-          color: AppColors.textPrimary,
+          color: color,
         ),
         titleSmall: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: AppColors.textPrimary,
+          color: color,
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w400,
-          color: AppColors.textPrimary,
+          color: color,
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w400,
-          color: AppColors.textSecondary,
+          color: secondaryColor,
         ),
         bodySmall: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w400,
-          color: AppColors.textMuted,
+          color: mutedColor,
         ),
         labelLarge: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: color,
         ),
         labelMedium: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: AppColors.textSecondary,
+          color: secondaryColor,
         ),
         labelSmall: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w500,
-          color: AppColors.textMuted,
+          color: mutedColor,
         ),
       ),
     );
   }
 
-  static ThemeData get darkTheme {
+  static ThemeData get lightTheme => _buildTheme(Brightness.light);
+  static ThemeData get darkTheme => _buildTheme(Brightness.dark);
+
+  static ThemeData _buildTheme(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    final backgroundColor = AppColors.getBackground(brightness);
+    final surfaceColor = AppColors.getSurface(brightness);
+    final surfaceVariantColor = AppColors.getSurfaceVariant(brightness);
+    final textPrimaryColor = AppColors.getTextPrimary(brightness);
+    final textSecondaryColor = AppColors.getTextSecondary(brightness);
+    final textMutedColor = AppColors.getTextMuted(brightness);
+
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: AppColors.background,
-      textTheme: _textTheme,
-      colorScheme: ColorScheme.dark(
-        surface: AppColors.surface,
-        primary: AppColors.primary,
-        secondary: AppColors.secondary,
-        error: AppColors.error,
-        onPrimary: Colors.white,
-        onSecondary: Colors.white,
-        tertiary: AppColors.secondaryLight,
-      ),
+      brightness: brightness,
+      scaffoldBackgroundColor: backgroundColor,
+      textTheme: _getTextTheme(brightness),
+      colorScheme: isDark
+          ? ColorScheme.dark(
+              surface: surfaceColor,
+              primary: AppColors.primary,
+              secondary: AppColors.secondary,
+              error: AppColors.error,
+              onPrimary: Colors.white,
+              onSecondary: Colors.white,
+              tertiary: AppColors.secondaryLight,
+            )
+          : ColorScheme.light(
+              surface: surfaceColor,
+              primary: AppColors.primary,
+              secondary: AppColors.secondary,
+              error: AppColors.error,
+              onPrimary: Colors.white,
+              onSecondary: Colors.white,
+              tertiary: AppColors.secondaryLight,
+            ),
       appBarTheme: AppBarTheme(
         centerTitle: false,
         elevation: 0,
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.textPrimary,
+        backgroundColor: backgroundColor,
+        foregroundColor: textPrimaryColor,
         titleTextStyle: GoogleFonts.inter(
-          color: AppColors.textPrimary,
+          color: textPrimaryColor,
           fontSize: 20,
           fontWeight: FontWeight.w600,
         ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: textPrimaryColor),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        color: surfaceColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(_cardRadius),
+        ),
       ),
-      dividerTheme: const DividerThemeData(
-        color: AppColors.surfaceVariant,
+      dividerTheme: DividerThemeData(
+        color: surfaceVariantColor,
         thickness: 1,
       ),
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.surfaceVariant),
+          borderRadius: BorderRadius.circular(_inputRadius),
+          borderSide: BorderSide(color: surfaceVariantColor),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.surfaceVariant),
+          borderRadius: BorderRadius.circular(_inputRadius),
+          borderSide: BorderSide(color: surfaceVariantColor),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(_inputRadius),
           borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(_inputRadius),
           borderSide: const BorderSide(color: AppColors.error),
         ),
         filled: true,
-        fillColor: AppColors.surface,
-        labelStyle: GoogleFonts.inter(color: AppColors.textSecondary),
-        hintStyle: GoogleFonts.inter(color: AppColors.textMuted),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+        fillColor: isDark ? surfaceColor : Colors.grey[50],
+        labelStyle: GoogleFonts.inter(color: textSecondaryColor),
+        hintStyle: GoogleFonts.inter(color: textMutedColor),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: AppColors.fab,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(_buttonRadius + 4),
+        ),
         elevation: 4,
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: surfaceColor,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.navUnselected,
         type: BottomNavigationBarType.fixed,
@@ -261,7 +317,7 @@ class AppTheme {
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: surfaceColor,
         indicatorColor: AppColors.primary.withValues(alpha: 0.15),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -285,14 +341,16 @@ class AppTheme {
         }),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: surfaceColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(_cardRadius + 4),
+        ),
         elevation: 8,
       ),
-      bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: surfaceColor,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
         elevation: 8,
       ),
@@ -300,24 +358,26 @@ class AppTheme {
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.surfaceVariant,
+        backgroundColor: surfaceVariantColor,
         selectedColor: AppColors.primary.withValues(alpha: 0.2),
         labelStyle: GoogleFonts.inter(
-          color: AppColors.textPrimary,
+          color: textPrimaryColor,
           fontSize: 12,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.surface,
-        contentTextStyle: GoogleFonts.inter(color: AppColors.textPrimary),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: isDark ? surfaceColor : Colors.grey[900],
+        contentTextStyle: GoogleFonts.inter(
+          color: isDark ? textPrimaryColor : Colors.white,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         behavior: SnackBarBehavior.floating,
       ),
       tabBarTheme: TabBarThemeData(
         labelColor: AppColors.primary,
-        unselectedLabelColor: AppColors.textMuted,
+        unselectedLabelColor: textMutedColor,
         indicatorColor: AppColors.primary,
         indicatorSize: TabBarIndicatorSize.label,
         labelStyle: GoogleFonts.inter(
@@ -336,7 +396,7 @@ class AppTheme {
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(_buttonRadius),
           ),
           textStyle: GoogleFonts.inter(
             fontSize: 14,
@@ -350,7 +410,7 @@ class AppTheme {
           side: const BorderSide(color: AppColors.primary),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(_buttonRadius),
           ),
           textStyle: GoogleFonts.inter(
             fontSize: 14,
@@ -372,19 +432,20 @@ class AppTheme {
           if (states.contains(WidgetState.selected)) {
             return AppColors.primary;
           }
-          return AppColors.textMuted;
+          return textMutedColor;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return AppColors.primary.withValues(alpha: 0.3);
           }
-          return AppColors.surfaceVariant;
+          return surfaceVariantColor;
         }),
       ),
-      progressIndicatorTheme: const ProgressIndicatorThemeData(
+      progressIndicatorTheme: ProgressIndicatorThemeData(
         color: AppColors.primary,
-        circularTrackColor: AppColors.surfaceVariant,
+        circularTrackColor: surfaceVariantColor,
       ),
     );
   }
 }
+

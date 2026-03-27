@@ -173,7 +173,7 @@ class _AccountsScreenState extends State<AccountsScreen>
         height: 36,
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
           Icons.more_horiz_rounded,
@@ -199,7 +199,7 @@ class _AccountsScreenState extends State<AccountsScreen>
                 Container(
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
                     children: [
@@ -237,7 +237,7 @@ class _AccountsScreenState extends State<AccountsScreen>
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
@@ -751,7 +751,7 @@ class _AccountsScreenState extends State<AccountsScreen>
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

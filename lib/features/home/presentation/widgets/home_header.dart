@@ -49,7 +49,7 @@ class HomeHeader extends StatelessWidget {
             child: Text(
               headerText,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,

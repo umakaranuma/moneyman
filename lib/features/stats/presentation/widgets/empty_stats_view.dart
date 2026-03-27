@@ -29,7 +29,7 @@ class EmptyStatsView extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             'No ${isIncome ? 'income' : 'expense'} data',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
@@ -38,7 +38,7 @@ class EmptyStatsView extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Start tracking your ${isIncome ? 'income' : 'expenses'}',
-            style: const TextStyle(fontSize: 14, color: AppColors.textMuted),
+            style: TextStyle(fontSize: 14, color: AppColors.textMuted),
           ),
         ],
       ),

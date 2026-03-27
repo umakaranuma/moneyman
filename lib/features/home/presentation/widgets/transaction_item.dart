@@ -53,7 +53,7 @@ class TransactionItem extends StatelessWidget {
                 children: [
                   Text(
                     transaction.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                       color: AppColors.textPrimary,
@@ -62,7 +62,7 @@ class TransactionItem extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     transaction.category ?? '',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       color: AppColors.textMuted,
                     ),

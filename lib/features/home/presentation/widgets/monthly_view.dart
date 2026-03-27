@@ -161,7 +161,7 @@ class _MonthRow extends StatelessWidget {
                 width: 80,
                 child: Text(
                   data.monthName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -171,7 +171,7 @@ class _MonthRow extends StatelessWidget {
               Expanded(
                 child: Text(
                   Helpers.formatCurrency(data.income),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     color: AppColors.income,
                     fontWeight: FontWeight.w500,
@@ -185,7 +185,7 @@ class _MonthRow extends StatelessWidget {
                   children: [
                     Text(
                       Helpers.formatCurrency(data.expense),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         color: AppColors.expense,
                         fontWeight: FontWeight.w500,
@@ -209,7 +209,7 @@ class _MonthRow extends StatelessWidget {
               const EdgeInsets.only(left: 16, right: 16, bottom: 12),
           children: weeks.isEmpty
               ? [
-                  const Align(
+                  Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       'No transactions for this month',
@@ -233,7 +233,7 @@ class _MonthRow extends StatelessWidget {
                               width: 80,
                               child: Text(
                                 week.label,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                   color: AppColors.textSecondary,
@@ -243,7 +243,7 @@ class _MonthRow extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 Helpers.formatCurrency(week.income),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
                                   color: AppColors.income,
                                   fontWeight: FontWeight.w500,
@@ -257,7 +257,7 @@ class _MonthRow extends StatelessWidget {
                                 children: [
                                   Text(
                                     Helpers.formatCurrency(week.expense),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
                                       color: AppColors.expense,
                                       fontWeight: FontWeight.w500,

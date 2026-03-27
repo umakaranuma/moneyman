@@ -13,7 +13,7 @@ class MoreScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
-        decoration: const BoxDecoration(color: AppColors.background),
+        decoration: BoxDecoration(color: AppColors.background),
         child: SafeArea(
           bottom: false,
           child: CustomScrollView(

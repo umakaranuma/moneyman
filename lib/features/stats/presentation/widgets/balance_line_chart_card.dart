@@ -44,7 +44,7 @@ class BalanceLineChartCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Balance',
             style: TextStyle(
               color: AppColors.textPrimary,
@@ -75,7 +75,7 @@ class BalanceLineChartCard extends StatelessWidget {
                         padding: const EdgeInsets.only(right: 8),
                         child: Text(
                           StatsCalculator.formatCurrency(value),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textMuted,
                             fontSize: 10,
                           ),
@@ -91,7 +91,7 @@ class BalanceLineChartCard extends StatelessWidget {
                         if (value.toInt() >= 0 && value.toInt() < months.length) {
                           return Text(
                             months[value.toInt()].split(' ')[0],
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textMuted,
                               fontSize: 10,
                             ),
@@ -144,11 +144,11 @@ class BalanceLineChartCard extends StatelessWidget {
                 children: [
                   Text(
                     '${month.split(' ')[0]}: ',
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 11),
                   ),
                   Text(
                     StatsCalculator.formatCurrency(balance),
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -181,7 +181,7 @@ class BalanceLineChartCard extends StatelessWidget {
       child: Center(
         child: Text(
           message,
-          style: const TextStyle(color: AppColors.textMuted, fontSize: 14),
+          style: TextStyle(color: AppColors.textMuted, fontSize: 14),
         ),
       ),
     );

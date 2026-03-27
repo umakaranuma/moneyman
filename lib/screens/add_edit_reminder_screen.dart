@@ -58,7 +58,7 @@ class _AddEditReminderScreenState extends State<AddEditReminderScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: AppColors.primary,
               onPrimary: Colors.white,
               surface: AppColors.surface,
@@ -82,7 +82,7 @@ class _AddEditReminderScreenState extends State<AddEditReminderScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: AppColors.primary,
               onPrimary: Colors.white,
               surface: AppColors.surface,
@@ -143,7 +143,7 @@ class _AddEditReminderScreenState extends State<AddEditReminderScreen> {
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+            child: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
           ),
         ),
         title: Text(
@@ -161,7 +161,7 @@ class _AddEditReminderScreenState extends State<AddEditReminderScreen> {
               margin: const EdgeInsets.all(8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   colors: [AppColors.primary, AppColors.primaryLight],
                 ),
                 borderRadius: BorderRadius.circular(12),
@@ -284,7 +284,7 @@ class _AddEditReminderScreenState extends State<AddEditReminderScreen> {
                 controller: _noteController,
                 maxLines: 3,
                 style: GoogleFonts.inter(color: AppColors.textPrimary),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Description (optional)',
                   border: InputBorder.none,
                   labelText: 'Description',
@@ -370,7 +370,7 @@ class _AddEditReminderScreenState extends State<AddEditReminderScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.calendar_today_rounded, color: AppColors.primary, size: 18),
+                      Icon(Icons.calendar_today_rounded, color: AppColors.primary, size: 18),
                       const SizedBox(width: 8),
                       Text(
                         DateFormat('dd.MM.yyyy').format(date),

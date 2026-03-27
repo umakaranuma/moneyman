@@ -30,7 +30,7 @@ void showDayTransactionsSheet(
     builder: (context) => SafeArea(
       top: false,
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
@@ -56,7 +56,7 @@ void showDayTransactionsSheet(
                     color: AppColors.surfaceVariant,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.calendar_today_rounded,
                     color: AppColors.textPrimary,
                     size: 20,
@@ -69,7 +69,7 @@ void showDayTransactionsSheet(
                     children: [
                       Text(
                         DateFormat('EEEE, MMMM d, yyyy').format(date),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
@@ -96,7 +96,7 @@ void showDayTransactionsSheet(
                       color: AppColors.surfaceVariant,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.close_rounded, color: AppColors.textMuted, size: 18),
+                    child: Icon(Icons.close_rounded, color: AppColors.textMuted, size: 18),
                   ),
                 ),
               ],

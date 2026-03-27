@@ -15,7 +15,6 @@ import '../core/router/app_router.dart';
 import 'transaction_filter_screen.dart';
 import '../utils/helpers.dart';
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -500,8 +499,6 @@ class _HomeScreenState extends State<HomeScreen>
     });
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -611,7 +608,7 @@ class _HomeScreenState extends State<HomeScreen>
           height: 60,
           decoration: BoxDecoration(
             color: AppColors.primary,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
                 color: AppColors.primary.withValues(alpha: 0.3),
@@ -752,7 +749,7 @@ class _HomeScreenState extends State<HomeScreen>
         height: 40,
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
         ),
         child: Icon(icon, color: color, size: 20),
@@ -781,7 +778,7 @@ class _HomeScreenState extends State<HomeScreen>
       backgroundColor: AppColors.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
         return Container(
@@ -850,7 +847,7 @@ class _HomeScreenState extends State<HomeScreen>
                           color: AppColors.surfaceVariant,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.close_rounded,
                           color: AppColors.textMuted,
                           size: 18,
@@ -1735,7 +1732,9 @@ class _HomeScreenState extends State<HomeScreen>
                                 if (!mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Failed to export PDF: $error'),
+                                    content: Text(
+                                      'Failed to export PDF: $error',
+                                    ),
                                   ),
                                 );
                               }
@@ -2340,7 +2339,7 @@ class _HomeScreenState extends State<HomeScreen>
                           color: AppColors.surfaceVariant,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.close_rounded,
                           color: AppColors.textMuted,
                           size: 18,
@@ -2714,10 +2713,6 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-
-
-
-
   Widget _buildTransactionItem(Transaction transaction) {
     final emoji = DefaultCategories.getCategoryEmoji(
       transaction.category,
@@ -2923,8 +2918,6 @@ class _SearchScreenState extends State<_SearchScreen> {
       _filteredTransactions = filtered;
     });
   }
-
-
 
   Color _getTypeColor(TransactionType type) {
     switch (type) {

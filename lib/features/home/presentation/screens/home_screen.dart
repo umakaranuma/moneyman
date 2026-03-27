@@ -458,7 +458,7 @@ class _HomeScreenState extends State<HomeScreen>
                   const SizedBox(width: 12),
                   Text(
                     'Bookmarked (${bookmarked.length})',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
@@ -474,8 +474,8 @@ class _HomeScreenState extends State<HomeScreen>
             ),
             Flexible(
               child: bookmarked.isEmpty
-                  ? const Padding(
-                      padding: EdgeInsets.all(32),
+                  ? Padding(
+                      padding: const EdgeInsets.all(32),
                       child: Text(
                         'No bookmarks',
                         style: TextStyle(color: AppColors.textMuted),
@@ -489,13 +489,13 @@ class _HomeScreenState extends State<HomeScreen>
                         return ListTile(
                           title: Text(
                             t.title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textPrimary,
                             ),
                           ),
                           subtitle: Text(
                             t.category ?? '',
-                            style: const TextStyle(color: AppColors.textMuted),
+                            style: TextStyle(color: AppColors.textMuted),
                           ),
                           trailing: Text(
                             Helpers.formatCurrency(t.amount),
