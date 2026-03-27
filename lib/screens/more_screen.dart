@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../core/router/app_router.dart';
+import '../services/theme_service.dart';
 import '../utils/app_utils.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -10,22 +11,29 @@ class MoreScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: BoxDecoration(color: AppColors.background),
-        child: SafeArea(
-          bottom: false,
-          child: CustomScrollView(
-            slivers: [
-              // Fixed Header
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _FixedHeaderDelegate(
-                  child: _buildHeader(),
-                  height: 96,
-                ),
-              ),
+    final themeService = ThemeService();
+    return ListenableBuilder(
+      listenable: themeService,
+      builder: (context, _) {
+        final themeMode = themeService.themeMode;
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Container(
+            decoration: BoxDecoration(color: AppColors.background),
+            child: SafeArea(
+              bottom: false,
+              child: CustomScrollView(
+                key: ValueKey(themeMode),
+                slivers: [
+                  // Fixed Header
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _FixedHeaderDelegate(
+                      themeMode: themeMode,
+                      child: _buildHeader(),
+                      height: 96,
+                    ),
+                  ),
 
               // Pro Banner - Commented out as Pro features are not implemented yet
               // SliverToBoxAdapter(child: _buildProBanner(context)),
@@ -140,6 +148,8 @@ class MoreScreen extends StatelessWidget {
           ),
         ),
       ),
+        );
+      },
     );
   }
 
@@ -473,8 +483,13 @@ class MoreScreen extends StatelessWidget {
 class _FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
   final double height;
+  final ThemeMode themeMode;
 
-  _FixedHeaderDelegate({required this.child, required this.height});
+  _FixedHeaderDelegate({
+    required this.child,
+    required this.height,
+    required this.themeMode,
+  });
 
   @override
   double get minExtent => height;
@@ -493,6 +508,8 @@ class _FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_FixedHeaderDelegate oldDelegate) {
-    return child != oldDelegate.child || height != oldDelegate.height;
+    return themeMode != oldDelegate.themeMode ||
+        child != oldDelegate.child ||
+        height != oldDelegate.height;
   }
 }

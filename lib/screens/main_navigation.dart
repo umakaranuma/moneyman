@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../services/theme_service.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/stats/presentation/screens/stats_screen.dart';
 import '../services/notification_navigation_handler.dart';
@@ -125,20 +126,25 @@ class _MainNavigationState extends State<MainNavigation>
         }
         return true;
       },
-      child: Scaffold(
-        body: PageView(
-          controller: _pageController,
-          physics:
-              const NeverScrollableScrollPhysics(), // Disable swipe to prevent loading screens
-          onPageChanged: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          children: _screens,
-        ),
-        extendBody: true,
-        bottomNavigationBar: _buildBottomNavBar(),
+      child: ListenableBuilder(
+        listenable: ThemeService(),
+        builder: (context, _) {
+          return Scaffold(
+            body: PageView(
+              controller: _pageController,
+              physics:
+                  const NeverScrollableScrollPhysics(), // Disable swipe to prevent loading screens
+              onPageChanged: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+              children: _screens,
+            ),
+            extendBody: true,
+            bottomNavigationBar: _buildBottomNavBar(),
+          );
+        },
       ),
     );
   }
