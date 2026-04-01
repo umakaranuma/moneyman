@@ -89,6 +89,7 @@ class _HomeScreenState extends State<HomeScreen>
     if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
 
     if (rewardedAd == null) {
+      debugPrint('[HomeScreen] Failed to load RewardedAd. It returned null.');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to load ad. Please try again later.')),

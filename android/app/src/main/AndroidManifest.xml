@@ -65,7 +65,7 @@
         <!-- AdMob app ID (replace with your production AdMob app ID). -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="ca-app-pub-8425136910231843~8209471192" />
         <!-- Default notification icon (small icon) for flutter_local_notifications -->
         <meta-data
             android:name="com.dexterous.flutterlocalnotifications.default_notification_icon"

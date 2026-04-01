@@ -5,12 +5,12 @@ class MobileAdsConfig {
 
   static const Duration adFreeRewardDuration = Duration(hours: 24);
 
-  static const String _androidBannerTestId =
-      'ca-app-pub-3940256099942544/6300978111';
-  static const String _androidInterstitialTestId =
-      'ca-app-pub-3940256099942544/1033173712';
-  static const String _androidRewardedTestId =
-      'ca-app-pub-3940256099942544/5224354917';
+  static const String _androidBannerProdId =
+      'ca-app-pub-8425136910231843/9421211590';
+  static const String _androidInterstitialProdId =
+      'ca-app-pub-8425136910231843/6543037867';
+  static const String _androidRewardedProdId =
+      'ca-app-pub-8425136910231843/6795048256';
 
   static const String _iosBannerTestId =
       'ca-app-pub-3940256099942544/2934735716';
@@ -24,9 +24,9 @@ class MobileAdsConfig {
   static bool get showRewardedAds => true;
 
   static String get anchoredBannerAdUnitId =>
-      Platform.isAndroid ? _androidBannerTestId : _iosBannerTestId;
+      Platform.isAndroid ? _androidBannerProdId : _iosBannerTestId;
   static String get interstitialAdUnitId =>
-      Platform.isAndroid ? _androidInterstitialTestId : _iosInterstitialTestId;
+      Platform.isAndroid ? _androidInterstitialProdId : _iosInterstitialTestId;
   static String get rewardedAdUnitId =>
-      Platform.isAndroid ? _androidRewardedTestId : _iosRewardedTestId;
+      Platform.isAndroid ? _androidRewardedProdId : _iosRewardedTestId;
 }
