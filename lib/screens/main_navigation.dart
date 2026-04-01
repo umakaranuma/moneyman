@@ -2,13 +2,12 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../theme/app_theme.dart';
 import '../services/theme_service.dart';
-import '../services/ad_service.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/stats/presentation/screens/stats_screen.dart';
 import '../services/notification_navigation_handler.dart';
+import '../widgets/adaptive_banner_ad_slot.dart';
 import 'accounts_screen.dart';
 import 'more_screen.dart';
 
@@ -24,8 +23,6 @@ class _MainNavigationState extends State<MainNavigation>
   int _currentIndex = 0;
   late AnimationController _fabAnimationController;
   late final PageController _pageController;
-  BannerAd? _bannerAd;
-  bool _isBannerLoaded = false;
 
   final List<Widget> _screens = [
     const HomeScreen(),
@@ -66,30 +63,9 @@ class _MainNavigationState extends State<MainNavigation>
       duration: const Duration(milliseconds: 200),
     );
     _pageController = PageController(initialPage: _currentIndex);
-    _loadBannerAd();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _applyPendingNotificationRoute());
-  }
-
-  void _loadBannerAd() {
-    final ad = BannerAd(
-      adUnitId: AdService.bannerAdUnitId,
-      request: const AdRequest(),
-      size: AdSize.banner,
-      listener: BannerAdListener(
-        onAdLoaded: (_) {
-          if (!mounted) return;
-          setState(() => _isBannerLoaded = true);
-        },
-        onAdFailedToLoad: (ad, _) {
-          ad.dispose();
-          if (!mounted) return;
-          setState(() => _isBannerLoaded = false);
-        },
-      ),
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _applyPendingNotificationRoute(),
     );
-
-    ad.load();
-    _bannerAd = ad;
   }
 
   @override
@@ -121,7 +97,10 @@ class _MainNavigationState extends State<MainNavigation>
         if (parts.length == 2) {
           final notificationId = int.tryParse(parts[1]);
           if (notificationId != null) {
-            router.push('/reminders', extra: {'highlightNotificationId': notificationId});
+            router.push(
+              '/reminders',
+              extra: {'highlightNotificationId': notificationId},
+            );
           } else {
             router.push('/reminders');
           }
@@ -137,7 +116,6 @@ class _MainNavigationState extends State<MainNavigation>
     WidgetsBinding.instance.removeObserver(this);
     _fabAnimationController.dispose();
     _pageController.dispose();
-    _bannerAd?.dispose();
     super.dispose();
   }
 
@@ -158,30 +136,33 @@ class _MainNavigationState extends State<MainNavigation>
         listenable: ThemeService(),
         builder: (context, _) {
           return Scaffold(
-            body: PageView(
-              controller: _pageController,
-              physics:
-                  const NeverScrollableScrollPhysics(), // Disable swipe to prevent loading screens
-              onPageChanged: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
-              children: _screens,
-            ),
-            extendBody: true,
-            bottomNavigationBar: Column(
-              mainAxisSize: MainAxisSize.min,
+            body: Stack(
               children: [
-                if (_isBannerLoaded && _bannerAd != null)
-                  SizedBox(
-                    width: _bannerAd!.size.width.toDouble(),
-                    height: _bannerAd!.size.height.toDouble(),
-                    child: AdWidget(ad: _bannerAd!),
+                PageView(
+                  controller: _pageController,
+                  physics:
+                      const NeverScrollableScrollPhysics(), // Disable swipe to prevent loading screens
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                  },
+                  children: _screens,
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  // Keep banner behind the bottom nav layer (not visibly separate).
+                  bottom: 0,
+                  child: const IgnorePointer(
+                    ignoring: false,
+                    child: AdaptiveBannerAdSlot(),
                   ),
-                _buildBottomNavBar(),
+                ),
               ],
             ),
+            extendBody: true,
+            bottomNavigationBar: _buildBottomNavBar(),
           );
         },
       ),

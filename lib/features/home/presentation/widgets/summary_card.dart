@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../utils/helpers.dart';
 import '../../../../theme/app_theme.dart';
 
@@ -16,50 +17,104 @@ class SummaryCard extends StatelessWidget {
     required this.total,
   });
 
-
-
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.surface,
+            AppColors.surfaceVariant.withValues(alpha: 0.5),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.1),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'Total Balance',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.textMuted,
-              fontWeight: FontWeight.w500,
-            ),
+          _buildStatItem('Income', income, AppColors.income, Icons.arrow_downward_rounded),
+          _buildDivider(),
+          _buildStatItem('Expenses', expense, AppColors.expense, Icons.arrow_upward_rounded),
+          _buildDivider(),
+          _buildStatItem('Balance', total, AppColors.textSecondary, Icons.account_balance_wallet_rounded, isBalance: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      width: 1,
+      height: 36,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.surfaceVariant.withValues(alpha: 0.1),
+            AppColors.surfaceVariant,
+            AppColors.surfaceVariant.withValues(alpha: 0.1),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, double value, Color color, IconData icon, {bool isBalance = false}) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(icon, color: color, size: 12),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  color: AppColors.textMuted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(
-            Helpers.formatCurrency(total),
-            style: TextStyle(
-              fontSize: 28,
+            isBalance && value < 0
+                ? '-${Helpers.formatCurrency(value.abs())}'
+                : Helpers.formatCurrency(value.abs()),
+            style: GoogleFonts.inter(
+              color: color,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              letterSpacing: -0.5,
             ),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _MiniStat('Income', income, AppColors.income),
-              _MiniStat('Expense', expense, AppColors.expense),
-            ],
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -67,28 +122,3 @@ class SummaryCard extends StatelessWidget {
   }
 }
 
-class _MiniStat extends StatelessWidget {
-  final String label;
-  final double value;
-  final Color color;
-
-  const _MiniStat(this.label, this.value, this.color);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(label, style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
-        const SizedBox(height: 4),
-        Text(
-          Helpers.formatCurrency(value),
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
-          ),
-        ),
-      ],
-    );
-  }
-}

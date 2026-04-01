@@ -13,6 +13,7 @@ import '../theme/app_theme.dart';
 import '../core/router/app_router.dart';
 import 'transaction_filter_screen.dart';
 import '../utils/helpers.dart';
+import '../features/home/presentation/widgets/summary_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -977,105 +978,10 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildSummaryBar(Map<String, double> summary) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.surface,
-            AppColors.surfaceVariant.withValues(alpha: 0.5),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.1),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _buildSummaryItem(
-            'Income',
-            summary['income']!,
-            AppColors.income,
-            Icons.arrow_downward_rounded,
-          ),
-          Container(width: 1, height: 40, color: AppColors.surfaceVariant),
-          _buildSummaryItem(
-            'Expenses',
-            summary['expense']!,
-            AppColors.expense,
-            Icons.arrow_upward_rounded,
-          ),
-          Container(width: 1, height: 40, color: AppColors.surfaceVariant),
-          _buildSummaryItem(
-            'Balance',
-            summary['total']!,
-            AppColors.textSecondary, // Light gray color for balance
-            Icons.account_balance_wallet_rounded,
-            showSign: true, // Show minus sign for negative balance
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryItem(
-    String label,
-    double value,
-    Color color,
-    IconData icon, {
-    bool showSign = false,
-  }) {
-    return Expanded(
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Icon(icon, color: color, size: 12),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  color: AppColors.textMuted,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            showSign && value < 0
-                ? '-${Helpers.formatCurrency(value.abs())}'
-                : Helpers.formatCurrency(value.abs()),
-            style: GoogleFonts.inter(
-              color: color,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+    return SummaryCard(
+      income: summary['income'] ?? 0.0,
+      expense: summary['expense'] ?? 0.0,
+      total: summary['total'] ?? 0.0,
     );
   }
 
