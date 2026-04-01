@@ -559,7 +559,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         }
       }
     } catch (e) {
-    } catch (e) {
       // Error launching email
     }
 

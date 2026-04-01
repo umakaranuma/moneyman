@@ -7,6 +7,7 @@ import 'services/budget_service.dart';
 import 'services/account_service.dart';
 import 'services/sms_service.dart';
 import 'services/notification_service.dart';
+import 'services/ad_service.dart';
 import 'services/theme_service.dart';
 import 'theme/app_theme.dart';
 import 'core/router/app_router.dart';
@@ -20,6 +21,7 @@ void main() async {
   await AccountService.init();
   await SmsService.init();
   await NotificationService.init();
+  await AdService.init();
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([

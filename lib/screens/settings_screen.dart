@@ -378,11 +378,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           : null,
                       onTap: () async {
                         await StorageService.setDefaultCurrencyCode(currency.name);
-                        if (!mounted) return;
-                        if (mounted) {
-                          setState(() => _defaultCurrency = currency);
-                          Navigator.pop(context);
-                        }
+                        if (!context.mounted) return;
+                        setState(() => _defaultCurrency = currency);
+                        Navigator.of(context).pop();
                       },
                     ),
                   ).toList(),

@@ -31,6 +31,7 @@ class StorageService {
   static const String _keyConfigLanguage = 'config_language';
   static const String _keyConfigPin = 'config_pin';
   static const String _keyConfigBiometricEnabled = 'config_biometric_enabled';
+  static const String _keyAdFreeUntilEpochMs = 'ad_free_until_epoch_ms';
   static const String _keyLastHandledNotificationLaunchSignature =
       'last_handled_notification_launch_signature';
 
@@ -223,6 +224,19 @@ class StorageService {
 
   static Future<void> setConfigBiometricEnabled(bool value) async {
     await _settingsBox.put(_keyConfigBiometricEnabled, value);
+  }
+
+  static bool isAdFreePeriodActive() {
+    final untilEpochMs = _settingsBox.get(_keyAdFreeUntilEpochMs) as int?;
+    if (untilEpochMs == null) return false;
+    return DateTime.now().millisecondsSinceEpoch < untilEpochMs;
+  }
+
+  static Future<void> extendAdFreePeriod(Duration extension) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final currentUntil = _settingsBox.get(_keyAdFreeUntilEpochMs) as int?;
+    final base = (currentUntil != null && currentUntil > now) ? currentUntil : now;
+    await _settingsBox.put(_keyAdFreeUntilEpochMs, base + extension.inMilliseconds);
   }
 
   /// Pending notification route (e.g. 'todos', 'home', 'reminders|123'). Used when app is opened from a notification tap.

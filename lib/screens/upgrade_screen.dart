@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../theme/app_theme.dart';
+import '../services/ad_service.dart';
 
 class UpgradeScreen extends StatefulWidget {
   const UpgradeScreen({super.key});
@@ -11,6 +13,7 @@ class UpgradeScreen extends StatefulWidget {
 
 class _UpgradeScreenState extends State<UpgradeScreen> {
   String _selectedPlan = 'yearly'; // 'monthly' or 'yearly'
+  bool _isLoadingRewarded = false;
 
   final List<ProFeature> _proFeatures = [
     ProFeature(
@@ -419,6 +422,29 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: _isLoadingRewarded ? null : _watchRewardedAd,
+                      icon: _isLoadingRewarded
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.play_circle_fill_rounded),
+                      label: Text(
+                        _isLoadingRewarded
+                            ? 'Loading...'
+                            : 'Watch ad to support Finzo',
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: BorderSide(
+                          color: AppColors.primary.withValues(alpha: 0.4),
+                        ),
+                        minimumSize: const Size(double.infinity, 48),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Text(
                       'Cancel anytime. No commitment.',
                       style: GoogleFonts.inter(
@@ -527,6 +553,38 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
             size: 24,
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _watchRewardedAd() async {
+    setState(() => _isLoadingRewarded = true);
+    final rewardedAd = await AdService.loadRewardedAd();
+    if (!mounted) return;
+    setState(() => _isLoadingRewarded = false);
+
+    if (rewardedAd == null) {
+      _showSnack('Rewarded ad is not available right now. Please try again.');
+      return;
+    }
+
+    rewardedAd.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) => ad.dispose(),
+      onAdFailedToShowFullScreenContent: (ad, _) => ad.dispose(),
+    );
+
+    rewardedAd.show(
+      onUserEarnedReward: (_, reward) {
+        _showSnack('Thanks for supporting Finzo! Reward: ${reward.amount.toInt()} ${reward.type}');
+      },
+    );
+  }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: GoogleFonts.inter()),
+        backgroundColor: AppColors.surface,
       ),
     );
   }

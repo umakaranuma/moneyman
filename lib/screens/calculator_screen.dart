@@ -384,6 +384,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 100),
         curve: Curves.easeOut,
+        // ignore: deprecated_member_use
         transform: Matrix4.identity()..scale(isPressed ? 0.95 : 1.0),
         decoration: BoxDecoration(
           gradient: isEquals

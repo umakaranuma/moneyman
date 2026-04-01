@@ -2,8 +2,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../theme/app_theme.dart';
 import '../services/theme_service.dart';
+import '../services/ad_service.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/stats/presentation/screens/stats_screen.dart';
 import '../services/notification_navigation_handler.dart';
@@ -22,6 +24,8 @@ class _MainNavigationState extends State<MainNavigation>
   int _currentIndex = 0;
   late AnimationController _fabAnimationController;
   late final PageController _pageController;
+  BannerAd? _bannerAd;
+  bool _isBannerLoaded = false;
 
   final List<Widget> _screens = [
     const HomeScreen(),
@@ -62,7 +66,30 @@ class _MainNavigationState extends State<MainNavigation>
       duration: const Duration(milliseconds: 200),
     );
     _pageController = PageController(initialPage: _currentIndex);
+    _loadBannerAd();
     WidgetsBinding.instance.addPostFrameCallback((_) => _applyPendingNotificationRoute());
+  }
+
+  void _loadBannerAd() {
+    final ad = BannerAd(
+      adUnitId: AdService.bannerAdUnitId,
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (_) {
+          if (!mounted) return;
+          setState(() => _isBannerLoaded = true);
+        },
+        onAdFailedToLoad: (ad, _) {
+          ad.dispose();
+          if (!mounted) return;
+          setState(() => _isBannerLoaded = false);
+        },
+      ),
+    );
+
+    ad.load();
+    _bannerAd = ad;
   }
 
   @override
@@ -110,6 +137,7 @@ class _MainNavigationState extends State<MainNavigation>
     WidgetsBinding.instance.removeObserver(this);
     _fabAnimationController.dispose();
     _pageController.dispose();
+    _bannerAd?.dispose();
     super.dispose();
   }
 
@@ -142,7 +170,18 @@ class _MainNavigationState extends State<MainNavigation>
               children: _screens,
             ),
             extendBody: true,
-            bottomNavigationBar: _buildBottomNavBar(),
+            bottomNavigationBar: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_isBannerLoaded && _bannerAd != null)
+                  SizedBox(
+                    width: _bannerAd!.size.width.toDouble(),
+                    height: _bannerAd!.size.height.toDouble(),
+                    child: AdWidget(ad: _bannerAd!),
+                  ),
+                _buildBottomNavBar(),
+              ],
+            ),
           );
         },
       ),

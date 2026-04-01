@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_theme.dart';
 import '../../../../core/router/app_router.dart';
 
-/// Bottom nav bar height (72) + bottom margin (16) + FAB height (60) + gap above bar (12)
-/// so the entire FAB sits fully above the nav bar.
-const double _kBottomNavHeightWithMargin = 72 + 16 + 60 + 12;
+/// Extra lift so FAB stays above bottom ads + nav container.
+const double _kBottomOverlayClearance = 72 + 16 + 60 + 12 + 28;
 
 class AddTransactionFAB extends StatelessWidget {
   final VoidCallback? onSaved;
@@ -18,7 +17,7 @@ class AddTransactionFAB extends StatelessWidget {
     // Scaffold FAB location already adds MediaQuery.padding.bottom; we only add
     // the height of the bottom nav bar (72 + 16 margin + 12 gap) so FAB sits above it.
     return Container(
-      margin: const EdgeInsets.only(bottom: _kBottomNavHeightWithMargin),
+      margin: const EdgeInsets.only(bottom: _kBottomOverlayClearance),
       child: GestureDetector(
         onTap: () async {
           final result = await context.goToAddTransaction<bool>();

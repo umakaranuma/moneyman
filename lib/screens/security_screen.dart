@@ -398,12 +398,11 @@ class _SecurityScreenState extends State<SecurityScreen> {
               // Usually you'd collect the PIN from a text field, but let's assume a default for now as it's a UI demo
               await StorageService.setConfigPin('1234');
               await StorageService.setConfigPasscodeEnabled(true);
-              if (!mounted) return;
-              if (!mounted) return;
+              if (!context.mounted) return;
               setState(() {
                 _pinEnabled = true;
               });
-              Navigator.pop(context);
+              Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(

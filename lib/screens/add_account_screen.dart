@@ -474,7 +474,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
             fontSize: 13,
             color: AppColors.textMuted,
           ),
-          prefixText: account.currencySymbol + ' ',
+          prefixText: '${account.currencySymbol} ',
           prefixStyle: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
