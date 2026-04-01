@@ -18,6 +18,7 @@ import '../../../../screens/categories_screen.dart';
 import '../../../../screens/calculator_screen.dart';
 
 import '../../../../services/budget_service.dart';
+import '../../../../services/fullscreen_ads_service.dart';
 import '../widgets/transaction_type_selector.dart';
 import '../widgets/amount_section.dart';
 import '../widgets/transaction_details_section.dart';
@@ -446,6 +447,9 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         ),
       );
       context.pop(true);
+      
+      // Schedule a potential interstitial ad after saving
+      FullscreenAdsService.instance.scheduleInterstitialAfterAction();
     }
   }
 

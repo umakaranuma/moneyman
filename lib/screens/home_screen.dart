@@ -14,6 +14,8 @@ import '../core/router/app_router.dart';
 import 'transaction_filter_screen.dart';
 import '../utils/helpers.dart';
 import '../features/home/presentation/widgets/summary_card.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../services/ad_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -67,6 +69,44 @@ class _HomeScreenState extends State<HomeScreen>
     super.didChangeDependencies();
     // Don't refresh on every screen switch - only refresh when actually needed
     // This prevents blinking and loading screens when navigating
+  }
+
+  Future<void> _executeWithRewardedAd(Future<void> Function() onRewarded) async {
+    if (StorageService.isAdFreePeriodActive()) {
+      await onRewarded();
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final rewardedAd = await AdService.loadRewardedAd();
+    
+    if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+
+    if (rewardedAd == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load ad. Please try again later.')),
+        );
+      }
+      return;
+    }
+
+    rewardedAd.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) => ad.dispose(),
+      onAdFailedToShowFullScreenContent: (ad, e) => ad.dispose(),
+    );
+
+    rewardedAd.show(
+      onUserEarnedReward: (ad, reward) async {
+        await onRewarded();
+      },
+    );
   }
 
   void _handleTabChange() {
@@ -1551,7 +1591,9 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           child: InkWell(
             onTap: () {
-              showModalBottomSheet<void>(
+              _executeWithRewardedAd(() async {
+                if (!mounted) return;
+                showModalBottomSheet<void>(
                 context: context,
                 backgroundColor: AppColors.surface,
                 shape: const RoundedRectangleBorder(
@@ -1642,6 +1684,7 @@ class _HomeScreenState extends State<HomeScreen>
                   );
                 },
               );
+            });
             },
             borderRadius: BorderRadius.circular(16),
             child: Padding(

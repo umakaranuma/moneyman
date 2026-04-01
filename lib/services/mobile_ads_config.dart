@@ -20,7 +20,7 @@ class MobileAdsConfig {
       'ca-app-pub-3940256099942544/1712485313';
 
   static bool get showAnchoredBanner => true;
-  static bool get showInterstitialAds => false;
+  static bool get showInterstitialAds => true;
   static bool get showRewardedAds => true;
 
   static String get anchoredBannerAdUnitId =>
