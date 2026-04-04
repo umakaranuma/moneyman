@@ -6,6 +6,7 @@ import '../../../../models/transaction.dart';
 import '../../../../services/budget_service.dart';
 import '../../../../services/storage_service.dart';
 import '../../../../services/total_export_service.dart';
+import '../../../../services/ad_service.dart';
 import '../../../../theme/app_theme.dart';
 import '../../../../core/router/app_router.dart';
 
@@ -164,31 +165,33 @@ class TotalView extends StatelessWidget {
                           title: const Text('Excel (.xlsx)'),
                           onTap: () async {
                             Navigator.of(sheetContext).pop();
-                            try {
-                              await TotalExportService.exportExcel(
-                                selectedMonth: selectedMonth,
-                                comparisonPercent: comparisonPercent,
-                                cashExpenses: cashExpenses,
-                                cardExpenses: cardExpenses,
-                                transfers: transfers,
-                                monthTransactions: monthTransactions,
-                              );
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Downloaded successfully'),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            } catch (error) {
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Download failed'),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            }
+                            AdService.executeWithInterstitialAd(context, () async {
+                              try {
+                                await TotalExportService.exportExcel(
+                                  selectedMonth: selectedMonth,
+                                  comparisonPercent: comparisonPercent,
+                                  cashExpenses: cashExpenses,
+                                  cardExpenses: cardExpenses,
+                                  transfers: transfers,
+                                  monthTransactions: monthTransactions,
+                                );
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Downloaded successfully'),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              } catch (error) {
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Download failed'),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            });
                           },
                         ),
                         ListTile(
@@ -197,31 +200,33 @@ class TotalView extends StatelessWidget {
                           title: const Text('PDF (.pdf)'),
                           onTap: () async {
                             Navigator.of(sheetContext).pop();
-                            try {
-                              await TotalExportService.exportPdf(
-                                selectedMonth: selectedMonth,
-                                comparisonPercent: comparisonPercent,
-                                cashExpenses: cashExpenses,
-                                cardExpenses: cardExpenses,
-                                transfers: transfers,
-                                monthTransactions: monthTransactions,
-                              );
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Downloaded successfully'),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            } catch (error) {
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Download failed'),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            }
+                            AdService.executeWithInterstitialAd(context, () async {
+                              try {
+                                await TotalExportService.exportPdf(
+                                  selectedMonth: selectedMonth,
+                                  comparisonPercent: comparisonPercent,
+                                  cashExpenses: cashExpenses,
+                                  cardExpenses: cardExpenses,
+                                  transfers: transfers,
+                                  monthTransactions: monthTransactions,
+                                );
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Downloaded successfully'),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              } catch (error) {
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Download failed'),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            });
                           },
                         ),
                       ],

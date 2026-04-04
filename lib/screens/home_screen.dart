@@ -14,7 +14,6 @@ import '../core/router/app_router.dart';
 import 'transaction_filter_screen.dart';
 import '../utils/helpers.dart';
 import '../features/home/presentation/widgets/summary_card.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../services/ad_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -69,45 +68,6 @@ class _HomeScreenState extends State<HomeScreen>
     super.didChangeDependencies();
     // Don't refresh on every screen switch - only refresh when actually needed
     // This prevents blinking and loading screens when navigating
-  }
-
-  Future<void> _executeWithRewardedAd(Future<void> Function() onRewarded) async {
-    if (StorageService.isAdFreePeriodActive()) {
-      await onRewarded();
-      return;
-    }
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      useRootNavigator: true,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
-    final rewardedAd = await AdService.loadRewardedAd();
-    
-    if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
-
-    if (rewardedAd == null) {
-      debugPrint('[HomeScreen] Failed to load RewardedAd. It returned null.');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load ad. Please try again later.')),
-        );
-      }
-      return;
-    }
-
-    rewardedAd.fullScreenContentCallback = FullScreenContentCallback(
-      onAdDismissedFullScreenContent: (ad) => ad.dispose(),
-      onAdFailedToShowFullScreenContent: (ad, e) => ad.dispose(),
-    );
-
-    rewardedAd.show(
-      onUserEarnedReward: (ad, reward) async {
-        await onRewarded();
-      },
-    );
   }
 
   void _handleTabChange() {
@@ -1592,9 +1552,7 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           child: InkWell(
             onTap: () {
-              _executeWithRewardedAd(() async {
-                if (!mounted) return;
-                showModalBottomSheet<void>(
+              showModalBottomSheet<void>(
                 context: context,
                 backgroundColor: AppColors.surface,
                 shape: const RoundedRectangleBorder(
@@ -1631,25 +1589,27 @@ class _HomeScreenState extends State<HomeScreen>
                             title: const Text('Excel (.xlsx)'),
                             onTap: () async {
                               Navigator.of(sheetContext).pop();
-                              try {
-                                await TotalExportService.exportExcel(
-                                  selectedMonth: _selectedMonth,
-                                  comparisonPercent: comparisonPercent,
-                                  cashExpenses: cashExpenses,
-                                  cardExpenses: cardExpenses,
-                                  transfers: transfers,
-                                  monthTransactions: monthTransactions,
-                                );
-                              } catch (error) {
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Failed to export Excel: $error',
+                              AdService.executeWithInterstitialAd(context, () async {
+                                try {
+                                  await TotalExportService.exportExcel(
+                                    selectedMonth: _selectedMonth,
+                                    comparisonPercent: comparisonPercent,
+                                    cashExpenses: cashExpenses,
+                                    cardExpenses: cardExpenses,
+                                    transfers: transfers,
+                                    monthTransactions: monthTransactions,
+                                  );
+                                } catch (error) {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Failed to export Excel: $error',
+                                      ),
                                     ),
-                                  ),
-                                );
-                              }
+                                  );
+                                }
+                              });
                             },
                           ),
                           ListTile(
@@ -1658,25 +1618,27 @@ class _HomeScreenState extends State<HomeScreen>
                             title: const Text('PDF (.pdf)'),
                             onTap: () async {
                               Navigator.of(sheetContext).pop();
-                              try {
-                                await TotalExportService.exportPdf(
-                                  selectedMonth: _selectedMonth,
-                                  comparisonPercent: comparisonPercent,
-                                  cashExpenses: cashExpenses,
-                                  cardExpenses: cardExpenses,
-                                  transfers: transfers,
-                                  monthTransactions: monthTransactions,
-                                );
-                              } catch (error) {
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Failed to export PDF: $error',
+                              AdService.executeWithInterstitialAd(context, () async {
+                                try {
+                                  await TotalExportService.exportPdf(
+                                    selectedMonth: _selectedMonth,
+                                    comparisonPercent: comparisonPercent,
+                                    cashExpenses: cashExpenses,
+                                    cardExpenses: cardExpenses,
+                                    transfers: transfers,
+                                    monthTransactions: monthTransactions,
+                                  );
+                                } catch (error) {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Failed to export PDF: $error',
+                                      ),
                                     ),
-                                  ),
-                                );
-                              }
+                                  );
+                                }
+                              });
                             },
                           ),
                         ],
@@ -1685,7 +1647,6 @@ class _HomeScreenState extends State<HomeScreen>
                   );
                 },
               );
-            });
             },
             borderRadius: BorderRadius.circular(16),
             child: Padding(
